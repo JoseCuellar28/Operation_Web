@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "titulo": "Instalación Sistema Eléctrico",
+    "descripcion": "Instalación completa del sistema eléctrico en el edificio A",
+    "estado": "Por Asignar",
+    "prioridad": "Alta",
+    "fecha": "2024-08-17"
+  },
+  {
+    "id": 2,
+    "titulo": "Mantenimiento HVAC",
+    "descripcion": "Revisión y mantenimiento del sistema de climatización",
+    "estado": "En Progreso",
+    "prioridad": "Media",
+    "fecha": "2024-08-16"
+  },
+  {
+    "id": 3,
+    "titulo": "Reparación Plomería",
+    "descripcion": "Reparación de tuberías en el baño principal",
+    "estado": "Finalizados",
+    "prioridad": "Alta",
+    "fecha": "2024-08-15"
+  },
+  {
+    "id": 4,
+    "titulo": "Pintura Exterior",
+    "descripcion": "Aplicación de pintura exterior en fachada norte",
+    "estado": "Por Asignar",
+    "prioridad": "Baja",
+    "fecha": "2024-08-18"
+  },
+  {
+    "id": 5,
+    "titulo": "Instalación Luces LED",
+    "descripcion": "Reemplazo de iluminación tradicional por LED",
+    "estado": "En Progreso",
+    "prioridad": "Media",
+    "fecha": "2024-08-17"
+  },
+  {
+    "id": 6,
+    "titulo": "Limpieza Almacén",
+    "descripcion": "Organización y limpieza del almacén principal",
+    "estado": "Finalizados",
+    "prioridad": "Baja",
+    "fecha": "2024-08-14"
+  }
+]
