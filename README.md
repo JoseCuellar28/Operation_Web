@@ -60,8 +60,8 @@ Modelo_Funcional/
 
 1. **Clonar el repositorio**
 ```bash
-git clone https://github.com/[usuario]/oca-operationsmart.git
-cd oca-operationsmart
+git clone https://github.com/[usuario]/Operation_Web.git
+cd Operation_Web
 ```
 
 2. **Iniciar el servidor local**
@@ -143,7 +143,7 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 
 **OCA Global** - [@OCAGlobal](https://github.com/OCAGlobal)
 
-Link del Proyecto: [https://github.com/[usuario]/oca-operationsmart](https://github.com/[usuario]/oca-operationsmart)
+Link del Proyecto: [https://github.com/[usuario]/Operation_Web](https://github.com/[usuario]/Operation_Web)
 
 ---
 
