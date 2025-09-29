@@ -907,3 +907,218 @@ body {
     color: white;
 }
 // MAIN-CONTENT MÁS ANCHO - dom 10 ago 2025 15:30:31 -05
+
+/* Estilos para el selector de columnas */
+.column-selector-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.column-selector-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.column-selector-content {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.column-selector-modal.show .column-selector-content {
+    transform: translateY(0);
+}
+
+.column-selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.column-selector-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.close-selector {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #64748b;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close-selector:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.column-selector-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.select-all-btn, .deselect-all-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.select-all-btn {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.select-all-btn:hover {
+    background-color: #2563eb;
+}
+
+.deselect-all-btn {
+    background-color: #64748b;
+    color: white;
+}
+
+.deselect-all-btn:hover {
+    background-color: #475569;
+}
+
+.column-counter {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.columns-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.column-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s ease;
+}
+
+.column-item:last-child {
+    border-bottom: none;
+}
+
+.column-item:hover {
+    background-color: #f8fafc;
+}
+
+.column-checkbox {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.column-label {
+    font-size: 0.95rem;
+    color: #374151;
+    cursor: pointer;
+    flex: 1;
+    user-select: none;
+}
+
+.column-selector-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.apply-selection-btn, .cancel-selection-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.apply-selection-btn {
+    background-color: #10b981;
+    color: white;
+}
+
+.apply-selection-btn:hover {
+    background-color: #059669;
+}
+
+.cancel-selection-btn {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.cancel-selection-btn:hover {
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
+/* Scrollbar personalizado para la lista de columnas */
+.columns-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.columns-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.columns-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.columns-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+    }
+    
+    .group-details-modal {
+        width: 95%;
+        max-height: 90vh;
+    }
+}

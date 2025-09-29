@@ -247,9 +247,510 @@ class DashboardManager {
 
     getDatosGeneralesContent() {
         return `
-            <div style="padding: 20px;">
-                <h1>Gestión Operativa</h1>
-                <p>Contenido de gestión operativa aquí...</p>
+            <style>
+                .gestion-container {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: white;
+                    padding: 20px;
+                    width: 100%;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                    margin: 0;
+                    overflow-x: auto;
+                    position: relative;
+                    min-width: 0;
+                }
+                
+                .gestion-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 30px;
+                    flex-wrap: wrap;
+                    gap: 15px;
+                }
+                
+                .gestion-titulo {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #1e3a8a;
+                    margin: 0;
+                }
+                
+                .gestion-upload-section {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    flex-wrap: wrap;
+                }
+                
+                .gestion-file-input-wrapper {
+                    position: relative;
+                    overflow: hidden;
+                    display: inline-block;
+                }
+                
+                .gestion-file-input {
+                    position: absolute;
+                    left: -9999px;
+                    opacity: 0;
+                }
+                
+                .gestion-file-label {
+                    background-color: #10b981;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transition: background-color 0.3s ease;
+                    border: none;
+                }
+                
+                .gestion-file-label:hover {
+                    background-color: #059669;
+                }
+                
+                .gestion-file-name {
+                    font-size: 14px;
+                    color: #6b7280;
+                    font-style: italic;
+                }
+                
+                .gestion-actions {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                }
+                
+                .gestion-info {
+                    display: flex;
+                    gap: 15px;
+                    align-items: center;
+                }
+                
+                .gestion-buttons {
+                    display: flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                }
+                
+                .column-indicator, .row-indicator {
+                    background-color: #f3f4f6;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    color: #374151;
+                    font-weight: 500;
+                    border: 1px solid #e5e7eb;
+                }
+                
+                .column-indicator i, .row-indicator i {
+                    margin-right: 5px;
+                    color: #6b7280;
+                }
+                
+                .gestion-scroll-info {
+                    background-color: #dbeafe;
+                    border: 1px solid #93c5fd;
+                    border-radius: 6px;
+                    padding: 8px 12px;
+                    margin-bottom: 10px;
+                    color: #1e40af;
+                    font-size: 13px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                
+                .gestion-scroll-info i {
+                    color: #3b82f6;
+                }
+                
+                .sheet-selector {
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-bottom: 20px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+                
+                .sheet-selector-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 12px;
+                    font-weight: 600;
+                    color: #374151;
+                    font-size: 14px;
+                }
+                
+                .sheet-selector-header i {
+                    color: #6b7280;
+                }
+                
+                .sheet-select {
+                    width: 100%;
+                    padding: 10px 12px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    color: #374151;
+                    background-color: white;
+                    cursor: pointer;
+                    transition: border-color 0.2s ease;
+                    margin-bottom: 10px;
+                }
+                
+                .sheet-select:focus {
+                    outline: none;
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                }
+                
+                .sheet-select:hover {
+                    border-color: #9ca3af;
+                }
+                
+                .sheet-info {
+                    display: flex;
+                    justify-content: flex-end;
+                }
+                
+                .sheet-count {
+                    background-color: #f3f4f6;
+                    padding: 6px 10px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    color: #6b7280;
+                    font-weight: 500;
+                }
+                
+                .sheet-count i {
+                    margin-right: 4px;
+                    color: #9ca3af;
+                }
+                
+                /* Estilos responsive */
+                @media (max-width: 768px) {
+                    .gestion-actions {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    
+                    .gestion-info {
+                        justify-content: center;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .gestion-buttons {
+                        justify-content: center;
+                    }
+                    
+                    .gestion-table-container {
+                        max-height: 400px;
+                    }
+                    
+                    .gestion-table th,
+                    .gestion-table td {
+                        min-width: 100px;
+                        font-size: 12px;
+                        padding: 8px 12px;
+                    }
+                }
+                
+                .gestion-btn {
+                    padding: 8px 16px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    background: white;
+                    color: #374151;
+                    cursor: pointer;
+                    font-size: 14px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    transition: all 0.3s ease;
+                }
+                
+                .gestion-btn:hover {
+                    background-color: #f3f4f6;
+                    border-color: #9ca3af;
+                }
+                
+                .gestion-btn-primary {
+                    background-color: #3b82f6;
+                    color: white;
+                    border-color: #3b82f6;
+                }
+                
+                .gestion-btn-primary:hover {
+                    background-color: #2563eb;
+                    border-color: #2563eb;
+                }
+                
+                .gestion-btn-success {
+                    background-color: #10b981;
+                    color: white;
+                    border-color: #10b981;
+                }
+                
+                .gestion-btn-success:hover {
+                    background-color: #059669;
+                    border-color: #059669;
+                }
+                
+                .gestion-table-container {
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    overflow-x: auto;
+                    overflow-y: auto;
+                    margin-top: 20px;
+                    max-height: 600px;
+                    border: 1px solid #e5e7eb;
+                }
+                
+                .gestion-table {
+                    width: max-content;
+                    min-width: 100%;
+                    border-collapse: collapse;
+                    font-size: 14px;
+                    table-layout: auto;
+                }
+                
+                .gestion-table th {
+                    background-color: #f8fafc;
+                    padding: 12px 16px;
+                    text-align: left;
+                    font-weight: 600;
+                    color: #374151;
+                    border-bottom: 2px solid #e5e7eb;
+                    border-right: 1px solid #e5e7eb;
+                    white-space: nowrap;
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                    min-width: 120px;
+                }
+                
+                .gestion-table th:last-child {
+                    border-right: none;
+                }
+                
+                .gestion-table td {
+                    padding: 12px 16px;
+                    border-bottom: 1px solid #e5e7eb;
+                    border-right: 1px solid #e5e7eb;
+                    color: #374151;
+                    white-space: nowrap;
+                    min-width: 120px;
+                    max-width: 250px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                
+                .gestion-table td:last-child {
+                    border-right: none;
+                }
+                
+                .gestion-table td:hover {
+                    overflow: visible;
+                    white-space: normal;
+                    word-wrap: break-word;
+                    position: relative;
+                    z-index: 5;
+                }
+                
+                .gestion-table tbody tr:hover {
+                    background-color: #f9fafb;
+                }
+                
+                .gestion-table tbody tr:nth-child(even) {
+                    background-color: #f8fafc;
+                }
+                
+                .gestion-table tbody tr:nth-child(even):hover {
+                    background-color: #f3f4f6;
+                }
+                
+                .gestion-status-activo {
+                    color: #059669;
+                    font-weight: 500;
+                }
+                
+                .gestion-status-inactivo {
+                    color: #dc2626;
+                    font-weight: 500;
+                }
+                
+                .gestion-empty-state {
+                    text-align: center;
+                    padding: 60px 20px;
+                    color: #6b7280;
+                }
+                
+                .gestion-empty-icon {
+                    font-size: 48px;
+                    margin-bottom: 16px;
+                    color: #d1d5db;
+                }
+                
+                .gestion-empty-text {
+                    font-size: 18px;
+                    margin-bottom: 8px;
+                }
+                
+                .gestion-empty-subtext {
+                    font-size: 14px;
+                }
+                
+                .gestion-loading {
+                    text-align: center;
+                    padding: 40px;
+                    color: #6b7280;
+                }
+                
+                .gestion-spinner {
+                    display: inline-block;
+                    width: 20px;
+                    height: 20px;
+                    border: 3px solid #f3f4f6;
+                    border-radius: 50%;
+                    border-top-color: #3b82f6;
+                    animation: spin 1s ease-in-out infinite;
+                    margin-right: 10px;
+                }
+                
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                
+                .gestion-error {
+                    background-color: #fef2f2;
+                    border: 1px solid #fecaca;
+                    color: #dc2626;
+                    padding: 12px;
+                    border-radius: 6px;
+                    margin-bottom: 20px;
+                    display: none;
+                }
+                
+                .gestion-success {
+                    background-color: #f0fdf4;
+                    border: 1px solid #bbf7d0;
+                    color: #059669;
+                    padding: 12px;
+                    border-radius: 6px;
+                    margin-bottom: 20px;
+                    display: none;
+                }
+                
+                @media (max-width: 768px) {
+                    .gestion-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    
+                    .gestion-upload-section {
+                        justify-content: center;
+                    }
+                    
+                    .gestion-actions {
+                        justify-content: center;
+                    }
+                    
+                    .gestion-table-container {
+                        overflow-x: auto;
+                    }
+                }
+            </style>
+            
+            <div class="gestion-container">
+                <div class="gestion-header">
+                    <h1 class="gestion-titulo">Gestión de Operaciones Diarias</h1>
+                    <div class="gestion-upload-section">
+                        <div class="gestion-file-input-wrapper">
+                            <input type="file" id="gestionFileInput" class="gestion-file-input" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(this)">
+                            <label for="gestionFileInput" class="gestion-file-label">
+                                <i class="fas fa-upload"></i>
+                                Cargar datos desde
+                            </label>
+                        </div>
+                        <span id="gestionFileName" class="gestion-file-name">Ningún archivo seleccionado</span>
+                    </div>
+                </div>
+                
+                <div id="sheetSelector" class="sheet-selector" style="display: none;">
+                    <div class="sheet-selector-header">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Seleccionar Hoja de Excel:</span>
+                    </div>
+                    <select id="sheetSelect" class="sheet-select" onchange="handleSheetChange()">
+                        <option value="">Selecciona una hoja...</option>
+                    </select>
+                    <div class="sheet-info">
+                        <span id="sheetCount" class="sheet-count">
+                            <i class="fas fa-file-alt"></i> Hojas disponibles: 0
+                        </span>
+                    </div>
+                </div>
+                
+                <div id="gestionError" class="gestion-error"></div>
+                <div id="gestionSuccess" class="gestion-success"></div>
+                
+                <div class="gestion-actions">
+                    <div class="gestion-info">
+                        <span id="columnCount" class="column-indicator">
+                            <i class="fas fa-columns"></i> Columnas: 0
+                        </span>
+                        <span id="rowCount" class="row-indicator">
+                            <i class="fas fa-list"></i> Filas: 0
+                        </span>
+                    </div>
+                    <div class="gestion-buttons">
+                        <button class="gestion-btn gestion-btn-primary" onclick="compartirConBD()">
+                            <i class="fas fa-database"></i>
+                            Compartir con BD
+                        </button>
+                        <button class="gestion-btn" onclick="seleccionarColumnas()">
+                            <i class="fas fa-columns"></i>
+                            Seleccionar Columnas
+                        </button>
+                        <button class="gestion-btn" onclick="exportarDatos()">
+                            <i class="fas fa-download"></i>
+                            Exportar
+                        </button>
+                        <button class="gestion-btn" onclick="filtrarDatos()">
+                            <i class="fas fa-filter"></i>
+                            Filtrar
+                        </button>
+
+                    </div>
+                </div>
+                
+                <div class="gestion-scroll-info" id="scrollInfo" style="display: none;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Desliza horizontalmente para ver todas las columnas</span>
+                </div>
+                
+                <div id="gestionTableContainer" class="gestion-table-container">
+                    <div class="gestion-empty-state">
+                        <div class="gestion-empty-icon">
+                            <i class="fas fa-file-excel"></i>
+                        </div>
+                        <div class="gestion-empty-text">No hay datos cargados</div>
+                        <div class="gestion-empty-subtext">Selecciona un archivo Excel para comenzar</div>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -4108,8 +4609,1818 @@ function guardarNuevoProyecto() {
     cerrarModalNuevoProyecto();
 }
 
+// ================================================================================
+// FUNCIONES PARA GESTIÓN DE OPERACIONES DIARIAS (EXCEL)
+// ================================================================================
+
+// Variables globales para almacenar los datos del Excel
+let gestionData = [];
+let gestionHeaders = [];
+let currentFile = null;
+let availableSheets = [];
+let currentSheetData = {};
+
+// Función para manejar la carga de archivos
+function handleFileUpload(input) {
+    const file = input.files[0];
+    const fileNameSpan = document.getElementById('gestionFileName');
+    const errorDiv = document.getElementById('gestionError');
+    const successDiv = document.getElementById('gestionSuccess');
+    
+    // Ocultar mensajes previos
+    hideMessage(errorDiv);
+    hideMessage(successDiv);
+    
+    if (!file) {
+        fileNameSpan.textContent = 'Ningún archivo seleccionado';
+        return;
+    }
+    
+    // Validar tipo de archivo
+    const validTypes = ['.xlsx', '.xls', '.csv'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!validTypes.includes(fileExtension)) {
+        showMessage(errorDiv, 'Tipo de archivo no válido. Por favor seleccione un archivo Excel (.xlsx, .xls) o CSV (.csv)');
+        fileNameSpan.textContent = 'Ningún archivo seleccionado';
+        input.value = '';
+        return;
+    }
+    
+    fileNameSpan.textContent = file.name;
+    currentFile = file;
+    
+    // Mostrar estado de carga
+    showLoadingState();
+    
+    // Procesar archivo
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            if (fileExtension === '.csv') {
+                processCSVData(e.target.result);
+                hideSheetSelector(); // CSV no tiene múltiples hojas
+                showMessage(successDiv, `Archivo "${file.name}" cargado exitosamente. ${gestionData.length} registros encontrados.`);
+            } else {
+                // Para Excel, primero detectamos las hojas disponibles
+                detectExcelSheets(e.target.result);
+            }
+        } catch (error) {
+            console.error('Error procesando archivo:', error);
+            showMessage(errorDiv, 'Error al procesar el archivo. Verifique que el formato sea correcto.');
+            gestionData = [];
+            gestionHeaders = [];
+            availableSheets = [];
+            hideSheetSelector();
+            showEmptyState();
+        }
+    };
+    
+    reader.onerror = function() {
+        showMessage(errorDiv, 'Error al leer el archivo. Intente nuevamente.');
+        showEmptyState();
+    };
+    
+    if (fileExtension === '.csv') {
+        reader.readAsText(file);
+    } else {
+        reader.readAsArrayBuffer(file);
+    }
+}
+
+// Función para procesar datos CSV
+function processCSVData(csvText) {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length === 0) {
+        throw new Error('Archivo CSV vacío');
+    }
+    
+    // Primera línea como headers
+    gestionHeaders = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
+    
+    // Procesar datos
+    gestionData = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(value => value.trim().replace(/"/g, ''));
+        if (values.length === gestionHeaders.length) {
+            const row = {};
+            gestionHeaders.forEach((header, index) => {
+                row[header] = values[index];
+            });
+            gestionData.push(row);
+        }
+    }
+    
+    renderDataTable();
+}
+
+// Función para procesar datos Excel (simulada - en producción usaría una librería como SheetJS)
+function processExcelData(arrayBuffer) {
+    // Para esta demo, simularemos datos de Excel con datos de ejemplo
+    // En producción, usarías una librería como SheetJS para leer archivos Excel reales
+    
+    gestionHeaders = [
+        'Tipo de Documento',
+        'Número de Documento', 
+        'Nombre de Documento',
+        'Apellido Paterno',
+        'Apellido Materno',
+        'Nombres',
+        'Email',
+        'Teléfono',
+        'Distrito'
+    ];
+    
+    gestionData = [
+        {
+            'Tipo de Documento': 'DNI',
+            'Número de Documento': '76679701',
+            'Nombre de Documento': 'Valenzuela',
+            'Apellido Paterno': 'Lizarraburu',
+            'Apellido Materno': 'Sebastián',
+            'Nombres': 'svalenzuela@gmail.com',
+            'Email': '978547320',
+            'Teléfono': 'Santa Anita',
+            'Distrito': 'Santa Anita'
+        },
+        {
+            'Tipo de Documento': 'C.E.',
+            'Número de Documento': '46679722',
+            'Nombre de Documento': 'Avellaneda',
+            'Apellido Paterno': 'Colmenares',
+            'Apellido Materno': 'Santiago',
+            'Nombres': 'scolmenares@gmail.com',
+            'Email': '956899445',
+            'Teléfono': 'Ventanilla',
+            'Distrito': 'Ventanilla'
+        },
+        {
+            'Tipo de Documento': 'DNI',
+            'Número de Documento': '76679701',
+            'Nombre de Documento': 'Valenzuela',
+            'Apellido Paterno': 'Lizarraburu',
+            'Apellido Materno': 'Sebastián',
+            'Nombres': 'svalenzuela@gmail.com',
+            'Email': '978547320',
+            'Teléfono': 'Comas',
+            'Distrito': 'Comas'
+        },
+        {
+            'Tipo de Documento': 'C.E.',
+            'Número de Documento': '46679722',
+            'Nombre de Documento': 'Avellaneda',
+            'Apellido Paterno': 'Colmenares',
+            'Apellido Materno': 'Santiago',
+            'Nombres': 'scolmenares@gmail.com',
+            'Email': '956899445',
+            'Teléfono': 'San Borja',
+            'Distrito': 'San Borja'
+        },
+        {
+            'Tipo de Documento': 'DNI',
+            'Número de Documento': '76679701',
+            'Nombre de Documento': 'Valenzuela',
+            'Apellido Paterno': 'Lizarraburu',
+            'Apellido Materno': 'Sebastián',
+            'Nombres': 'svalenzuela@gmail.com',
+            'Email': '978547320',
+            'Teléfono': 'Santa Anita',
+            'Distrito': 'Santa Anita'
+        },
+        {
+            'Tipo de Documento': 'C.E.',
+            'Número de Documento': '46679722',
+            'Nombre de Documento': 'Avellaneda',
+            'Apellido Paterno': 'Colmenares',
+            'Apellido Materno': 'Santiago',
+            'Nombres': 'scolmenares@gmail.com',
+            'Email': '956899445',
+            'Teléfono': 'Ventanilla',
+            'Distrito': 'Ventanilla'
+        },
+        {
+            'Tipo de Documento': 'DNI',
+            'Número de Documento': '76679701',
+            'Nombre de Documento': 'Valenzuela',
+            'Apellido Paterno': 'Lizarraburu',
+            'Apellido Materno': 'Sebastián',
+            'Nombres': 'svalenzuela@gmail.com',
+            'Email': '978547320',
+            'Teléfono': 'Comas',
+            'Distrito': 'Comas'
+        },
+        {
+            'Tipo de Documento': 'C.E.',
+            'Número de Documento': '46679722',
+            'Nombre de Documento': 'Avellaneda',
+            'Apellido Paterno': 'Colmenares',
+            'Apellido Materno': 'Santiago',
+            'Nombres': 'scolmenares@gmail.com',
+            'Email': '956899445',
+            'Teléfono': 'San Borja',
+            'Distrito': 'San Borja'
+        },
+        {
+            'Tipo de Documento': 'DNI',
+            'Número de Documento': '76679701',
+            'Nombre de Documento': 'Valenzuela',
+            'Apellido Paterno': 'Lizarraburu',
+            'Apellido Materno': 'Sebastián',
+            'Nombres': 'svalenzuela@gmail.com',
+            'Email': '978547320',
+            'Teléfono': 'Santa Anita',
+            'Distrito': 'Santa Anita'
+        }
+    ];
+    
+    renderDataTable();
+}
+
+// Función para renderizar la tabla de datos
+function renderDataTable() {
+    const container = document.getElementById('gestionTableContainer');
+    
+    if (!gestionData || gestionData.length === 0) {
+        showEmptyState();
+        return;
+    }
+    
+    // Usar columnas seleccionadas o todas las columnas si no hay selección
+    const columnsToShow = selectedColumns && selectedColumns.length > 0 ? 
+        gestionHeaders.filter(header => selectedColumns.includes(header)) : 
+        gestionHeaders;
+    
+    let tableHTML = `
+        <table class="gestion-table">
+            <thead>
+                <tr>
+    `;
+    
+    // Agregar headers de columnas seleccionadas
+    columnsToShow.forEach(header => {
+        tableHTML += `<th>${header}</th>`;
+    });
+    
+    tableHTML += `
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    // Agregar filas de datos solo para columnas seleccionadas
+    gestionData.forEach((row, index) => {
+        tableHTML += `<tr>`;
+        columnsToShow.forEach(header => {
+            let cellValue = row[header] || '';
+            
+            // Aplicar estilos especiales según el contenido
+            if (header.toLowerCase().includes('email') && cellValue.includes('@')) {
+                cellValue = `<span style="color: #3b82f6;">${cellValue}</span>`;
+            } else if (header.toLowerCase().includes('documento') && cellValue.includes('DNI')) {
+                cellValue = `<span style="color: #059669; font-weight: 500;">${cellValue}</span>`;
+            } else if (header.toLowerCase().includes('documento') && cellValue.includes('C.E.')) {
+                cellValue = `<span style="color: #dc2626; font-weight: 500;">${cellValue}</span>`;
+            }
+            
+            tableHTML += `<td>${cellValue}</td>`;
+        });
+        tableHTML += `</tr>`;
+    });
+    
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+    
+    container.innerHTML = tableHTML;
+    
+    // Actualizar contadores
+    updateDataCounters(columnsToShow);
+    
+    // Mostrar mensaje de scroll si hay muchas columnas
+    const scrollInfo = document.getElementById('scrollInfo');
+    if (scrollInfo && columnsToShow && columnsToShow.length > 6) {
+        scrollInfo.style.display = 'flex';
+    } else if (scrollInfo) {
+        scrollInfo.style.display = 'none';
+    }
+    
+    // Mostrar u ocultar botón de mapa automáticamente
+    mostrarOcultarBotonMapa();
+}
+
+// Función para actualizar los contadores de datos
+function updateDataCounters(columnsToShow = null) {
+    const columnCountElement = document.getElementById('columnCount');
+    const rowCountElement = document.getElementById('rowCount');
+    
+    if (columnCountElement && rowCountElement) {
+        const columnCount = columnsToShow ? columnsToShow.length : (gestionHeaders ? gestionHeaders.length : 0);
+        const rowCount = gestionData ? gestionData.length : 0;
+        
+        columnCountElement.innerHTML = `<i class="fas fa-columns"></i> Columnas: ${columnCount}`;
+        rowCountElement.innerHTML = `<i class="fas fa-list"></i> Filas: ${rowCount}`;
+    }
+}
+
+// Función para mostrar estado vacío
+function showEmptyState() {
+    const container = document.getElementById('gestionTableContainer');
+    container.innerHTML = `
+        <div class="gestion-empty-state">
+            <div class="gestion-empty-icon">
+                <i class="fas fa-file-excel"></i>
+            </div>
+            <div class="gestion-empty-text">No hay datos cargados</div>
+            <div class="gestion-empty-subtext">Selecciona un archivo Excel para comenzar</div>
+        </div>
+    `;
+    
+    // Resetear contadores
+    const columnCountElement = document.getElementById('columnCount');
+    const rowCountElement = document.getElementById('rowCount');
+    
+    if (columnCountElement && rowCountElement) {
+        columnCountElement.innerHTML = `<i class="fas fa-columns"></i> Columnas: 0`;
+        rowCountElement.innerHTML = `<i class="fas fa-list"></i> Filas: 0`;
+    }
+    
+    // Ocultar mensaje de scroll
+    const scrollInfo = document.getElementById('scrollInfo');
+    if (scrollInfo) {
+        scrollInfo.style.display = 'none';
+    }
+}
+
+// Función para mostrar estado de carga
+function showLoadingState() {
+    const container = document.getElementById('gestionTableContainer');
+    container.innerHTML = `
+        <div class="gestion-loading">
+            <div class="gestion-spinner"></div>
+            Procesando archivo...
+        </div>
+    `;
+}
+
+// Funciones para mostrar/ocultar mensajes
+function showMessage(element, message) {
+    element.textContent = message;
+    element.style.display = 'block';
+    setTimeout(() => {
+        hideMessage(element);
+    }, 5000);
+}
+
+function hideMessage(element) {
+    element.style.display = 'none';
+}
+
+// Funciones para los botones de acción
+function compartirConBD() {
+    const successDiv = document.getElementById('gestionSuccess');
+    
+    if (!gestionData || gestionData.length === 0) {
+        const errorDiv = document.getElementById('gestionError');
+        showMessage(errorDiv, 'No hay datos para compartir. Cargue un archivo primero.');
+        return;
+    }
+    
+    // Simular proceso de compartir con base de datos
+    showMessage(successDiv, `Datos compartidos exitosamente con la base de datos. ${gestionData.length} registros procesados.`);
+    console.log('Datos compartidos con BD:', gestionData);
+}
+
+function seleccionarColumnas() {
+    console.log('🔍 [COLUMNAS] Función seleccionarColumnas() ejecutada');
+    console.log('📊 [COLUMNAS] Datos disponibles:', gestionData ? gestionData.length : 0, 'filas');
+    
+    if (!gestionData || gestionData.length === 0) {
+        alert('⚠️ No hay datos cargados. Por favor, carga un archivo primero.');
+        console.log('❌ [COLUMNAS] No hay datos disponibles');
+        return;
+    }
+    
+    console.log('✅ [COLUMNAS] Datos encontrados, mostrando selector de columnas...');
+    mostrarSelectorColumnas();
+}
+
+function exportarDatos() {
+    if (!gestionData || gestionData.length === 0) {
+        const errorDiv = document.getElementById('gestionError');
+        showMessage(errorDiv, 'No hay datos para exportar. Cargue un archivo primero.');
+        return;
+    }
+    
+    // Crear CSV para exportar
+    let csvContent = gestionHeaders.join(',') + '\n';
+    gestionData.forEach(row => {
+        const values = gestionHeaders.map(header => `"${row[header] || ''}"`);
+        csvContent += values.join(',') + '\n';
+    });
+    
+    // Crear y descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `gestion_operaciones_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    const successDiv = document.getElementById('gestionSuccess');
+    showMessage(successDiv, 'Datos exportados exitosamente.');
+}
+
+function filtrarDatos() {
+    if (!gestionData || gestionData.length === 0) {
+        const errorDiv = document.getElementById('gestionError');
+        showMessage(errorDiv, 'No hay datos para filtrar. Cargue un archivo primero.');
+        return;
+    }
+    
+    const filtro = prompt('Ingrese el texto a buscar en todos los campos:');
+    if (!filtro) return;
+    
+    const datosFiltrados = gestionData.filter(row => {
+        return gestionHeaders.some(header => {
+            const valor = row[header] || '';
+            return valor.toLowerCase().includes(filtro.toLowerCase());
+        });
+    });
+    
+    // Temporalmente mostrar datos filtrados
+    const datosOriginales = [...gestionData];
+    gestionData = datosFiltrados;
+    renderDataTable();
+    
+    const successDiv = document.getElementById('gestionSuccess');
+    showMessage(successDiv, `Filtro aplicado. Mostrando ${datosFiltrados.length} de ${datosOriginales.length} registros.`);
+    
+    // Restaurar datos originales después de 10 segundos
+    setTimeout(() => {
+        gestionData = datosOriginales;
+        renderDataTable();
+        const infoDiv = document.getElementById('gestionSuccess');
+        showMessage(infoDiv, 'Filtro removido. Mostrando todos los registros.');
+    }, 10000);
+}
+
+// ================================================================================
+// FUNCIONES PARA MANEJO DE HOJAS DE EXCEL
+// ================================================================================
+
+// Función para detectar hojas disponibles en un archivo Excel
+function detectExcelSheets(arrayBuffer) {
+    try {
+        // Leer el archivo Excel usando SheetJS
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        
+        // Obtener nombres de todas las hojas
+        const sheetNames = workbook.SheetNames;
+        
+        if (sheetNames.length === 0) {
+            hideSheetSelector();
+            showEmptyState();
+            const errorDiv = document.getElementById('gestionError');
+            showMessage(errorDiv, 'No se encontraron hojas válidas en el archivo.');
+            return;
+        }
+        
+        // Procesar cada hoja y extraer sus datos
+        availableSheets = [];
+        currentSheetData = {};
+        
+        sheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            
+            // Obtener el rango de la hoja para asegurar que capturemos todas las columnas
+            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+            
+            // Usar sheet_to_json con defval para mantener celdas vacías
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                header: 1, 
+                defval: '', // Valor por defecto para celdas vacías
+                range: range // Usar el rango completo de la hoja
+            });
+            
+            if (jsonData.length > 0) {
+                // La primera fila contiene los headers
+                let headers = jsonData[0] || [];
+                
+                // Asegurar que tenemos todos los headers hasta la última columna con datos
+                const maxColumns = Math.max(...jsonData.map(row => row.length));
+                while (headers.length < maxColumns) {
+                    headers.push(`Columna ${headers.length + 1}`);
+                }
+                
+                // Filtrar headers vacíos al final y reemplazar con nombres por defecto
+                headers = headers.map((header, index) => {
+                    if (!header || header.toString().trim() === '') {
+                        return `Columna ${index + 1}`;
+                    }
+                    return header.toString().trim();
+                });
+                
+                const dataRows = jsonData.slice(1);
+                
+                // Convertir filas a objetos usando los headers
+                const data = dataRows.map(row => {
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = (row[index] !== undefined && row[index] !== null) ? row[index].toString() : '';
+                    });
+                    return obj;
+                }).filter(row => {
+                    // Filtrar filas completamente vacías
+                    return Object.values(row).some(value => value !== '');
+                });
+                
+                console.log(`Hoja "${sheetName}": ${headers.length} columnas detectadas:`, headers);
+                
+                availableSheets.push({ name: sheetName, data: { headers, data } });
+                currentSheetData[sheetName] = { headers, data };
+            }
+        });
+        
+        if (availableSheets.length > 1) {
+            showSheetSelector();
+            populateSheetSelector();
+            
+            const successDiv = document.getElementById('gestionSuccess');
+            showMessage(successDiv, `Archivo cargado exitosamente. ${availableSheets.length} hojas detectadas. Selecciona una hoja para continuar.`);
+        } else if (availableSheets.length === 1) {
+            // Solo una hoja, cargar automáticamente
+            hideSheetSelector();
+            loadSheetData(availableSheets[0].name);
+        } else {
+            hideSheetSelector();
+            showEmptyState();
+            const errorDiv = document.getElementById('gestionError');
+            showMessage(errorDiv, 'No se encontraron hojas con datos válidos en el archivo.');
+        }
+        
+    } catch (error) {
+        console.error('Error al procesar archivo Excel:', error);
+        hideSheetSelector();
+        showEmptyState();
+        const errorDiv = document.getElementById('gestionError');
+        showMessage(errorDiv, 'Error al procesar el archivo Excel. Verifica que el archivo no esté corrupto.');
+    }
+}
+
+// Función para generar datos de ejemplo para diferentes hojas
+function generateSampleData(sheetName) {
+    switch(sheetName) {
+        case 'Hoja1':
+            return {
+                headers: ['Tipo de Documento', 'Número de Documento', 'Nombres', 'Apellidos', 'Email', 'Teléfono', 'Distrito'],
+                data: [
+                    {
+                        'Tipo de Documento': 'DNI',
+                        'Número de Documento': '76679701',
+                        'Nombres': 'Sebastián',
+                        'Apellidos': 'Valenzuela Lizarraburu',
+                        'Email': 'svalenzuela@gmail.com',
+                        'Teléfono': '978547320',
+                        'Distrito': 'Santa Anita'
+                    },
+                    {
+                        'Tipo de Documento': 'C.E.',
+                        'Número de Documento': '46679722',
+                        'Nombres': 'Santiago',
+                        'Apellidos': 'Avellaneda Colmenares',
+                        'Email': 'scolmenares@gmail.com',
+                        'Teléfono': '956899445',
+                        'Distrito': 'Ventanilla'
+                    }
+                ]
+            };
+        case 'Empleados':
+            return {
+                headers: ['ID', 'Nombre Completo', 'Cargo', 'Departamento', 'Fecha Ingreso', 'Salario', 'Estado'],
+                data: [
+                    {
+                        'ID': 'EMP001',
+                        'Nombre Completo': 'María García López',
+                        'Cargo': 'Analista de Sistemas',
+                        'Departamento': 'Tecnología',
+                        'Fecha Ingreso': '2023-01-15',
+                        'Salario': 'S/. 4,500',
+                        'Estado': 'Activo'
+                    },
+                    {
+                        'ID': 'EMP002',
+                        'Nombre Completo': 'Carlos Rodríguez Pérez',
+                        'Cargo': 'Supervisor de Operaciones',
+                        'Departamento': 'Operaciones',
+                        'Fecha Ingreso': '2022-08-20',
+                        'Salario': 'S/. 5,200',
+                        'Estado': 'Activo'
+                    },
+                    {
+                        'ID': 'EMP003',
+                        'Nombre Completo': 'Ana Martínez Silva',
+                        'Cargo': 'Coordinadora de Recursos Humanos',
+                        'Departamento': 'RRHH',
+                        'Fecha Ingreso': '2021-11-10',
+                        'Salario': 'S/. 4,800',
+                        'Estado': 'Activo'
+                    }
+                ]
+            };
+        case 'Departamentos':
+            return {
+                headers: ['Código', 'Nombre Departamento', 'Jefe de Departamento', 'Presupuesto', 'Empleados', 'Ubicación'],
+                data: [
+                    {
+                        'Código': 'TECH',
+                        'Nombre Departamento': 'Tecnología',
+                        'Jefe de Departamento': 'Luis Fernández',
+                        'Presupuesto': 'S/. 150,000',
+                        'Empleados': '12',
+                        'Ubicación': 'Piso 3'
+                    },
+                    {
+                        'Código': 'OPS',
+                        'Nombre Departamento': 'Operaciones',
+                        'Jefe de Departamento': 'Carmen Vega',
+                        'Presupuesto': 'S/. 200,000',
+                        'Empleados': '18',
+                        'Ubicación': 'Piso 1'
+                    },
+                    {
+                        'Código': 'RRHH',
+                        'Nombre Departamento': 'Recursos Humanos',
+                        'Jefe de Departamento': 'Roberto Castillo',
+                        'Presupuesto': 'S/. 80,000',
+                        'Empleados': '6',
+                        'Ubicación': 'Piso 2'
+                    }
+                ]
+            };
+        case 'Proyectos':
+            return {
+                headers: ['ID Proyecto', 'Nombre Proyecto', 'Cliente', 'Fecha Inicio', 'Fecha Fin', 'Estado', 'Presupuesto', 'Responsable'],
+                data: [
+                    {
+                        'ID Proyecto': 'PRY001',
+                        'Nombre Proyecto': 'Sistema de Gestión Operativa',
+                        'Cliente': 'Empresa ABC',
+                        'Fecha Inicio': '2024-01-01',
+                        'Fecha Fin': '2024-06-30',
+                        'Estado': 'En Progreso',
+                        'Presupuesto': 'S/. 50,000',
+                        'Responsable': 'María García'
+                    },
+                    {
+                        'ID Proyecto': 'PRY002',
+                        'Nombre Proyecto': 'Automatización de Procesos',
+                        'Cliente': 'Corporación XYZ',
+                        'Fecha Inicio': '2024-02-15',
+                        'Fecha Fin': '2024-08-15',
+                        'Estado': 'Planificación',
+                        'Presupuesto': 'S/. 75,000',
+                        'Responsable': 'Carlos Rodríguez'
+                    }
+                ]
+            };
+        default:
+            return { headers: [], data: [] };
+    }
+}
+
+// Función para mostrar el selector de hojas
+function showSheetSelector() {
+    const sheetSelector = document.getElementById('sheetSelector');
+    if (sheetSelector) {
+        sheetSelector.style.display = 'block';
+    }
+}
+
+// Función para ocultar el selector de hojas
+function hideSheetSelector() {
+    const sheetSelector = document.getElementById('sheetSelector');
+    if (sheetSelector) {
+        sheetSelector.style.display = 'none';
+    }
+}
+
+// Función para poblar el selector de hojas
+function populateSheetSelector() {
+    const sheetSelect = document.getElementById('sheetSelect');
+    const sheetCount = document.getElementById('sheetCount');
+    
+    if (sheetSelect && sheetCount) {
+        // Limpiar opciones existentes
+        sheetSelect.innerHTML = '<option value="">Selecciona una hoja...</option>';
+        
+        // Agregar opciones para cada hoja
+        availableSheets.forEach(sheet => {
+            const option = document.createElement('option');
+            option.value = sheet.name;
+            option.textContent = sheet.name;
+            sheetSelect.appendChild(option);
+        });
+        
+        // Actualizar contador
+        sheetCount.innerHTML = `<i class="fas fa-file-alt"></i> Hojas disponibles: ${availableSheets.length}`;
+    }
+}
+
+// Función para manejar el cambio de hoja seleccionada
+function handleSheetChange() {
+    const sheetSelect = document.getElementById('sheetSelect');
+    const selectedSheet = sheetSelect.value;
+    
+    if (selectedSheet) {
+        loadSheetData(selectedSheet);
+    } else {
+        showEmptyState();
+    }
+}
+
+// Función para cargar datos de una hoja específica
+function loadSheetData(sheetName) {
+    const sheetData = currentSheetData[sheetName];
+    
+    if (sheetData) {
+        gestionHeaders = sheetData.headers;
+        gestionData = sheetData.data;
+        
+        renderDataTable();
+        
+        const successDiv = document.getElementById('gestionSuccess');
+        showMessage(successDiv, `Hoja "${sheetName}" cargada exitosamente. ${gestionData.length} registros encontrados.`);
+    } else {
+        const errorDiv = document.getElementById('gestionError');
+        showMessage(errorDiv, `Error al cargar la hoja "${sheetName}".`);
+        showEmptyState();
+    }
+}
+
+// Variables para selección de columnas
+let selectedColumns = [];
+let allColumns = [];
+
+// Función para mostrar el modal de selección de columnas
+function mostrarSelectorColumnas() {
+    if (!gestionHeaders || gestionHeaders.length === 0) {
+        alert('No hay datos cargados. Por favor, carga un archivo primero.');
+        return;
+    }
+
+    // Inicializar columnas disponibles y seleccionadas
+    allColumns = [...gestionHeaders];
+    if (selectedColumns.length === 0) {
+        selectedColumns = [...gestionHeaders];
+    }
+
+    const modalHTML = `
+        <div class="modal-overlay" id="modalSelectorColumnas" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;">
+            <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative;">
+                <!-- Header del Modal -->
+                <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">SELECCIONAR COLUMNAS</h2>
+                    <button class="modal-close" onclick="cerrarSelectorColumnas()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
+                </div>
+                
+                <!-- Contenido del Modal -->
+                <div class="modal-content" style="padding: 24px 32px;">
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                            <button onclick="seleccionarTodasColumnas()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;">Seleccionar Todas</button>
+                            <button onclick="deseleccionarTodasColumnas()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;">Deseleccionar Todas</button>
+                        </div>
+                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">
+                            Selecciona las columnas que deseas mostrar en la tabla:
+                        </div>
+                    </div>
+                    
+                    <div id="columnasContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+                        ${generateColumnCheckboxes()}
+                    </div>
+                    
+                    <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 6px; font-size: 14px; color: #374151;">
+                        <strong>Columnas seleccionadas:</strong> <span id="contadorColumnas">${selectedColumns.length}</span> de ${allColumns.length}
+                    </div>
+                </div>
+                
+                <!-- Footer del Modal -->
+                <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+                    <button class="btn-secondary" onclick="cerrarSelectorColumnas()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
+                    <button class="btn-primary" onclick="aplicarSeleccionColumnas()" style="padding: 12px 24px; background: #1e3a8a; color: white; border: none; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    console.log('Modal de selector de columnas creado');
+}
+
+// Función para generar checkboxes de columnas
+function generateColumnCheckboxes() {
+    return allColumns.map(column => {
+        const isChecked = selectedColumns.includes(column);
+        return `
+            <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
+                <input type="checkbox" id="col_${column}" ${isChecked ? 'checked' : ''} onchange="toggleColumn('${column}')" style="margin-right: 12px; transform: scale(1.2);">
+                <label for="col_${column}" style="flex: 1; cursor: pointer; font-size: 14px; color: #374151;">${column}</label>
+            </div>
+        `;
+    }).join('');
+}
+
+// Función para alternar selección de columna
+function toggleColumn(columnName) {
+    const index = selectedColumns.indexOf(columnName);
+    if (index > -1) {
+        selectedColumns.splice(index, 1);
+    } else {
+        selectedColumns.push(columnName);
+    }
+    updateColumnCounter();
+}
+
+// Función para seleccionar todas las columnas
+function seleccionarTodasColumnas() {
+    selectedColumns = [...allColumns];
+    updateColumnCheckboxes();
+    updateColumnCounter();
+}
+
+// Función para deseleccionar todas las columnas
+function deseleccionarTodasColumnas() {
+    selectedColumns = [];
+    updateColumnCheckboxes();
+    updateColumnCounter();
+}
+
+// Función para actualizar checkboxes
+function updateColumnCheckboxes() {
+    allColumns.forEach(column => {
+        const checkbox = document.getElementById(`col_${column}`);
+        if (checkbox) {
+            checkbox.checked = selectedColumns.includes(column);
+        }
+    });
+}
+
+// Función para actualizar contador
+function updateColumnCounter() {
+    const contador = document.getElementById('contadorColumnas');
+    if (contador) {
+        contador.textContent = selectedColumns.length;
+    }
+}
+
+// Función para aplicar selección de columnas
+function aplicarSeleccionColumnas() {
+    if (selectedColumns.length === 0) {
+        alert('Debes seleccionar al menos una columna.');
+        return;
+    }
+
+    // Actualizar headers globales
+    gestionHeaders = [...selectedColumns];
+    
+    // Re-renderizar tabla con columnas seleccionadas
+    renderDataTable();
+    
+    // Detectar columnas geográficas y mostrar/ocultar botón de mapa
+    detectarColumnasGeograficas();
+    
+    // Cerrar modal
+    cerrarSelectorColumnas();
+    
+    console.log('Columnas aplicadas:', selectedColumns);
+}
+
+// Variables para funcionalidad de mapas
+let columnasGeograficas = [];
+let tieneUbicacionesGeograficas = false;
+
+// Función para detectar columnas con datos geográficos
+function detectarColumnasGeograficas() {
+    columnasGeograficas = [];
+    tieneUbicacionesGeograficas = false;
+    
+    // Función para normalizar texto (quitar acentos y convertir a minúsculas)
+    function normalizeText(text) {
+        return text.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, ''); // Quitar acentos
+    }
+    
+    // Palabras clave para identificar columnas geográficas
+    const palabrasClaveGeo = [
+        'latitud', 'latitude', 'lat',
+        'longitud', 'longitude', 'lng', 'lon',
+        'direccion', 'address', 'ubicacion', 'location',
+        'coordenada', 'coordinate', 'coord',
+        'ciudad', 'city', 'municipio',
+        'departamento', 'estado', 'state', 'provincia',
+        'pais', 'country', 'region',
+        'zona', 'sector', 'barrio', 'neighborhood',
+        'gps', 'geolocation', 'geolocalizacion'
+    ];
+    
+    // Revisar cada columna seleccionada
+    selectedColumns.forEach(columna => {
+        const nombreColumnaNormalizado = normalizeText(columna);
+        
+        // Verificar si el nombre de la columna contiene palabras clave geográficas
+        const esGeografica = palabrasClaveGeo.some(palabra => 
+            nombreColumnaNormalizado.includes(palabra)
+        );
+        
+        if (esGeografica) {
+            columnasGeograficas.push(columna);
+            tieneUbicacionesGeograficas = true;
+        }
+    });
+    
+    // Si hay datos geográficos, verificar también el contenido de las columnas
+    if (!tieneUbicacionesGeograficas && gestionData.length > 0) {
+        selectedColumns.forEach(columna => {
+            const indiceColumna = gestionHeaders.indexOf(columna);
+            if (indiceColumna !== -1 && verificarContenidoGeografico(columna, indiceColumna)) {
+                columnasGeograficas.push(columna);
+                tieneUbicacionesGeograficas = true;
+            }
+        });
+    }
+    
+    // Mostrar u ocultar botón de mapa
+    mostrarOcultarBotonMapa();
+    
+    console.log('🗺️ Columnas seleccionadas:', selectedColumns);
+    console.log('🗺️ Columnas geográficas detectadas:', columnasGeograficas);
+    console.log('🗺️ Tiene ubicaciones geográficas:', tieneUbicacionesGeograficas);
+}
+
+// Función para verificar si el contenido de una columna es geográfico
+function verificarContenidoGeografico(nombreColumna, indiceColumna) {
+    if (gestionData.length === 0) return false;
+    
+    // Tomar una muestra de los primeros 10 registros para análisis
+    const muestra = gestionData.slice(0, Math.min(10, gestionData.length));
+    let contadorCoincidencias = 0;
+    
+    muestra.forEach(fila => {
+        const valor = fila[indiceColumna];
+        if (valor && typeof valor === 'string') {
+            const valorLimpio = valor.trim();
+            
+            // Verificar patrón de coordenadas separadas por coma (ej: -12.1353,-76.9408)
+            const patronCoordenadasComa = /^-?\d+\.?\d*,-?\d+\.?\d*$/;
+            
+            // Verificar patrón de coordenadas individuales (ej: -74.123456)
+            const patronCoordenadas = /^-?\d+\.?\d*$/;
+            
+            // Verificar patrones de direcciones (contiene números y letras)
+            const patronDireccion = /\d+.*[a-zA-Z]|[a-zA-Z].*\d+/;
+            
+            // Verificar si es un par de coordenadas separadas por coma
+            if (patronCoordenadasComa.test(valorLimpio)) {
+                const coordenadas = valorLimpio.split(',');
+                if (coordenadas.length === 2) {
+                    const lat = parseFloat(coordenadas[0]);
+                    const lng = parseFloat(coordenadas[1]);
+                    
+                    // Verificar rangos válidos de latitud y longitud
+                    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                        contadorCoincidencias++;
+                    }
+                }
+            }
+            // Verificar si parece una coordenada individual
+            else if (patronCoordenadas.test(valorLimpio)) {
+                const numero = parseFloat(valorLimpio);
+                // Rangos típicos de latitud (-90 a 90) y longitud (-180 a 180)
+                if ((numero >= -90 && numero <= 90) || (numero >= -180 && numero <= 180)) {
+                    contadorCoincidencias++;
+                }
+            }
+            // Verificar si parece una dirección
+            else if (patronDireccion.test(valorLimpio) && valorLimpio.length > 5) {
+                contadorCoincidencias++;
+            }
+        }
+    });
+    
+    // Si al menos el 50% de la muestra parece geográfica, considerarla como tal
+    const porcentajeCoincidencias = contadorCoincidencias / muestra.length;
+    console.log(`🔍 Verificando contenido de "${nombreColumna}": ${contadorCoincidencias}/${muestra.length} coincidencias (${(porcentajeCoincidencias * 100).toFixed(1)}%)`);
+    
+    return porcentajeCoincidencias >= 0.5;
+}
+
+// Función para mostrar u ocultar el botón de mapa
+function mostrarOcultarBotonMapa() {
+    let botonMapa = document.getElementById('btn-ver-mapa');
+    
+    // Siempre mostrar el botón si hay datos cargados
+    if (gestionData.length > 0 && gestionHeaders.length > 0) {
+        // Si no existe el botón, crearlo
+        if (!botonMapa) {
+            crearBotonMapa();
+        } else {
+            // Si existe, mostrarlo
+            botonMapa.style.display = 'inline-block';
+        }
+    } else {
+        // Si no hay datos, ocultar el botón
+        if (botonMapa) {
+            botonMapa.style.display = 'none';
+        }
+    }
+}
+
+// Función para crear el botón "Ver en Mapa"
+function crearBotonMapa() {
+    const contenedorBotones = document.querySelector('.gestion-buttons');
+    if (!contenedorBotones) return;
+    
+    const botonMapa = document.createElement('button');
+    botonMapa.id = 'btn-ver-mapa';
+    botonMapa.className = 'gestion-btn gestion-btn-success';
+    botonMapa.innerHTML = '<i class="fas fa-map-marked-alt"></i> Ver en Mapa';
+    botonMapa.onclick = abrirModalMapa;
+    
+    contenedorBotones.appendChild(botonMapa);
+    console.log('🗺️ Botón "Ver en Mapa" creado');
+}
+
+// Variables para el mapa
+let mapaInstancia = null;
+let marcadoresGrupo = null;
+
+// Variables para el modo de dibujo
+let modoDibujoActivo = false;
+let trazoDibujo = null;
+let puntosSeleccionados = [];
+let marcadoresSeleccionados = [];
+
+// Función para abrir el modal de mapa
+function abrirModalMapa() {
+    if (gestionData.length === 0 || gestionHeaders.length === 0) {
+        alert('No hay datos cargados para mostrar en el mapa.');
+        return;
+    }
+    
+    const modal = document.getElementById('modal-mapa');
+    if (!modal) {
+        alert('Error: No se encontró el modal de mapa.');
+        return;
+    }
+    
+    // Crear selector de columnas para ubicación
+    crearSelectorColumnasUbicacion();
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
+    
+    console.log('🗺️ Modal de mapa abierto');
+}
+
+// Función para crear el selector de columnas de ubicación
+function crearSelectorColumnasUbicacion() {
+    const selector = document.getElementById('selector-columna-geo');
+    if (!selector) return;
+    
+    // Limpiar opciones existentes
+    selector.innerHTML = '<option value="">-- Selecciona una columna --</option>';
+    
+    // Agregar todas las columnas disponibles
+    gestionHeaders.forEach(columna => {
+        const option = document.createElement('option');
+        option.value = columna;
+        option.textContent = columna;
+        selector.appendChild(option);
+    });
+    
+    console.log('🗺️ Selector de columnas creado con', gestionHeaders.length, 'columnas');
+}
+
+// Función para cargar el mapa con la columna seleccionada
+function cargarMapaConColumna() {
+    const selector = document.getElementById('selector-columna-geo');
+    const columnaSeleccionada = selector.value;
+    
+    if (!columnaSeleccionada) {
+        alert('Por favor selecciona una columna que contenga información de ubicación.');
+        return;
+    }
+    
+    // Inicializar mapa directamente con la columna seleccionada
+    
+    // Inicializar mapa con la columna seleccionada
+    setTimeout(() => {
+        inicializarMapaConColumna(columnaSeleccionada);
+    }, 100);
+    
+    console.log('🗺️ Cargando mapa con columna:', columnaSeleccionada);
+}
+
+// Función para cerrar el modal de mapa
+function cerrarModalMapa() {
+    const modal = document.getElementById('modal-mapa');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    // Ocultar estadísticas del mapa
+    const stats = document.querySelector('.mapa-stats');
+    if (stats) {
+        stats.style.display = 'none';
+    }
+    
+    // Limpiar instancia del mapa
+    if (mapaInstancia) {
+        mapaInstancia.remove();
+        mapaInstancia = null;
+        marcadoresGrupo = null;
+    }
+    
+    console.log('🗺️ Modal de mapa cerrado');
+}
+
+// Función para inicializar el mapa
+function inicializarMapa() {
+    const contenedorMapa = document.getElementById('mapa-container');
+    if (!contenedorMapa) return;
+    
+    // Limpiar mapa anterior si existe
+    if (mapaInstancia) {
+        mapaInstancia.remove();
+    }
+    
+    // Crear nueva instancia del mapa centrado en Colombia
+    mapaInstancia = L.map('mapa-container').setView([4.5709, -74.2973], 6);
+    
+    // Agregar capa de tiles (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(mapaInstancia);
+    
+    // Crear grupo de marcadores
+    marcadoresGrupo = L.layerGroup().addTo(mapaInstancia);
+    
+    // Procesar y agregar marcadores
+    procesarDatosGeograficos();
+    
+    console.log('🗺️ Mapa inicializado');
+}
+
+// Función para inicializar el mapa con una columna específica seleccionada por el usuario
+function inicializarMapaConColumna(columnaSeleccionada) {
+    const contenedorMapa = document.getElementById('mapa-container');
+    if (!contenedorMapa) return;
+    
+    // Limpiar mapa anterior si existe
+    if (mapaInstancia) {
+        mapaInstancia.remove();
+    }
+    
+    // Crear nueva instancia del mapa centrado en Colombia
+    mapaInstancia = L.map('mapa-container').setView([4.5709, -74.2973], 6);
+    
+    // Agregar capa de tiles (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(mapaInstancia);
+    
+    // Crear grupo de marcadores
+    marcadoresGrupo = L.layerGroup().addTo(mapaInstancia);
+    
+    // Procesar y agregar marcadores con la columna seleccionada
+    procesarDatosGeograficosConColumna(columnaSeleccionada);
+    
+    console.log('🗺️ Mapa inicializado con columna:', columnaSeleccionada);
+}
+
+// Función para procesar datos geográficos y crear marcadores
+function procesarDatosGeograficos() {
+    if (!gestionData || gestionData.length === 0) {
+        return;
+    }
+    
+    let puntosValidos = 0;
+    const bounds = L.latLngBounds();
+    
+    // Identificar índices de columnas geográficas
+    const indicesColumnas = {};
+    columnasGeograficas.forEach(columna => {
+        const indice = gestionHeaders.indexOf(columna);
+        if (indice !== -1) {
+            indicesColumnas[columna] = indice;
+        }
+    });
+    
+    // Set para evitar marcadores duplicados
+    const posicionesExistentes = new Set();
+    
+    // Procesar cada fila de datos
+    gestionData.forEach((fila, indiceFila) => {
+        const coordenadas = extraerCoordenadas(fila, indicesColumnas);
+        
+        if (coordenadas.lat !== null && coordenadas.lng !== null) {
+            const posKey = `${coordenadas.lat},${coordenadas.lng}`;
+            
+            // Solo crear marcador si la posición no existe
+            if (!posicionesExistentes.has(posKey)) {
+                posicionesExistentes.add(posKey);
+                
+                // Crear marcador
+                const marcador = L.marker([coordenadas.lat, coordenadas.lng])
+                    .addTo(marcadoresGrupo);
+                
+                // Crear contenido del popup
+                const contenidoPopup = crearContenidoPopup(fila, indiceFila + 1);
+                marcador.bindPopup(contenidoPopup);
+                
+                // Agregar a bounds para centrar el mapa
+                bounds.extend([coordenadas.lat, coordenadas.lng]);
+                puntosValidos++;
+            } else {
+                console.log(`⚠️ Marcador duplicado evitado en posición [${coordenadas.lat}, ${coordenadas.lng}] - Fila ${indiceFila + 1}`);
+            }
+        }
+    });
+    
+    // Centrar mapa en todos los marcadores si hay puntos válidos
+    if (puntosValidos > 0) {
+        mapaInstancia.fitBounds(bounds, { padding: [20, 20] });
+    }
+    
+    console.log(`🗺️ ${puntosValidos} puntos procesados y agregados al mapa`);
+}
+
+// Función para procesar datos geográficos con una columna específica
+function procesarDatosGeograficosConColumna(columnaSeleccionada) {
+    if (!gestionData || gestionData.length === 0) {
+        return;
+    }
+    
+    let puntosValidos = 0;
+    const bounds = L.latLngBounds();
+    const indiceColumna = gestionHeaders.indexOf(columnaSeleccionada);
+    
+    if (indiceColumna === -1) {
+        alert('Error: No se encontró la columna seleccionada.');
+        return;
+    }
+    
+    // Set para evitar marcadores duplicados
+    const posicionesExistentes = new Set();
+    
+    // Procesar cada fila de datos
+    gestionData.forEach((fila, indiceFila) => {
+        const valorUbicacion = fila[columnaSeleccionada];
+        const coordenadas = extraerCoordenadasDeTexto(valorUbicacion);
+        
+        if (coordenadas.lat !== null && coordenadas.lng !== null) {
+            const posKey = `${coordenadas.lat},${coordenadas.lng}`;
+            
+            // Solo crear marcador si la posición no existe
+            if (!posicionesExistentes.has(posKey)) {
+                posicionesExistentes.add(posKey);
+                
+                // Crear marcador
+                const marcador = L.marker([coordenadas.lat, coordenadas.lng])
+                    .addTo(marcadoresGrupo);
+                
+                // Crear contenido del popup
+                const contenidoPopup = crearContenidoPopupConUbicacion(fila, indiceFila + 1, columnaSeleccionada, valorUbicacion);
+                marcador.bindPopup(contenidoPopup);
+                
+                // Agregar a bounds para centrar el mapa
+                bounds.extend([coordenadas.lat, coordenadas.lng]);
+                puntosValidos++;
+            } else {
+                console.log(`⚠️ Marcador duplicado evitado en posición [${coordenadas.lat}, ${coordenadas.lng}] - Fila ${indiceFila + 1} (Columna: ${columnaSeleccionada})`);
+            }
+        }
+    });
+    
+    // Centrar mapa en todos los marcadores si hay puntos válidos
+    if (puntosValidos > 0) {
+        mapaInstancia.fitBounds(bounds, { padding: [20, 20] });
+    } else {
+        alert(`No se encontraron coordenadas válidas en la columna "${columnaSeleccionada}". 
+        
+Formatos soportados:
+• Latitud, Longitud (ej: 4.5709, -74.2973)
+• Latitud,Longitud (ej: 4.5709,-74.2973)
+• Coordenadas separadas por espacios (ej: 4.5709 -74.2973)`);
+    }
+    
+    console.log(`🗺️ ${puntosValidos} puntos procesados de la columna "${columnaSeleccionada}"`);
+}
+
+// Función para extraer coordenadas de una fila
+function extraerCoordenadas(fila, indicesColumnas) {
+    let lat = null;
+    let lng = null;
+    
+    // Buscar latitud y longitud en las columnas detectadas
+    Object.keys(indicesColumnas).forEach(nombreColumna => {
+        const indice = indicesColumnas[nombreColumna];
+        const valor = fila[indice];
+        
+        if (valor && typeof valor === 'string') {
+            const valorLimpio = valor.trim();
+            const numero = parseFloat(valorLimpio);
+            
+            if (!isNaN(numero)) {
+                const nombreLower = nombreColumna.toLowerCase();
+                
+                // Detectar latitud
+                if (nombreLower.includes('lat') && numero >= -90 && numero <= 90) {
+                    lat = numero;
+                }
+                
+                // Detectar longitud
+                if ((nombreLower.includes('lng') || nombreLower.includes('lon') || nombreLower.includes('longitud')) 
+                    && numero >= -180 && numero <= 180) {
+                    lng = numero;
+                }
+            }
+        }
+    });
+    
+    return { lat, lng };
+}
+
+// Función para extraer coordenadas de un texto
+function extraerCoordenadasDeTexto(texto) {
+    if (!texto || typeof texto !== 'string') {
+        return { lat: null, lng: null };
+    }
+    
+    const textoLimpio = texto.trim();
+    
+    // Patrones para diferentes formatos de coordenadas
+    const patrones = [
+        // Formato: "latitud, longitud" o "latitud,longitud"
+        /^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/,
+        // Formato: "latitud longitud" (separado por espacio)
+        /^(-?\d+\.?\d*)\s+(-?\d+\.?\d*)$/,
+        // Formato: "lat:latitud lng:longitud" o "lat:latitud lon:longitud"
+        /lat:\s*(-?\d+\.?\d*)\s+l(?:ng|on):\s*(-?\d+\.?\d*)/i,
+        // Formato: "latitud;longitud"
+        /^(-?\d+\.?\d*)\s*;\s*(-?\d+\.?\d*)$/
+    ];
+    
+    for (const patron of patrones) {
+        const coincidencia = textoLimpio.match(patron);
+        if (coincidencia) {
+            const lat = parseFloat(coincidencia[1]);
+            const lng = parseFloat(coincidencia[2]);
+            
+            // Validar rangos de coordenadas
+            if (!isNaN(lat) && !isNaN(lng) && 
+                lat >= -90 && lat <= 90 && 
+                lng >= -180 && lng <= 180) {
+                return { lat, lng };
+            }
+        }
+    }
+    
+    return { lat: null, lng: null };
+}
+
+// Función para crear contenido del popup con información de ubicación
+function crearContenidoPopupConUbicacion(fila, numeroFila, columnaUbicacion, valorUbicacion) {
+    let contenido = `<div style="max-width: 250px;">
+        <h4 style="margin: 0 0 10px 0; color: #059669;">Registro #${numeroFila}</h4>
+        <p style="margin: 5px 0; font-size: 12px; background: #f0f9ff; padding: 5px; border-radius: 4px;">
+            <strong>📍 ${columnaUbicacion}:</strong><br>${valorUbicacion}
+        </p>`;
+    
+    // Mostrar información de las primeras 4 columnas (excluyendo la de ubicación si está entre ellas)
+    let columnasAMostrar = 0;
+    const maxColumnas = 4;
+    
+    for (let i = 0; i < gestionHeaders.length && columnasAMostrar < maxColumnas; i++) {
+        const nombreColumna = gestionHeaders[i];
+        
+        // Saltar la columna de ubicación si ya la mostramos arriba
+        if (nombreColumna === columnaUbicacion) continue;
+        
+        const valor = fila[i] || 'N/A';
+        contenido += `<p style="margin: 5px 0; font-size: 12px;">
+            <strong>${nombreColumna}:</strong> ${valor}
+        </p>`;
+        columnasAMostrar++;
+    }
+    
+    const columnasRestantes = gestionHeaders.length - columnasAMostrar - 1; // -1 por la columna de ubicación
+    if (columnasRestantes > 0) {
+        contenido += `<p style="margin: 5px 0; font-size: 11px; color: #666; font-style: italic;">
+            ... y ${columnasRestantes} columnas más
+        </p>`;
+    }
+    
+    contenido += '</div>';
+    return contenido;
+}
+
+// Función para crear contenido del popup
+function crearContenidoPopup(fila, numeroFila) {
+    let contenido = `<div style="max-width: 250px;"><h4 style="margin: 0 0 10px 0; color: #059669;">Registro #${numeroFila}</h4>`;
+    
+    // Mostrar información de las primeras 5 columnas o todas si son menos
+    const columnasAMostrar = Math.min(5, gestionHeaders.length);
+    
+    for (let i = 0; i < columnasAMostrar; i++) {
+        const nombreColumna = gestionHeaders[i];
+        const valor = fila[i] || 'N/A';
+        
+        contenido += `<p style="margin: 5px 0; font-size: 12px;">
+            <strong>${nombreColumna}:</strong> ${valor}
+        </p>`;
+    }
+    
+    if (gestionHeaders.length > 5) {
+        contenido += `<p style="margin: 5px 0; font-size: 11px; color: #666; font-style: italic;">
+            ... y ${gestionHeaders.length - 5} columnas más
+        </p>`;
+    }
+    
+    contenido += '</div>';
+    return contenido;
+}
+
+// Función para centrar el mapa
+function centrarMapa() {
+    if (!mapaInstancia || !marcadoresGrupo) return;
+    
+    const marcadores = marcadoresGrupo.getLayers();
+    if (marcadores.length === 0) return;
+    
+    const bounds = L.latLngBounds();
+    marcadores.forEach(marcador => {
+        bounds.extend(marcador.getLatLng());
+    });
+    
+    mapaInstancia.fitBounds(bounds, { padding: [20, 20] });
+    console.log('🗺️ Mapa centrado en todos los marcadores');
+}
+
+// Función para exportar ubicaciones
+function exportarUbicaciones() {
+    if (!gestionData || gestionData.length === 0) {
+        alert('No hay datos para exportar.');
+        return;
+    }
+    
+    // Crear datos para exportar solo con columnas geográficas
+    const datosExportar = [];
+    const encabezados = ['Registro', ...columnasGeograficas];
+    datosExportar.push(encabezados);
+    
+    gestionData.forEach((fila, indice) => {
+        const filaExportar = [indice + 1];
+        
+        columnasGeograficas.forEach(columna => {
+            const indiceColumna = gestionHeaders.indexOf(columna);
+            const valor = indiceColumna !== -1 ? fila[indiceColumna] : 'N/A';
+            filaExportar.push(valor);
+        });
+        
+        datosExportar.push(filaExportar);
+    });
+    
+    // Convertir a CSV
+    const csvContent = datosExportar.map(fila => 
+        fila.map(campo => `"${campo}"`).join(',')
+    ).join('\n');
+    
+    // Descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'ubicaciones_geograficas.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('🗺️ Ubicaciones exportadas a CSV');
+}
+
+
+
+
+
+// Función para cerrar modal de selector de columnas
+function cerrarSelectorColumnas() {
+    const modal = document.getElementById('modalSelectorColumnas');
+    if (modal) {
+        modal.remove();
+        console.log('Modal de selector de columnas cerrado');
+    }
+}
+
+// ========== FUNCIONES PARA MODO DE DIBUJO ==========
+
+// Función para activar/desactivar el modo de dibujo
+function toggleModoDibujo() {
+    if (!mapaInstancia) {
+        alert('Primero debes cargar el mapa.');
+        return;
+    }
+    
+    const botonModo = document.getElementById('btn-modo-dibujo');
+    const botonLimpiar = document.getElementById('btn-limpiar-seleccion');
+    
+    if (modoDibujoActivo) {
+        // Desactivar modo de dibujo
+        desactivarModoDibujo();
+        botonModo.innerHTML = '<i class="fas fa-pencil-alt"></i> Modo Dibujo';
+        botonModo.classList.remove('btn-mapa-primary');
+        botonModo.classList.add('btn-mapa-secondary');
+        botonLimpiar.style.display = 'none';
+        console.log('🎨 Modo de dibujo desactivado');
+    } else {
+        // Activar modo de dibujo
+        activarModoDibujo();
+        botonModo.innerHTML = '<i class="fas fa-stop"></i> Detener Dibujo';
+        botonModo.classList.remove('btn-mapa-secondary');
+        botonModo.classList.add('btn-mapa-primary');
+        botonLimpiar.style.display = 'inline-block';
+        console.log('🎨 Modo de dibujo activado');
+    }
+}
+
+// Función para activar el modo de dibujo
+function activarModoDibujo() {
+    modoDibujoActivo = true;
+    
+    // Cambiar cursor del mapa
+    mapaInstancia.getContainer().style.cursor = 'crosshair';
+    
+    // Agregar eventos de dibujo
+    mapaInstancia.on('mousedown', iniciarDibujo);
+    mapaInstancia.on('mousemove', continuarDibujo);
+    mapaInstancia.on('mouseup', finalizarDibujo);
+    
+    // Deshabilitar interacciones del mapa durante el dibujo
+    mapaInstancia.dragging.disable();
+    mapaInstancia.touchZoom.disable();
+    mapaInstancia.doubleClickZoom.disable();
+    mapaInstancia.scrollWheelZoom.disable();
+    mapaInstancia.boxZoom.disable();
+    mapaInstancia.keyboard.disable();
+    
+    console.log('🎨 Eventos de dibujo configurados');
+}
+
+// Función para desactivar el modo de dibujo
+function desactivarModoDibujo() {
+    modoDibujoActivo = false;
+    
+    // Restaurar cursor del mapa
+    mapaInstancia.getContainer().style.cursor = '';
+    
+    // Remover eventos de dibujo
+    mapaInstancia.off('mousedown', iniciarDibujo);
+    mapaInstancia.off('mousemove', continuarDibujo);
+    mapaInstancia.off('mouseup', finalizarDibujo);
+    
+    // Rehabilitar interacciones del mapa
+    mapaInstancia.dragging.enable();
+    mapaInstancia.touchZoom.enable();
+    mapaInstancia.doubleClickZoom.enable();
+    mapaInstancia.scrollWheelZoom.enable();
+    mapaInstancia.boxZoom.enable();
+    mapaInstancia.keyboard.enable();
+    
+    console.log('🎨 Eventos de dibujo removidos');
+}
+
+// Variables para el dibujo
+let dibujando = false;
+let puntosTrazo = [];
+
+// Función para iniciar el dibujo
+function iniciarDibujo(e) {
+    if (!modoDibujoActivo) return;
+    
+    dibujando = true;
+    puntosTrazo = [e.latlng];
+    
+    // Crear polyline inicial
+    trazoDibujo = L.polyline(puntosTrazo, {
+        color: '#ff0000',
+        weight: 3,
+        opacity: 0.8
+    }).addTo(mapaInstancia);
+    
+    console.log('🎨 Iniciando dibujo en:', e.latlng);
+}
+
+// Función para continuar el dibujo
+function continuarDibujo(e) {
+    if (!modoDibujoActivo || !dibujando || !trazoDibujo) return;
+    
+    puntosTrazo.push(e.latlng);
+    trazoDibujo.setLatLngs(puntosTrazo);
+}
+
+// Función para finalizar el dibujo
+function finalizarDibujo(e) {
+    if (!modoDibujoActivo || !dibujando) return;
+    
+    dibujando = false;
+    
+    if (puntosTrazo.length > 2) {
+        // Crear una copia del trazo para cerrar el polígono sin modificar el original
+        const puntosPoligono = [...puntosTrazo, puntosTrazo[0]];
+        trazoDibujo.setLatLngs(puntosPoligono);
+        
+        // Seleccionar puntos dentro del área dibujada (usar el trazo original sin duplicar)
+        seleccionarPuntosEnArea();
+    } else {
+        // Si el trazo es muy corto, eliminarlo
+        if (trazoDibujo) {
+            mapaInstancia.removeLayer(trazoDibujo);
+            trazoDibujo = null;
+        }
+    }
+    
+    console.log('🎨 Dibujo finalizado con', puntosTrazo.length, 'puntos');
+}
+
+// Función para seleccionar puntos dentro del área dibujada
+function seleccionarPuntosEnArea() {
+    if (!trazoDibujo || !marcadoresGrupo) return;
+    
+    // Limpiar selección anterior
+    limpiarSeleccionAnterior();
+    
+    const marcadores = marcadoresGrupo.getLayers();
+    let puntosSeleccionadosCount = 0;
+    
+    console.log(`🔍 DEBUG: Iniciando selección con ${marcadores.length} marcadores totales`);
+    console.log(`🔍 DEBUG: Polígono tiene ${puntosTrazo.length} puntos:`, puntosTrazo);
+    
+    // Verificar si hay marcadores duplicados
+    const posicionesUnicas = new Set();
+    const marcadoresDuplicados = [];
+    marcadores.forEach((marcador, index) => {
+        const pos = marcador.getLatLng();
+        const posKey = `${pos.lat},${pos.lng}`;
+        if (posicionesUnicas.has(posKey)) {
+            marcadoresDuplicados.push({index, posicion: posKey});
+        } else {
+            posicionesUnicas.add(posKey);
+        }
+    });
+    
+    if (marcadoresDuplicados.length > 0) {
+        console.log(`⚠️ DEBUG: Se encontraron ${marcadoresDuplicados.length} marcadores duplicados:`, marcadoresDuplicados);
+    }
+    console.log(`🔍 DEBUG: Posiciones únicas: ${posicionesUnicas.size}`);
+    
+    // Usar Set para contar solo posiciones únicas seleccionadas
+    const posicionesSeleccionadas = new Set();
+    
+    marcadores.forEach((marcador, index) => {
+        const posicion = marcador.getLatLng();
+        const posKey = `${posicion.lat},${posicion.lng}`;
+        const dentroDelPoligono = puntoEnPoligono(posicion, puntosTrazo);
+        
+        console.log(`🔍 DEBUG: Marcador ${index + 1} en posición [${posicion.lat}, ${posicion.lng}] - Dentro: ${dentroDelPoligono}`);
+        
+        // Verificar si el punto está dentro del polígono dibujado
+        if (dentroDelPoligono) {
+            // Guardar el icono original si no está guardado
+            if (!marcador._iconoOriginal) {
+                // Obtener el icono actual del marcador
+                const iconoActual = marcador.options.icon;
+                if (iconoActual) {
+                    marcador._iconoOriginal = iconoActual;
+                } else {
+                    // Si no tiene icono personalizado, crear uno por defecto
+                    marcador._iconoOriginal = new L.Icon.Default();
+                }
+                console.log(`💾 DEBUG: Icono original guardado para marcador ${index + 1}`);
+            }
+            
+            // Crear icono rojo para marcador seleccionado usando divIcon con CSS
+            const iconoSeleccionado = L.divIcon({
+                className: 'custom-marker-selected',
+                html: '<div style="background-color: #ff0000; width: 25px; height: 25px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.4);"></div>',
+                iconSize: [25, 25],
+                iconAnchor: [12, 24],
+                popupAnchor: [0, -24]
+            });
+            
+            marcador.setIcon(iconoSeleccionado);
+            marcadoresSeleccionados.push(marcador);
+            
+            // Solo contar posiciones únicas
+            if (!posicionesSeleccionadas.has(posKey)) {
+                posicionesSeleccionadas.add(posKey);
+                puntosSeleccionadosCount++;
+                console.log(`✅ DEBUG: Marcador ${index + 1} SELECCIONADO - Nueva posición única (Total únicas: ${puntosSeleccionadosCount})`);
+            } else {
+                console.log(`⚠️ DEBUG: Marcador ${index + 1} SELECCIONADO - Posición duplicada (no se cuenta)`);
+            }
+        }
+    });
+    
+    console.log(`🎯 RESULTADO: ${puntosSeleccionadosCount} puntos seleccionados dentro del área dibujada`);
+    console.log(`🎯 DEBUG: Marcadores seleccionados:`, marcadoresSeleccionados.length);
+    
+    // Mostrar mensaje con el resultado
+    if (puntosSeleccionadosCount > 0) {
+        alert(`✅ Se han seleccionado ${puntosSeleccionadosCount} puntos dentro del área dibujada.`);
+    } else {
+        alert('❌ No se encontraron puntos dentro del área dibujada.');
+    }
+}
+
+// Función para verificar si un punto está dentro de un polígono (algoritmo ray casting)
+function puntoEnPoligono(punto, poligono) {
+    const x = punto.lat;
+    const y = punto.lng;
+    let dentro = false;
+    
+    for (let i = 0, j = poligono.length - 1; i < poligono.length; j = i++) {
+        const xi = poligono[i].lat;
+        const yi = poligono[i].lng;
+        const xj = poligono[j].lat;
+        const yj = poligono[j].lng;
+        
+        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+            dentro = !dentro;
+        }
+    }
+    
+    return dentro;
+}
+
+// Función para limpiar la selección anterior
+function limpiarSeleccionAnterior() {
+    console.log(`🔄 DEBUG: Restaurando ${marcadoresSeleccionados.length} marcadores seleccionados`);
+    
+    // Restaurar el icono original de los marcadores seleccionados
+    marcadoresSeleccionados.forEach((marcador, index) => {
+        if (marcador._iconoOriginal) {
+            marcador.setIcon(marcador._iconoOriginal);
+            console.log(`✅ DEBUG: Icono original restaurado para marcador ${index + 1}`);
+        } else {
+            // Si no hay icono original guardado, usar el icono por defecto de Leaflet
+            marcador.setIcon(new L.Icon.Default());
+            console.log(`⚠️ DEBUG: Usando icono por defecto para marcador ${index + 1} (no había original)`);
+        }
+    });
+    
+    marcadoresSeleccionados = [];
+    console.log(`🔄 DEBUG: Selección anterior limpiada completamente`);
+}
+
+// Función para limpiar la selección y el trazo
+function limpiarSeleccion() {
+    // Limpiar selección de marcadores
+    limpiarSeleccionAnterior();
+    
+    // Remover el trazo del mapa de forma más robusta
+    if (trazoDibujo) {
+        try {
+            mapaInstancia.removeLayer(trazoDibujo);
+        } catch (e) {
+            console.warn('Error al remover trazo:', e);
+        }
+        trazoDibujo = null;
+    }
+    
+    // Limpiar variables de dibujo
+    puntosTrazo = [];
+    puntosSeleccionados = [];
+    dibujando = false;
+    
+    // Forzar redibujado del mapa para asegurar limpieza visual
+    if (mapaInstancia) {
+        mapaInstancia.invalidateSize();
+    }
+    
+    console.log('🧹 Selección y trazo limpiados completamente');
+    alert('✅ Selección limpiada correctamente.');
+}
+
 // Inicializar dashboard cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DOM] DOM cargado, inicializando dashboard...');
     new DashboardManager();
-}); 
+});
