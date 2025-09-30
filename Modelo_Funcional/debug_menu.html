@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Menu Asignación</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            display: block; 
+            margin: 10px 0; 
+            padding: 10px 20px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        .test-button:hover { background: #0056b3; }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            background: #f8f9fa; 
+            border-left: 4px solid #007bff; 
+        }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+    </style>
+</head>
+<body>
+    <h1>Debug Menu de Asignación</h1>
+    
+    <h2>Pruebas de Funciones</h2>
+    <button class="test-button" onclick="testAsignarCuadrilla()">Test: asignarCuadrilla()</button>
+    <button class="test-button" onclick="testAsignarEfectivoPolicial()">Test: asignarEfectivoPolicial()</button>
+    <button class="test-button" onclick="testMostrarListaCuadrillas()">Test: mostrarListaCuadrillas()</button>
+    <button class="test-button" onclick="testMostrarListaEfectivos()">Test: mostrarListaEfectivos()</button>
+    
+    <h2>Pruebas de Elementos DOM</h2>
+    <button class="test-button" onclick="testElementosDOM()">Test: Verificar elementos DOM</button>
+    
+    <div id="results"></div>
+
+    <script src="js/dashboard_simple.js"></script>
+    <script>
+        function addResult(message, isError = false, isSuccess = false) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        function testAsignarCuadrilla() {
+            try {
+                if (typeof asignarCuadrilla === 'function') {
+                    asignarCuadrilla();
+                    addResult('✅ asignarCuadrilla() ejecutada correctamente', false, true);
+                } else {
+                    addResult('❌ asignarCuadrilla no está definida', true);
+                }
+            } catch (error) {
+                addResult(`❌ Error en asignarCuadrilla(): ${error.message}`, true);
+            }
+        }
+
+        function testAsignarEfectivoPolicial() {
+            try {
+                if (typeof asignarEfectivoPolicial === 'function') {
+                    asignarEfectivoPolicial();
+                    addResult('✅ asignarEfectivoPolicial() ejecutada correctamente', false, true);
+                } else {
+                    addResult('❌ asignarEfectivoPolicial no está definida', true);
+                }
+            } catch (error) {
+                addResult(`❌ Error en asignarEfectivoPolicial(): ${error.message}`, true);
+            }
+        }
+
+        function testMostrarListaCuadrillas() {
+            try {
+                if (typeof mostrarListaCuadrillas === 'function') {
+                    mostrarListaCuadrillas();
+                    addResult('✅ mostrarListaCuadrillas() ejecutada correctamente', false, true);
+                } else {
+                    addResult('❌ mostrarListaCuadrillas no está definida', true);
+                }
+            } catch (error) {
+                addResult(`❌ Error en mostrarListaCuadrillas(): ${error.message}`, true);
+            }
+        }
+
+        function testMostrarListaEfectivos() {
+            try {
+                if (typeof mostrarListaEfectivos === 'function') {
+                    mostrarListaEfectivos();
+                    addResult('✅ mostrarListaEfectivos() ejecutada correctamente', false, true);
+                } else {
+                    addResult('❌ mostrarListaEfectivos no está definida', true);
+                }
+            } catch (error) {
+                addResult(`❌ Error en mostrarListaEfectivos(): ${error.message}`, true);
+            }
+        }
+
+        function testElementosDOM() {
+            const elementos = [
+                'menu-puntos-seleccionados',
+                'lista-cuadrillas', 
+                'lista-efectivos'
+            ];
+            
+            elementos.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    addResult(`✅ Elemento #${id} encontrado`, false, true);
+                } else {
+                    addResult(`❌ Elemento #${id} NO encontrado`, true);
+                }
+            });
+        }
+
+        // Test inicial al cargar la página
+        window.onload = function() {
+            addResult('🔍 Página de debug cargada. Iniciando pruebas...', false, true);
+            testElementosDOM();
+        };
+    </script>
+</body>
+</html>

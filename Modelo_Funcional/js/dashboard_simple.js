@@ -5664,6 +5664,7 @@ let modoDibujoActivo = false;
 let trazoDibujo = null;
 let puntosSeleccionados = [];
 let marcadoresSeleccionados = [];
+let asignaciones = [];
 
 // Función para abrir el modal de mapa
 function abrirModalMapa() {
@@ -5678,13 +5679,16 @@ function abrirModalMapa() {
         return;
     }
     
-    // Crear selector de columnas para ubicación
-    crearSelectorColumnasUbicacion();
+    // Crear selector de columnas para ubicación con detección automática
+    crearSelectorColumnasUbicacionMejorado();
     
     // Mostrar modal
     modal.style.display = 'flex';
     
-    console.log('🗺️ Modal de mapa abierto');
+    // Auto-detectar y cargar mapa si hay columnas geográficas
+    autoDetectarYCargarMapa();
+    
+    console.log('🗺️ Modal de mapa abierto con', gestionData.length, 'registros');
 }
 
 // Función para crear el selector de columnas de ubicación
@@ -5751,7 +5755,7 @@ function cerrarModalMapa() {
 
 // Función para inicializar el mapa
 function inicializarMapa() {
-    const contenedorMapa = document.getElementById('mapa-container');
+    const contenedorMapa = document.getElementById('mapa-leaflet');
     if (!contenedorMapa) return;
     
     // Limpiar mapa anterior si existe
@@ -5760,7 +5764,7 @@ function inicializarMapa() {
     }
     
     // Crear nueva instancia del mapa centrado en Colombia
-    mapaInstancia = L.map('mapa-container').setView([4.5709, -74.2973], 6);
+    mapaInstancia = L.map('mapa-leaflet').setView([4.5709, -74.2973], 6);
     
     // Agregar capa de tiles (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -5779,7 +5783,7 @@ function inicializarMapa() {
 
 // Función para inicializar el mapa con una columna específica seleccionada por el usuario
 function inicializarMapaConColumna(columnaSeleccionada) {
-    const contenedorMapa = document.getElementById('mapa-container');
+    const contenedorMapa = document.getElementById('mapa-leaflet');
     if (!contenedorMapa) return;
     
     // Limpiar mapa anterior si existe
@@ -5788,7 +5792,7 @@ function inicializarMapaConColumna(columnaSeleccionada) {
     }
     
     // Crear nueva instancia del mapa centrado en Colombia
-    mapaInstancia = L.map('mapa-container').setView([4.5709, -74.2973], 6);
+    mapaInstancia = L.map('mapa-leaflet').setView([4.5709, -74.2973], 6);
     
     // Agregar capa de tiles (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -6342,9 +6346,9 @@ function seleccionarPuntosEnArea() {
     console.log(`🎯 RESULTADO: ${puntosSeleccionadosCount} puntos seleccionados dentro del área dibujada`);
     console.log(`🎯 DEBUG: Marcadores seleccionados:`, marcadoresSeleccionados.length);
     
-    // Mostrar mensaje con el resultado
+    // Mostrar menú desplegable con el resultado
     if (puntosSeleccionadosCount > 0) {
-        alert(`✅ Se han seleccionado ${puntosSeleccionadosCount} puntos dentro del área dibujada.`);
+        mostrarMenuPuntosSeleccionados(puntosSeleccionadosCount);
     } else {
         alert('❌ No se encontraron puntos dentro del área dibujada.');
     }
@@ -6419,8 +6423,1627 @@ function limpiarSeleccion() {
     alert('✅ Selección limpiada correctamente.');
 }
 
+// ========================================
+// FUNCIONES PARA MENÚ DE PUNTOS SELECCIONADOS
+// ========================================
+
+// Función para mostrar el menú de puntos seleccionados
+function mostrarMenuPuntosSeleccionados() {
+    const menu = document.getElementById('menu-lateral-puntos');
+    const contador = document.getElementById('contador-puntos');
+    const cantidadPuntos = marcadoresSeleccionados.length;
+    
+    if (menu && contador) {
+        contador.textContent = cantidadPuntos;
+        menu.style.display = 'flex'; // Cambiar a flex para el diseño lateral
+        console.log(`📋 Menú lateral de puntos seleccionados mostrado con ${cantidadPuntos} puntos`);
+    } else {
+        console.error('❌ No se encontró el menú de puntos seleccionados en el DOM');
+        // Fallback al alert original
+        alert(`✅ Se han seleccionado ${cantidadPuntos} puntos.`);
+    }
+}
+
+// Función para cerrar el menú de puntos seleccionados
+function cerrarMenuPuntos() {
+    const menu = document.getElementById('menu-lateral-puntos');
+    if (menu) {
+        menu.style.display = 'none';
+        console.log('📋 Menú lateral de puntos seleccionados cerrado');
+    }
+}
+
+// Función para asignar cuadrilla a los puntos seleccionados
+function asignarCuadrilla() {
+    console.log('🔧 asignarCuadrilla() llamada - Marcadores:', marcadoresSeleccionados.length);
+    
+    if (marcadoresSeleccionados.length === 0) {
+        alert('❌ No hay puntos seleccionados.\n\nPara usar esta función:\n1. Dibuja un área en el mapa\n2. Selecciona puntos dentro del área\n3. Usa este botón para asignar cuadrillas');
+        return;
+    }
+    
+    try {
+        mostrarListaCuadrillas();
+        console.log('✅ Lista de cuadrillas mostrada correctamente');
+    } catch (error) {
+        console.error('❌ Error al mostrar lista de cuadrillas:', error);
+        alert('❌ Error al mostrar la lista de cuadrillas. Revisa la consola para más detalles.');
+    }
+}
+
+// Función para programar tarea en los puntos seleccionados
+function programarTarea() {
+    console.log('📅 programarTarea() llamada - Marcadores:', marcadoresSeleccionados.length);
+    
+    if (marcadoresSeleccionados.length === 0) {
+        alert('❌ No hay puntos seleccionados.\n\nPara usar esta función:\n1. Dibuja un área en el mapa\n2. Selecciona puntos dentro del área\n3. Usa este botón para programar tareas');
+        return;
+    }
+    
+    // Por ahora, mostrar un mensaje simple
+    alert(`📅 Función "Programar Tarea" en desarrollo.\nPuntos seleccionados: ${marcadoresSeleccionados.length}`);
+    console.log('📅 Programar tarea - Puntos seleccionados:', marcadoresSeleccionados.length);
+}
+
+// Función para mostrar lista de cuadrillas
+function mostrarListaCuadrillas() {
+    const listaCuadrillas = document.querySelector('.lista-cuadrillas');
+    
+    if (listaCuadrillas) {
+        listaCuadrillas.style.display = 'flex';
+        console.log('✅ Lista de cuadrillas mostrada - Menú principal permanece visible');
+    }
+}
+
+// Función para mostrar lista de efectivos policiales
+function mostrarListaEfectivos() {
+    const listaEfectivos = document.querySelector('#lista-efectivos');
+    
+    if (!listaEfectivos) {
+        console.error('❌ No se encontró el elemento #lista-efectivos');
+        return;
+    }
+    
+    // Mostrar lista de efectivos sin ocultar el menú principal
+    listaEfectivos.style.display = 'flex';
+    console.log('✅ Lista de efectivos mostrada - Menú principal permanece visible');
+}
+
+// Función para cerrar lista de cuadrillas
+function cerrarListaCuadrillas() {
+    const listaCuadrillas = document.querySelector('.lista-cuadrillas');
+    
+    if (listaCuadrillas) {
+        listaCuadrillas.style.display = 'none';
+        console.log('✅ Lista de cuadrillas cerrada - Menú principal permanece visible');
+    }
+}
+
+// Función para cerrar lista de efectivos
+function cerrarListaEfectivos() {
+    const listaEfectivos = document.querySelector('#lista-efectivos');
+    
+    if (listaEfectivos) {
+        listaEfectivos.style.display = 'none';
+        console.log('✅ Lista de efectivos cerrada - Menú principal permanece visible');
+    }
+}
+
+// Función para seleccionar cuadrilla específica
+function seleccionarCuadrilla(nombre, detalle) {
+    if (marcadoresSeleccionados.length === 0) {
+        return;
+    }
+    
+    // Aquí se implementaría la lógica para asignar la cuadrilla específica
+    console.log(`Cuadrilla asignada: ${nombre} - ${detalle} - Puntos: ${marcadoresSeleccionados.length}`);
+    alert(`✅ Cuadrilla "${nombre}" asignada a ${marcadoresSeleccionados.length} puntos seleccionados.`);
+    
+    // Volver al menú principal en lugar de cerrar todo
+    cerrarListaCuadrillas();
+}
+
+// Función de retry logic para asignación de efectivos
+async function seleccionarEfectivoConReintento(nombre, detalle, maxIntentos = 3) {
+    console.log(`🔄 Iniciando asignación con retry logic - Máximo ${maxIntentos} intentos`);
+    
+    for (let intento = 1; intento <= maxIntentos; intento++) {
+        console.log(`🔄 Intento ${intento} de ${maxIntentos} para asignar efectivo: ${nombre}`);
+        
+        try {
+            // Verificar estado antes del intento
+            if (!marcadoresSeleccionados || marcadoresSeleccionados.length === 0) {
+                console.log(`⚠️ Intento ${intento}: No hay marcadores seleccionados`);
+                
+                if (intento < maxIntentos) {
+                    console.log(`⏳ Esperando 500ms antes del siguiente intento...`);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    continue;
+                } else {
+                    console.log(`❌ Todos los intentos fallaron - No hay marcadores seleccionados`);
+                    alert('Error: No se pudo completar la asignación después de varios intentos.\n\nPor favor:\n1. Selecciona un punto en el mapa\n2. Verifica que aparezca el contador de puntos seleccionados\n3. Intenta nuevamente');
+                    return false;
+                }
+            }
+            
+            // Intentar la asignación
+            const resultado = seleccionarEfectivo(nombre, detalle);
+            
+            if (resultado !== false) {
+                console.log(`✅ Asignación exitosa en intento ${intento}`);
+                return true;
+            } else {
+                console.log(`❌ Intento ${intento} falló`);
+                if (intento < maxIntentos) {
+                    console.log(`⏳ Esperando 1000ms antes del siguiente intento...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error en intento ${intento}:`, error);
+            if (intento < maxIntentos) {
+                console.log(`⏳ Esperando 1000ms antes del siguiente intento...`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    }
+    
+    console.log(`❌ Todos los ${maxIntentos} intentos fallaron`);
+    alert(`Error: No se pudo completar la asignación después de ${maxIntentos} intentos.\n\nPor favor, recarga la página e intenta nuevamente.`);
+    return false;
+}
+
+// Función para seleccionar efectivo específico
+function seleccionarEfectivo(nombre, detalle) {
+    console.log('🔍 DEBUG - seleccionarEfectivo() iniciada');
+    console.log('🔍 DEBUG - Parámetros recibidos:', { nombre, detalle });
+    
+    // VALIDACIÓN ROBUSTA - Verificar que marcadoresSeleccionados esté inicializado y tenga elementos
+    if (!marcadoresSeleccionados) {
+        console.error('❌ CRÍTICO - marcadoresSeleccionados no está inicializado');
+        marcadoresSeleccionados = []; // Inicializar si no existe
+        alert('Error del sistema: Array de marcadores no inicializado. Por favor, recarga la página e intenta nuevamente.');
+        return false;
+    }
+    
+    console.log('🔍 DEBUG - marcadoresSeleccionados.length:', marcadoresSeleccionados.length);
+    console.log('🔍 DEBUG - marcadoresSeleccionados:', marcadoresSeleccionados);
+    console.log('🔍 DEBUG - asignaciones.length antes:', asignaciones.length);
+    
+    if (marcadoresSeleccionados.length === 0) {
+        console.log('❌ DEBUG - No hay marcadores seleccionados, saliendo de la función');
+        alert('Por favor, selecciona al menos un punto en el mapa antes de asignar efectivos.\n\nPasos:\n1. Haz clic en un punto del mapa\n2. Verifica que aparezca el menú de puntos seleccionados\n3. Luego selecciona el efectivo');
+        return false;
+    }
+    
+    // Verificar que asignaciones esté inicializado
+    if (!asignaciones) {
+        console.error('❌ CRÍTICO - asignaciones no está inicializado');
+        asignaciones = [];
+        console.log('✅ asignaciones inicializado como array vacío');
+    }
+    
+    console.log(`🚔 Asignando efectivo: ${nombre} - ${detalle} a ${marcadoresSeleccionados.length} puntos`);
+    
+    let asignacionesCreadas = 0;
+    let asignacionesActualizadas = 0;
+    
+    // Implementar la lógica real de asignación de efectivos
+    marcadoresSeleccionados.forEach((marcador, index) => {
+        console.log(`🔍 DEBUG - Procesando marcador ${index + 1}:`, marcador);
+        console.log(`🔍 DEBUG - marcador._leaflet_id:`, marcador._leaflet_id);
+        console.log(`🔍 DEBUG - marcador.puntoData:`, marcador.puntoData);
+        
+        // Buscar si ya existe una asignación para este punto
+        const asignacionExistente = asignaciones.find(asig => 
+            asig.puntoId === marcador._leaflet_id
+        );
+        
+        console.log(`🔍 DEBUG - Asignación existente encontrada:`, asignacionExistente);
+        
+        if (asignacionExistente) {
+            // Si ya existe, agregar o actualizar el efectivo individual
+            asignacionExistente.efectivo = {
+                nombre: nombre,
+                detalle: detalle,
+                tipoPersonal: 'Efectivo Policial'
+            };
+            asignacionExistente.fechaAsignacion = new Date().toISOString();
+            asignacionesActualizadas++;
+            console.log(`✅ Efectivo actualizado en punto existente: ${asignacionExistente.puntoNombre}`);
+        } else {
+            // Crear nueva asignación
+            const nuevaAsignacion = {
+                puntoId: marcador._leaflet_id,
+                puntoNombre: marcador.puntoData ? marcador.puntoData.nombre : `Punto ${marcador._leaflet_id}`,
+                coordenadas: {
+                    lat: marcador.puntoData ? marcador.puntoData.lat : marcador.getLatLng().lat,
+                    lng: marcador.puntoData ? marcador.puntoData.lng : marcador.getLatLng().lng
+                },
+                efectivo: {
+                    nombre: nombre,
+                    detalle: detalle,
+                    tipoPersonal: 'Efectivo Policial'
+                },
+                fechaAsignacion: new Date().toISOString()
+            };
+            
+            console.log(`🔍 DEBUG - Nueva asignación creada:`, nuevaAsignacion);
+            asignaciones.push(nuevaAsignacion);
+            asignacionesCreadas++;
+            console.log(`✅ Nueva asignación creada para punto: ${nuevaAsignacion.puntoNombre}`);
+        }
+    });
+    
+    console.log('🔍 DEBUG - asignaciones.length después:', asignaciones.length);
+    console.log('🔍 DEBUG - Asignaciones creadas:', asignacionesCreadas);
+    console.log('🔍 DEBUG - Asignaciones actualizadas:', asignacionesActualizadas);
+    console.log('📋 Estado actual de asignaciones después de agregar efectivo:', asignaciones);
+    
+    // Verificar que las asignaciones se guardaron correctamente
+    const asignacionesDelEfectivo = asignaciones.filter(asig => 
+        asig.efectivo && asig.efectivo.nombre === nombre
+    );
+    console.log(`🔍 DEBUG - Asignaciones encontradas para ${nombre}:`, asignacionesDelEfectivo.length);
+    
+    // Mostrar confirmación
+    mostrarNotificacion(`Efectivo "${nombre}" asignado a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
+    
+    // Volver al menú principal en lugar de cerrar todo
+    cerrarListaEfectivos();
+    
+    console.log('🔍 DEBUG - seleccionarEfectivo() completada');
+}
+
+// Función para asignar efectivo policial (nueva función)
+function asignarEfectivoPolicial() {
+    if (marcadoresSeleccionados.length === 0) {
+        return;
+    }
+    
+    mostrarListaEfectivos();
+}
+
+// ========== NUEVAS FUNCIONALIDADES MEJORADAS ==========
+
+// Función mejorada para crear selector de columnas con detección automática
+function crearSelectorColumnasUbicacionMejorado() {
+    console.log('🔍 Iniciando crearSelectorColumnasUbicacionMejorado...');
+    console.log('📊 Headers disponibles:', gestionHeaders);
+    
+    const selector = document.getElementById('selector-columna-geo');
+    console.log('🎯 Selector encontrado:', selector);
+    
+    if (!selector) {
+        console.error('❌ No se encontró el selector con ID selector-columna-geo');
+        return;
+    }
+    
+    // Limpiar opciones existentes
+    selector.innerHTML = '<option value="">-- Selecciona una columna --</option>';
+    console.log('🧹 Selector limpiado');
+    
+    // Buscar columnas que puedan contener información geográfica
+    const columnasGeo = gestionHeaders.filter(header => 
+        header.toLowerCase().includes('distrito') ||
+        header.toLowerCase().includes('ubicacion') ||
+        header.toLowerCase().includes('ubicación') ||
+        header.toLowerCase().includes('direccion') ||
+        header.toLowerCase().includes('dirección') ||
+        header.toLowerCase().includes('zona') ||
+        header.toLowerCase().includes('coordenada') ||
+        header.toLowerCase().includes('lugar') ||
+        header.toLowerCase().includes('localidad')
+    );
+    
+    // Agregar todas las columnas disponibles, marcando las geográficas
+    console.log('📝 Agregando columnas al selector...');
+    gestionHeaders.forEach((columna, index) => {
+        const option = document.createElement('option');
+        option.value = columna;
+        const esGeo = columnasGeo.includes(columna);
+        option.textContent = esGeo ? `🗺️ ${columna} (Detectada)` : columna;
+        if (esGeo) {
+            option.style.fontWeight = 'bold';
+            option.style.color = '#059669';
+        }
+        selector.appendChild(option);
+        console.log(`✅ Columna ${index + 1} agregada: ${columna} (Geo: ${esGeo})`);
+    });
+    
+    console.log('🗺️ Selector mejorado creado. Total columnas:', gestionHeaders.length);
+    console.log('🎯 Columnas geográficas detectadas:', columnasGeo.length, columnasGeo);
+    console.log('📋 Opciones en selector:', selector.children.length);
+    
+    // Si hay columnas geográficas, seleccionar la primera automáticamente
+    if (columnasGeo.length > 0) {
+        selector.value = columnasGeo[0];
+        mostrarNotificacion(`Columna geográfica detectada automáticamente: ${columnasGeo[0]}`, 'success');
+    }
+}
+
+// Función para auto-detectar y cargar mapa
+function autoDetectarYCargarMapa() {
+    console.log('🔍 Iniciando auto-detección de columnas geográficas...');
+    
+    // Buscar columnas geográficas directamente
+    const columnasGeo = gestionHeaders.filter(header => 
+        header.toLowerCase().includes('distrito') ||
+        header.toLowerCase().includes('ubicacion') ||
+        header.toLowerCase().includes('ubicación') ||
+        header.toLowerCase().includes('direccion') ||
+        header.toLowerCase().includes('dirección') ||
+        header.toLowerCase().includes('zona') ||
+        header.toLowerCase().includes('coordenada') ||
+        header.toLowerCase().includes('lugar') ||
+        header.toLowerCase().includes('localidad')
+    );
+    
+    console.log('🗺️ Columnas geográficas encontradas:', columnasGeo);
+    
+    if (columnasGeo.length > 0) {
+        const columnaSeleccionada = columnasGeo[0];
+        console.log('✅ Cargando mapa automáticamente con columna:', columnaSeleccionada);
+        
+        // Cargar el mapa automáticamente con un pequeño delay
+        setTimeout(() => {
+            inicializarMapaConDatosMejorado(columnaSeleccionada);
+        }, 300);
+    } else {
+        console.log('⚠️ No se encontraron columnas geográficas automáticamente');
+        mostrarNotificacion('No se detectaron columnas geográficas automáticamente. Selecciona una columna manualmente.', 'warning');
+    }
+}
+
+// Función mejorada para inicializar el mapa con datos
+function inicializarMapaConDatosMejorado(columnaSeleccionada) {
+    console.log('🗺️ Iniciando inicializarMapaConDatosMejorado con columna:', columnaSeleccionada);
+    console.log('📊 Datos disponibles:', gestionData.length, 'registros');
+    console.log('📋 Headers disponibles:', gestionHeaders);
+    
+    if (!columnaSeleccionada) {
+        console.error('❌ No se proporcionó columna seleccionada');
+        mostrarNotificacion('Por favor selecciona una columna geográfica', 'warning');
+        return;
+    }
+    
+    const contenedorMapa = document.getElementById('mapa-container');
+    const contenedorLeaflet = document.getElementById('mapa-leaflet');
+    
+    console.log('🎯 Contenedor mapa-container:', contenedorMapa);
+    console.log('🎯 Contenedor mapa-leaflet:', contenedorLeaflet);
+    
+    if (!contenedorMapa || !contenedorLeaflet) {
+        console.error('❌ No se encontró el contenedor del mapa');
+        console.error('❌ mapa-container:', !!contenedorMapa);
+        console.error('❌ mapa-leaflet:', !!contenedorLeaflet);
+        return;
+    }
+    
+    // Limpiar mapa anterior si existe
+    if (mapaInstancia) {
+        console.log('🧹 Limpiando mapa anterior');
+        try {
+            mapaInstancia.remove();
+        } catch (error) {
+            console.log('⚠️ Error al limpiar mapa anterior:', error);
+        }
+    }
+    
+    // Crear nueva instancia del mapa centrado en Perú
+    console.log('🗺️ Creando nueva instancia del mapa en mapa-leaflet');
+    try {
+        mapaInstancia = L.map('mapa-leaflet').setView([-12.0464, -77.0428], 11);
+        console.log('✅ Mapa creado exitosamente:', mapaInstancia);
+    } catch (error) {
+        console.error('❌ Error al crear mapa:', error);
+        return;
+    }
+    
+    // Agregar capa de tiles (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(mapaInstancia);
+    
+    // Crear grupo de marcadores
+    marcadoresGrupo = L.layerGroup().addTo(mapaInstancia);
+    
+    // Procesar y agregar marcadores usando la función original que funciona
+    procesarDatosGeograficosConColumna(columnaSeleccionada);
+    
+    console.log('✅ Mapa mejorado inicializado con columna:', columnaSeleccionada);
+}
+
+// Función para procesar datos de operaciones de forma mejorada
+function procesarDatosOperacionesMejorado(datos, headers, columnaGeo) {
+    console.log('📊 Procesando datos de operaciones...');
+    console.log('📋 Columna geográfica:', columnaGeo);
+    console.log('📋 Headers:', headers);
+    
+    const indiceColumna = headers.indexOf(columnaGeo);
+    console.log('📍 Índice de columna geográfica:', indiceColumna);
+    
+    if (indiceColumna === -1) {
+        console.error('❌ Columna geográfica no encontrada en headers');
+        mostrarNotificacion('Error: Columna geográfica no encontrada', 'error');
+        return;
+    }
+    
+    // Crear puntos basados en los datos
+    crearPuntosDesdeOperacionesMejorado(datos, headers, indiceColumna, columnaGeo);
+    
+    mostrarNotificacion(`Mapa cargado con ${datos.length} registros de operaciones`, 'success');
+}
+
+// Función para crear puntos desde operaciones de forma mejorada
+function crearPuntosDesdeOperacionesMejorado(datos, headers, indiceColumna, columnaGeo) {
+    console.log('📍 Creando puntos desde operaciones...');
+    console.log('📊 Total de datos:', datos.length);
+    console.log('📍 Índice de columna:', indiceColumna);
+    
+    let puntosCreados = 0;
+    
+    datos.forEach((fila, index) => {
+        const ubicacion = fila[indiceColumna];
+        console.log(`📍 Fila ${index + 1}: ubicación = "${ubicacion}"`);
+        
+        if (!ubicacion || ubicacion.trim() === '') {
+            console.log(`⚠️ Fila ${index + 1}: ubicación vacía, saltando...`);
+            return;
+        }
+        
+        // Generar coordenadas basadas en la ubicación
+        const coordenadas = generarCoordenadasPorUbicacionMejorado(ubicacion);
+        console.log(`📍 Fila ${index + 1}: coordenadas generadas:`, coordenadas);
+        
+        // Crear información del punto con todos los datos originales
+        const punto = {
+            lat: coordenadas.lat,
+            lng: coordenadas.lng,
+            nombre: `Operación ${index + 1}`,
+            ubicacion: ubicacion,
+            datosOriginales: fila.join(' | '),
+            indiceOriginal: index,
+            headers: headers
+        };
+        
+        // Agregar punto al mapa
+        agregarPuntoAlMapaMejorado(punto);
+        puntosCreados++;
+        console.log(`✅ Punto ${puntosCreados} agregado al mapa`);
+    });
+    
+    console.log(`📍 ${puntosCreados} puntos creados en el mapa`);
+    
+    // Si no se crearon puntos, crear puntos de ejemplo
+    if (puntosCreados === 0) {
+        console.log('⚠️ No se crearon puntos, creando puntos de ejemplo...');
+        crearPuntosEjemploOperacionesMejorado(datos);
+    }
+}
+
+// Función para generar coordenadas por ubicación de forma mejorada
+function generarCoordenadasPorUbicacionMejorado(ubicacion) {
+    // Primero, verificar si la ubicación contiene coordenadas reales (formato: lat,lng)
+    const coordenadasRegex = /^-?\d+\.?\d*,-?\d+\.?\d*$/;
+    if (coordenadasRegex.test(ubicacion.trim())) {
+        const [lat, lng] = ubicacion.trim().split(',').map(coord => parseFloat(coord));
+        if (!isNaN(lat) && !isNaN(lng)) {
+            console.log('📍 Coordenadas reales detectadas:', lat, lng);
+            return { lat: lat, lng: lng };
+        }
+    }
+    
+    // Si no son coordenadas reales, buscar por nombre de distrito
+    const ubicacionLower = ubicacion.toLowerCase();
+    
+    // Coordenadas base para diferentes distritos de Lima
+    const coordenadasBase = {
+        'miraflores': { lat: -12.1197, lng: -77.0282 },
+        'san isidro': { lat: -12.0969, lng: -77.0378 },
+        'barranco': { lat: -12.1404, lng: -77.0200 },
+        'surco': { lat: -12.1391, lng: -77.0056 },
+        'la molina': { lat: -12.0792, lng: -76.9447 },
+        'san borja': { lat: -12.1115, lng: -77.0095 },
+        'lima': { lat: -12.0464, lng: -77.0428 },
+        'callao': { lat: -12.0566, lng: -77.1181 },
+        'chorrillos': { lat: -12.1684, lng: -77.0130 },
+        'villa maria': { lat: -12.0719, lng: -77.0139 },
+        'villa el salvador': { lat: -12.2039, lng: -76.9358 },
+        'san juan de miraflores': { lat: -12.1562, lng: -76.9734 }
+    };
+    
+    // Buscar coincidencia en las coordenadas base
+    for (const [distrito, coords] of Object.entries(coordenadasBase)) {
+        if (ubicacionLower.includes(distrito)) {
+            // Agregar variación aleatoria pequeña para evitar superposición
+            console.log('📍 Distrito detectado:', distrito);
+            return {
+                lat: coords.lat + (Math.random() - 0.5) * 0.01,
+                lng: coords.lng + (Math.random() - 0.5) * 0.01
+            };
+        }
+    }
+    
+    // Si no se encuentra, usar coordenadas base de Lima con variación
+    console.log('📍 Usando coordenadas por defecto para:', ubicacion);
+    return {
+        lat: -12.0464 + (Math.random() - 0.5) * 0.1,
+        lng: -77.0428 + (Math.random() - 0.5) * 0.1
+    };
+}
+
+// Función para agregar punto al mapa de forma mejorada
+function agregarPuntoAlMapaMejorado(punto) {
+    console.log('🗺️ Agregando punto al mapa:', punto);
+    
+    if (!mapaInstancia) {
+        console.error('❌ mapaInstancia no está definida');
+        return null;
+    }
+    
+    if (!punto.lat || !punto.lng) {
+        console.error('❌ Coordenadas inválidas:', punto.lat, punto.lng);
+        return null;
+    }
+    
+    try {
+        console.log('🔧 Creando marcador en coordenadas:', [punto.lat, punto.lng]);
+        const marcador = L.marker([punto.lat, punto.lng]);
+        console.log('🔧 Marcador creado:', marcador);
+        
+        console.log('🔧 Agregando marcador al mapa...');
+        marcador.addTo(mapaInstancia);
+        console.log('🔧 Marcador agregado al mapa');
+        
+        console.log('🔧 Configurando popup...');
+        marcador.bindPopup(`
+                <div style="max-width: 300px;">
+                    <strong>${punto.nombre}</strong><br>
+                    <strong>Ubicación:</strong> ${punto.ubicacion}<br>
+                    <hr style="margin: 8px 0;">
+                    <small><strong>Datos:</strong><br>${punto.datosOriginales}</small>
+                </div>
+            `);
+
+        marcador.puntoData = punto;
+        marcador.indice = Date.now() + Math.random(); // Índice único
+        
+        marcador.on('click', function() {
+            seleccionarMarcadorMejorado(this);
+        });
+        
+        console.log('✅ Punto mejorado agregado exitosamente:', punto.nombre, 'en', punto.ubicacion);
+        console.log('✅ Marcador final:', marcador);
+        
+        return marcador;
+    } catch (error) {
+        console.error('❌ Error al agregar marcador:', error);
+        return null;
+    }
+}
+
+// Función para seleccionar marcador de forma mejorada
+function seleccionarMarcadorMejorado(marcador) {
+    console.log('🎯 Marcador clickeado:', marcador);
+    
+    // Buscar si el marcador ya está seleccionado
+    const index = marcadoresSeleccionados.findIndex(m => m.indice === marcador.indice);
+    
+    if (index === -1) {
+        // Agregar a seleccionados
+        marcadoresSeleccionados.push(marcador);
+        
+        // Cambiar icono a rojo (seleccionado)
+        marcador.setIcon(L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }));
+        
+        console.log('✅ Marcador seleccionado');
+    } else {
+        // Quitar de seleccionados
+        marcadoresSeleccionados.splice(index, 1);
+        
+        // Cambiar icono a azul (no seleccionado)
+        marcador.setIcon(L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }));
+        
+        console.log('❌ Marcador deseleccionado');
+    }
+    
+    // Actualizar contador y mostrar/ocultar menú
+    actualizarContadorPuntos();
+    
+    if (marcadoresSeleccionados.length > 0) {
+        mostrarMenuPuntosSeleccionados();
+    } else {
+        cerrarMenuPuntos();
+    }
+    
+    console.log('🎯 Total seleccionados:', marcadoresSeleccionados.length);
+}
+
+// Función para actualizar el contador de puntos seleccionados
+function actualizarContadorPuntos() {
+    const contador = document.getElementById('contador-puntos');
+    if (contador) {
+        contador.textContent = marcadoresSeleccionados.length;
+        console.log('📊 Contador actualizado:', marcadoresSeleccionados.length);
+    }
+}
+
+// Función para crear puntos de ejemplo mejorados
+function crearPuntosEjemploOperacionesMejorado(datos) {
+    const puntosEjemplo = [
+        { lat: -12.0464, lng: -77.0428, nombre: 'Operación Centro', ubicacion: 'Lima Centro' },
+        { lat: -12.1197, lng: -77.0282, nombre: 'Operación Miraflores', ubicacion: 'Miraflores' },
+        { lat: -12.0969, lng: -77.0378, nombre: 'Operación San Isidro', ubicacion: 'San Isidro' },
+        { lat: -12.1404, lng: -77.0200, nombre: 'Operación Barranco', ubicacion: 'Barranco' },
+        { lat: -12.1391, lng: -77.0056, nombre: 'Operación Surco', ubicacion: 'Santiago de Surco' }
+    ];
+    
+    puntosEjemplo.forEach((punto, index) => {
+        if (index < datos.length) {
+            punto.datosOriginales = datos[index].join(' | ');
+            punto.indiceOriginal = index;
+        }
+        agregarPuntoAlMapaMejorado(punto);
+    });
+    
+    mostrarNotificacion('Se crearon puntos de ejemplo basados en ubicaciones de Lima', 'info');
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    // Crear elemento de notificación
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion notificacion-${tipo}`;
+    notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        z-index: 10001;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: slideInRight 0.3s ease-out;
+    `;
+    
+    // Colores según el tipo
+    const colores = {
+        'success': '#10b981',
+        'error': '#ef4444',
+        'info': '#3b82f6',
+        'warning': '#f59e0b'
+    };
+    
+    notificacion.style.backgroundColor = colores[tipo] || colores.info;
+    notificacion.textContent = mensaje;
+    
+    // Agregar al DOM
+    document.body.appendChild(notificacion);
+    
+    // Remover después de 4 segundos
+    setTimeout(() => {
+        notificacion.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => {
+            if (notificacion.parentNode) {
+                notificacion.parentNode.removeChild(notificacion);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// Agregar estilos CSS para las animaciones de notificación
+if (!document.getElementById('notificacion-styles')) {
+    const styles = document.createElement('style');
+    styles.id = 'notificacion-styles';
+    styles.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(styles);
+}
+
+// ========================================
+// FUNCIONES DE SELECCIÓN MÚLTIPLE MEJORADAS
+// ========================================
+
+// Funciones de asignación con selectores simples
+function asignarCuadrillaSelect(select) {
+    const valor = select.value;
+    if (!valor) return;
+    
+    const [nombre, detalle] = valor.split('|');
+    asignarCuadrillaEspecifica(nombre, detalle);
+    
+    // Resetear el selector
+    select.value = '';
+}
+
+function asignarEfectivoSelect(select) {
+    const valor = select.value;
+    if (!valor) return;
+    
+    const [nombre, detalle] = valor.split('|');
+    asignarEfectivoEspecifico(nombre, detalle);
+    
+    // Resetear el selector
+    select.value = '';
+}
+
+// Nuevas funciones para selección múltiple de efectivos
+function asignarEfectivosSeleccionados() {
+    console.log('👮 Función asignarEfectivosSeleccionados llamada');
+    
+    if (marcadoresSeleccionados.length === 0) {
+        alert('Por favor, selecciona al menos un punto en el mapa primero.');
+        return;
+    }
+
+    const checkboxes = document.querySelectorAll('#efectivos-checkboxes input[type="checkbox"]:checked');
+    
+    if (checkboxes.length === 0) {
+        alert('Por favor, selecciona al menos un efectivo policial.');
+        return;
+    }
+
+    let efectivosAsignados = 0;
+    
+    checkboxes.forEach(checkbox => {
+        const valor = checkbox.value;
+        const [nombre, detalle] = valor.split('|');
+        
+        // Asignar este efectivo a todos los puntos seleccionados
+        marcadoresSeleccionados.forEach(marcador => {
+            // Verificar si ya existe una asignación para este punto
+            const asignacionExistente = asignaciones.find(asig => 
+                asig.puntoId === marcador._leaflet_id
+            );
+
+            if (asignacionExistente) {
+                // Si ya existe, agregar el efectivo a la lista
+                if (!asignacionExistente.efectivos) {
+                    asignacionExistente.efectivos = [];
+                }
+                
+                // Verificar si este efectivo ya está asignado a este punto
+                const efectivoExistente = asignacionExistente.efectivos.find(ef => ef.nombre === nombre);
+                if (!efectivoExistente) {
+                    asignacionExistente.efectivos.push({
+                        nombre: nombre,
+                        detalle: detalle,
+                        tipoPersonal: 'Efectivo Policial'
+                    });
+                    efectivosAsignados++;
+                }
+            } else {
+                // Crear nueva asignación
+                const nuevaAsignacion = {
+                    puntoId: marcador._leaflet_id,
+                    puntoNombre: marcador.puntoData ? marcador.puntoData.nombre : `Punto ${marcador._leaflet_id}`,
+                    coordenadas: {
+                        lat: marcador.puntoData ? marcador.puntoData.lat : marcador.getLatLng().lat,
+                        lng: marcador.puntoData ? marcador.puntoData.lng : marcador.getLatLng().lng
+                    },
+                    efectivos: [{
+                        nombre: nombre,
+                        detalle: detalle,
+                        tipoPersonal: 'Efectivo Policial'
+                    }],
+                    fechaAsignacion: new Date().toISOString()
+                };
+                
+                asignaciones.push(nuevaAsignacion);
+                efectivosAsignados++;
+            }
+        });
+    });
+
+    console.log('📋 Asignaciones después de agregar efectivos múltiples:', asignaciones);
+    
+    // Mostrar mensaje de confirmación
+    mostrarNotificacion(`✅ Se han asignado ${checkboxes.length} efectivos a ${marcadoresSeleccionados.length} puntos. Total de asignaciones: ${efectivosAsignados}`, 'success');
+
+    // Limpiar selecciones
+    limpiarSeleccionEfectivos();
+}
+
+function limpiarSeleccionEfectivos() {
+    const checkboxes = document.querySelectorAll('#efectivos-checkboxes input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    console.log('🗑️ Selección de efectivos limpiada');
+}
+
+function asignarCuadrillaEspecifica(nombre, detalle) {
+    console.log('🔧 Función asignarCuadrillaEspecifica llamada:', nombre, detalle);
+    console.log('📍 Marcadores seleccionados:', marcadoresSeleccionados.length);
+    
+    if (marcadoresSeleccionados.length === 0) {
+        alert('Por favor, selecciona al menos un punto en el mapa primero.');
+        console.log('❌ No hay marcadores seleccionados');
+        return;
+    }
+    
+    // Crear asignación para cada punto seleccionado
+    marcadoresSeleccionados.forEach(marcador => {
+        const asignacionExistente = asignaciones.find(a => a.puntoId === marcador.indice);
+        
+        if (asignacionExistente) {
+            asignacionExistente.cuadrilla = { nombre, detalle };
+            asignacionExistente.fechaAsignacion = new Date().toLocaleString();
+        } else {
+            const nuevaAsignacion = {
+                id: asignaciones.length + 1,
+                puntoId: marcador.indice,
+                puntoNombre: marcador.puntoData ? marcador.puntoData.nombre : `Punto ${marcador.indice + 1}`,
+                coordenadas: marcador.puntoData ? `${marcador.puntoData.lat}, ${marcador.puntoData.lng}` : `${marcador.getLatLng().lat}, ${marcador.getLatLng().lng}`,
+                cuadrilla: { nombre, detalle },
+                efectivo: null,
+                fechaAsignacion: new Date().toLocaleString(),
+                estado: 'Asignado'
+            };
+            asignaciones.push(nuevaAsignacion);
+        }
+    });
+    
+    console.log(`Cuadrilla ${nombre} asignada a ${marcadoresSeleccionados.length} puntos`);
+    console.log('📋 Asignaciones después de agregar cuadrilla:', asignaciones);
+    mostrarNotificacion(`Cuadrilla "${nombre}" asignada a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
+}
+
+function asignarEfectivoEspecifico(nombre, detalle) {
+    if (marcadoresSeleccionados.length === 0) {
+        alert('Por favor, selecciona al menos un punto en el mapa primero.');
+        return;
+    }
+    
+    // Crear asignación para cada punto seleccionado
+    marcadoresSeleccionados.forEach(marcador => {
+        const asignacionExistente = asignaciones.find(a => a.puntoId === marcador.indice);
+        
+        if (asignacionExistente) {
+            asignacionExistente.efectivo = { nombre, detalle };
+            asignacionExistente.fechaAsignacion = new Date().toLocaleString();
+        } else {
+            const nuevaAsignacion = {
+                id: asignaciones.length + 1,
+                puntoId: marcador.indice,
+                puntoNombre: marcador.puntoData ? marcador.puntoData.nombre : `Punto ${marcador.indice + 1}`,
+                coordenadas: marcador.puntoData ? `${marcador.puntoData.lat}, ${marcador.puntoData.lng}` : `${marcador.getLatLng().lat}, ${marcador.getLatLng().lng}`,
+                cuadrilla: null,
+                efectivo: { nombre, detalle },
+                fechaAsignacion: new Date().toLocaleString(),
+                estado: 'Asignado'
+            };
+            asignaciones.push(nuevaAsignacion);
+        }
+    });
+    
+    console.log(`Efectivo ${nombre} asignado a ${marcadoresSeleccionados.length} puntos`);
+    console.log('📋 Asignaciones después de agregar efectivo:', asignaciones);
+    mostrarNotificacion(`Efectivo "${nombre}" asignado a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
+}
+
+function guardarAsignacion() {
+    console.log('💾 Iniciando proceso de guardado de asignaciones...');
+    
+    try {
+        // Verificar si hay puntos seleccionados
+        if (!marcadoresSeleccionados || marcadoresSeleccionados.length === 0) {
+            console.log('❌ No hay puntos seleccionados');
+            mostrarNotificacion('No hay puntos seleccionados para guardar asignación', 'error');
+            alert('Por favor, selecciona al menos un punto en el mapa antes de guardar la asignación.');
+            return;
+        }
+        
+        // Verificar que el array de asignaciones existe
+        if (!asignaciones || !Array.isArray(asignaciones)) {
+            console.log('❌ Array de asignaciones no válido');
+            mostrarNotificacion('Error en el sistema de asignaciones', 'error');
+            alert('Error en el sistema. Por favor, recarga la página e inténtalo de nuevo.');
+            return;
+        }
+        
+        // Filtrar solo las asignaciones de los puntos actualmente seleccionados
+        const asignacionesActuales = asignaciones.filter(asig => 
+            asig && marcadoresSeleccionados.some(marcador => marcador && marcador.id === asig.puntoId)
+        );
+        
+        // Verificar si hay asignaciones realizadas para los puntos seleccionados
+        if (asignacionesActuales.length === 0) {
+            console.log('❌ No hay asignaciones realizadas para los puntos seleccionados');
+            mostrarNotificacion('No hay asignaciones para los puntos seleccionados', 'error');
+            alert('Por favor, asigna cuadrillas o efectivos a los puntos seleccionados antes de guardar.');
+            return;
+        }
+        
+        console.log('✅ Validaciones pasadas, procediendo a guardar...');
+        console.log(`📊 Puntos seleccionados: ${marcadoresSeleccionados.length}`);
+        console.log(`📊 Asignaciones actuales: ${asignacionesActuales.length}`);
+        
+        // Simular guardado de asignaciones
+        const timestamp = new Date().toLocaleString();
+        const datosGuardado = {
+            fecha: timestamp,
+            totalPuntos: marcadoresSeleccionados.length,
+            totalAsignaciones: asignacionesActuales.length,
+            asignaciones: asignacionesActuales.map(asig => ({
+                id: asig.id || 'sin-id',
+                puntoId: asig.puntoId || 0,
+                puntoNombre: asig.puntoNombre || 'Punto sin nombre',
+                coordenadas: asig.coordenadas || { lat: 0, lng: 0 },
+                cuadrilla: asig.cuadrilla || null,
+                efectivo: asig.efectivo || null,
+                efectivos: asig.efectivos || [],
+                fechaAsignacion: asig.fechaAsignacion || timestamp,
+                estado: asig.estado || 'activo'
+            }))
+        };
+        
+        // Guardar en localStorage para persistencia
+        localStorage.setItem('asignaciones_guardadas', JSON.stringify(datosGuardado));
+        console.log('✅ Asignaciones guardadas en localStorage:', datosGuardado);
+        
+        // Calcular estadísticas globales correctamente
+        const todosLosCuadrillas = new Set();
+        const todosLosEfectivos = new Set();
+        const puntosConAsignaciones = new Set();
+        
+        // Procesar todas las asignaciones para obtener estadísticas precisas
+        asignacionesActuales.forEach(asig => {
+            if (!asig) return;
+            
+            // Contar puntos únicos
+            puntosConAsignaciones.add(asig.puntoId);
+            
+            // Contar cuadrillas únicas
+            if (asig.cuadrilla && asig.cuadrilla.nombre) {
+                todosLosCuadrillas.add(asig.cuadrilla.nombre);
+            }
+            
+            // Contar efectivos individuales únicos
+            if (asig.efectivo && asig.efectivo.nombre) {
+                todosLosEfectivos.add(asig.efectivo.nombre);
+            }
+            
+            // Contar múltiples efectivos únicos
+            if (asig.efectivos && Array.isArray(asig.efectivos) && asig.efectivos.length > 0) {
+                asig.efectivos.forEach(ef => {
+                    if (ef && ef.nombre) {
+                        todosLosEfectivos.add(ef.nombre);
+                    }
+                });
+            }
+        });
+        
+        // Debug: Mostrar el estado de las asignaciones
+        console.log('🔍 DEBUG - Asignaciones actuales:', asignacionesActuales);
+        console.log('🔍 DEBUG - Puntos con asignaciones:', Array.from(puntosConAsignaciones));
+        console.log('🔍 DEBUG - Cuadrillas únicas:', Array.from(todosLosCuadrillas));
+        console.log('🔍 DEBUG - Efectivos únicos:', Array.from(todosLosEfectivos));
+
+        // Crear lista compacta de recursos asignados
+        let listaRecursos = [];
+        
+        if (todosLosCuadrillas.size > 0) {
+            listaRecursos.push(`👥 <strong>Cuadrillas:</strong> ${Array.from(todosLosCuadrillas).join(', ')}`);
+        }
+        
+        if (todosLosEfectivos.size > 0) {
+            listaRecursos.push(`🚔 <strong>Efectivos:</strong> ${Array.from(todosLosEfectivos).join(', ')}`);
+        }
+        
+        if (listaRecursos.length === 0) {
+            listaRecursos.push(`⚠️ <em>No se encontraron recursos asignados</em>`);
+        }
+        
+        // Mostrar notificación de éxito
+        mostrarNotificacion(`Asignaciones guardadas exitosamente: ${puntosConAsignaciones.size} puntos con recursos asignados`, 'success');
+        
+        // Mostrar confirmación ejecutiva y compacta
+        const contenidoModal = `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 36px; margin-bottom: 8px;">✅</div>
+                <div style="font-size: 16px; color: #16a34a; font-weight: bold;">Asignaciones Completadas</div>
+                <div style="font-size: 12px; color: #666; margin-top: 3px;">${timestamp}</div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px;">
+                <div style="background: #f0f9ff; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #3b82f6;">
+                    <div style="font-size: 20px; font-weight: bold; color: #1e40af;">${marcadoresSeleccionados.length}</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">📍 Puntos</div>
+                </div>
+                <div style="background: #f0fdf4; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #16a34a;">
+                    <div style="font-size: 20px; font-weight: bold; color: #15803d;">${puntosConAsignaciones.size}</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">✅ Asignados</div>
+                </div>
+                <div style="background: #fefce8; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #eab308;">
+                    <div style="font-size: 20px; font-weight: bold; color: #a16207;">${todosLosCuadrillas.size}</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">👥 Cuadrillas</div>
+                </div>
+                <div style="background: #fef2f2; padding: 12px; border-radius: 8px; text-align: center; border-left: 3px solid #ef4444;">
+                    <div style="font-size: 20px; font-weight: bold; color: #dc2626;">${todosLosEfectivos.size}</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">🚔 Efectivos</div>
+                </div>
+            </div>
+            
+            ${listaRecursos.length > 0 ? `
+            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-size: 13px; font-weight: bold; color: #475569; margin-bottom: 8px;">🎯 Recursos Asignados:</div>
+                ${listaRecursos.map(recurso => `<div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">${recurso}</div>`).join('')}
+            </div>
+            ` : ''}
+            
+            <div style="text-align: center; padding: 10px; background: #dcfce7; border-radius: 6px; border: 1px solid #16a34a;">
+                <div style="color: #16a34a; font-weight: bold; font-size: 13px;">
+                    💾 Guardado en sistema local
+                </div>
+            </div>
+        `;
+        
+        // Llamar al modal con validación adicional
+        if (typeof mostrarModalCentrado === 'function') {
+            mostrarModalCentrado('Confirmación de Asignaciones', contenidoModal);
+        } else {
+            console.error('❌ Función mostrarModalCentrado no disponible');
+            alert('Asignaciones guardadas correctamente, pero no se puede mostrar el modal de confirmación.');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error al guardar asignaciones:', error);
+        console.error('❌ Stack trace:', error.stack);
+        mostrarNotificacion('Error al guardar asignaciones', 'error');
+        alert(`Error al guardar las asignaciones: ${error.message}. Por favor, inténtalo de nuevo.`);
+    }
+}
+
+// Función para mostrar modal centrado
+function mostrarModalCentrado(titulo, contenido) {
+    // Crear overlay del modal
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    
+    // Crear contenido del modal
+    overlay.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">${titulo}</div>
+            <div class="modal-body">${contenido}</div>
+            <button class="modal-close-btn" onclick="cerrarModal(this)">✅ Completar y Continuar</button>
+        </div>
+    `;
+    
+    // Agregar al body
+    document.body.appendChild(overlay);
+    
+    // Cerrar modal al hacer click en el overlay
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            cerrarModal(overlay.querySelector('.modal-close-btn'));
+        }
+    });
+}
+
+// Función para cerrar modal
+function cerrarModal(boton) {
+    const overlay = boton.closest('.modal-overlay');
+    if (overlay) {
+        overlay.remove();
+        
+        // Verificar si el modal era de confirmación de asignaciones
+        const modalHeader = overlay.querySelector('.modal-header');
+        if (modalHeader && modalHeader.textContent.includes('Confirmación de Asignaciones')) {
+            console.log('🧹 Limpiando mapa después de guardar asignaciones...');
+            
+            // Limpiar selecciones y regresar al mapa limpio
+            limpiarMapaDespuesDeGuardar();
+        }
+    }
+}
+
+// Nueva función para limpiar el mapa después de guardar
+function limpiarMapaDespuesDeGuardar() {
+    try {
+        console.log('🔄 Iniciando limpieza del mapa...');
+        
+        // Limpiar arrays de selección
+        if (typeof marcadoresSeleccionados !== 'undefined') {
+            marcadoresSeleccionados.length = 0;
+            console.log('✅ marcadoresSeleccionados limpiado');
+        }
+        
+        if (typeof puntosSeleccionados !== 'undefined') {
+            puntosSeleccionados.length = 0;
+            console.log('✅ puntosSeleccionados limpiado');
+        }
+        
+        // Limpiar selección visual en el mapa
+        if (typeof limpiarSeleccion === 'function') {
+            limpiarSeleccion();
+            console.log('✅ Selección visual limpiada');
+        }
+        
+        // Desactivar modo de dibujo si está activo
+        if (typeof modoDibujoActivo !== 'undefined' && modoDibujoActivo) {
+            if (typeof desactivarModoDibujo === 'function') {
+                desactivarModoDibujo();
+                console.log('✅ Modo de dibujo desactivado');
+            }
+        }
+        
+        // Limpiar variables de dibujo adicionales
+        if (typeof puntosTrazo !== 'undefined') {
+            puntosTrazo.length = 0;
+            console.log('✅ puntosTrazo limpiado');
+        }
+        
+        if (typeof dibujando !== 'undefined') {
+            dibujando = false;
+            console.log('✅ Estado de dibujo reiniciado');
+        }
+        
+        // Cerrar cualquier menú o panel abierto
+        if (typeof cerrarMenuPuntos === 'function') {
+            cerrarMenuPuntos();
+            console.log('✅ Menús cerrados');
+        }
+        
+        // Cerrar listas de cuadrillas y efectivos si están abiertas
+        if (typeof cerrarListaCuadrillas === 'function') {
+            cerrarListaCuadrillas();
+        }
+        
+        if (typeof cerrarListaEfectivos === 'function') {
+            cerrarListaEfectivos();
+        }
+        
+        // Mostrar notificación de que el mapa está listo para nuevas asignaciones
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('Mapa limpio y listo para nuevas asignaciones', 'info');
+        }
+        
+        console.log('🎯 Limpieza del mapa completada - Listo para nuevas asignaciones');
+        
+    } catch (error) {
+        console.error('❌ Error al limpiar el mapa:', error);
+        // Intentar limpieza básica como fallback
+        if (typeof marcadoresSeleccionados !== 'undefined') {
+            marcadoresSeleccionados.length = 0;
+        }
+        if (typeof puntosSeleccionados !== 'undefined') {
+            puntosSeleccionados.length = 0;
+        }
+    }
+}
+
+// Función para cargar asignaciones guardadas desde localStorage
+function cargarAsignacionesGuardadas() {
+    try {
+        console.log('📂 Cargando asignaciones guardadas desde localStorage...');
+        
+        const asignacionesGuardadas = localStorage.getItem('asignaciones_guardadas');
+        
+        if (asignacionesGuardadas) {
+            const datos = JSON.parse(asignacionesGuardadas);
+            console.log('✅ Asignaciones encontradas en localStorage:', datos);
+            
+            // Verificar que los datos tienen la estructura esperada
+            if (datos && datos.asignaciones && Array.isArray(datos.asignaciones)) {
+                // Cargar las asignaciones al array global
+                if (typeof asignaciones !== 'undefined') {
+                    // Agregar las asignaciones guardadas al array existente
+                    datos.asignaciones.forEach(asignacion => {
+                        // Verificar que no exista ya una asignación para el mismo punto
+                        const existeAsignacion = asignaciones.find(a => a && a.puntoId === asignacion.puntoId);
+                        if (!existeAsignacion) {
+                            asignaciones.push(asignacion);
+                        }
+                    });
+                    
+                    console.log(`✅ ${datos.asignaciones.length} asignaciones cargadas al sistema`);
+                    console.log(`📊 Total de asignaciones en memoria: ${asignaciones.length}`);
+                    
+                    // Mostrar notificación de carga exitosa
+                    if (typeof mostrarNotificacion === 'function') {
+                        mostrarNotificacion(`${datos.asignaciones.length} asignaciones cargadas desde sesión anterior`, 'success');
+                    }
+                } else {
+                    console.warn('⚠️ Array de asignaciones no está disponible');
+                }
+            } else {
+                console.warn('⚠️ Datos de localStorage no tienen la estructura esperada');
+            }
+        } else {
+            console.log('ℹ️ No hay asignaciones guardadas en localStorage');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error al cargar asignaciones guardadas:', error);
+        // Limpiar localStorage si hay datos corruptos
+        try {
+            localStorage.removeItem('asignaciones_guardadas');
+            console.log('🧹 localStorage limpiado debido a datos corruptos');
+        } catch (cleanupError) {
+            console.error('❌ Error al limpiar localStorage:', cleanupError);
+        }
+    }
+}
+
+// Función para verificar asignaciones en localStorage (para debugging)
+function verificarAsignacionesGuardadas() {
+    try {
+        const asignacionesGuardadas = localStorage.getItem('asignaciones_guardadas');
+        if (asignacionesGuardadas) {
+            const datos = JSON.parse(asignacionesGuardadas);
+            console.log('🔍 Asignaciones en localStorage:', datos);
+            return datos;
+        } else {
+            console.log('🔍 No hay asignaciones en localStorage');
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ Error al verificar localStorage:', error);
+        return null;
+    }
+}
+
 // Inicializar dashboard cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DOM] DOM cargado, inicializando dashboard...');
+    
+    // INICIALIZACIÓN GARANTIZADA DE ARRAYS CRÍTICOS
+    console.log('🔧 Inicializando arrays críticos del sistema...');
+    
+    // Verificar e inicializar marcadoresSeleccionados
+    if (typeof marcadoresSeleccionados === 'undefined' || !Array.isArray(marcadoresSeleccionados)) {
+        window.marcadoresSeleccionados = [];
+        console.log('✅ marcadoresSeleccionados inicializado como array vacío');
+    } else {
+        console.log('✅ marcadoresSeleccionados ya está inicializado:', marcadoresSeleccionados.length, 'elementos');
+    }
+    
+    // Verificar e inicializar asignaciones
+    if (typeof asignaciones === 'undefined' || !Array.isArray(asignaciones)) {
+        window.asignaciones = [];
+        console.log('✅ asignaciones inicializado como array vacío');
+    } else {
+        console.log('✅ asignaciones ya está inicializado:', asignaciones.length, 'elementos');
+    }
+    
+    // Verificar e inicializar puntosSeleccionados
+    if (typeof puntosSeleccionados === 'undefined' || !Array.isArray(puntosSeleccionados)) {
+        window.puntosSeleccionados = [];
+        console.log('✅ puntosSeleccionados inicializado como array vacío');
+    } else {
+        console.log('✅ puntosSeleccionados ya está inicializado:', puntosSeleccionados.length, 'elementos');
+    }
+    
+    console.log('🎯 Inicialización de arrays críticos completada');
+    
+    // Cargar asignaciones guardadas desde localStorage
+    cargarAsignacionesGuardadas();
+    
     new DashboardManager();
 });
+
+// ==========================================
+// SCRIPT DE PRUEBA SISTEMÁTICA DE EFECTIVOS
+// ==========================================
+
+class TestEfectivos {
+    constructor() {
+        this.resultados = [];
+        this.testActual = 0;
+        this.totalTests = 10;
+    }
+
+    async iniciarTestCompleto() {
+        console.log('🧪 INICIANDO TEST SISTEMÁTICO DE EFECTIVOS POLICIALES');
+        console.log('📅 Fecha y hora:', new Date().toLocaleString());
+        console.log('🎯 Objetivo: Identificar por qué las asignaciones no funcionan en el primer intento');
+        console.log('📊 Total de pruebas:', this.totalTests);
+        console.log('=' .repeat(80));
+
+        for (let i = 1; i <= this.totalTests; i++) {
+            await this.realizarTest(i);
+            await this.esperar(1500); // Esperar 1.5 segundos entre tests
+        }
+
+        this.mostrarResumenFinal();
+        return this.resultados;
+    }
+
+    async realizarTest(numeroTest) {
+        this.testActual = numeroTest;
+        console.log(`\n🧪 TEST ${numeroTest}/${this.totalTests} - INICIANDO`);
+        console.log(`⏰ Hora: ${new Date().toLocaleTimeString()}`);
+
+        const testData = {
+            numero: numeroTest,
+            timestamp: new Date().toISOString(),
+            efectivo: `Oficial Test ${numeroTest}`,
+            detalle: `Prueba ${numeroTest} - ${new Date().toLocaleTimeString()}`,
+            puntosSeleccionados: [],
+            asignacionesAntes: 0,
+            asignacionesDespues: 0,
+            exito: false,
+            intentos: 1,
+            errores: [],
+            logs: []
+        };
+
+        try {
+            // Paso 1: Verificar estado inicial
+            testData.logs.push('📋 Verificando estado inicial...');
+            testData.asignacionesAntes = window.asignaciones ? window.asignaciones.length : 0;
+            testData.logs.push(`📊 Asignaciones antes: ${testData.asignacionesAntes}`);
+
+            // Paso 2: Verificar marcadores seleccionados
+            if (!window.marcadoresSeleccionados || window.marcadoresSeleccionados.length === 0) {
+                testData.logs.push('⚠️ Simulando selección de marcador...');
+                // Simular marcador seleccionado para la prueba
+                window.marcadoresSeleccionados = [{
+                    id: `test_marker_${numeroTest}`,
+                    puntoData: {
+                        lat: 40.7128 + (numeroTest * 0.001),
+                        lng: -74.0060 + (numeroTest * 0.001)
+                    },
+                    tipo: 'test'
+                }];
+                testData.logs.push('✅ Marcador de prueba creado');
+            }
+
+            testData.puntosSeleccionados = [...window.marcadoresSeleccionados];
+            testData.logs.push(`📍 Puntos seleccionados: ${testData.puntosSeleccionados.length}`);
+
+            // Paso 3: Ejecutar función de asignación
+            const efectivoNombre = `Oficial García Test ${numeroTest}`;
+            const efectivoDetalle = `Sargento - Prueba ${numeroTest}`;
+
+            testData.logs.push(`👮 Ejecutando seleccionarEfectivo con: ${efectivoNombre}`);
+
+            // Capturar el estado antes de la ejecución
+            const marcadoresAntes = window.marcadoresSeleccionados.length;
+            
+            // Ejecutar la función
+            if (typeof window.seleccionarEfectivo === 'function') {
+                await window.seleccionarEfectivo(efectivoNombre, efectivoDetalle);
+                testData.logs.push('✅ Función seleccionarEfectivo ejecutada');
+            } else {
+                testData.errores.push('❌ Función seleccionarEfectivo no encontrada');
+            }
+
+            // Paso 4: Verificar resultado después de un breve delay
+            await this.esperar(300);
+            
+            testData.asignacionesDespues = window.asignaciones ? window.asignaciones.length : 0;
+            const diferencia = testData.asignacionesDespues - testData.asignacionesAntes;
+            testData.exito = diferencia > 0;
+
+            testData.logs.push(`📊 Asignaciones después: ${testData.asignacionesDespues}`);
+            testData.logs.push(`📈 Diferencia: +${diferencia}`);
+
+            if (testData.exito) {
+                console.log(`✅ TEST ${numeroTest}: Asignación exitosa (+${diferencia})`);
+                testData.logs.push('🎉 Asignación completada exitosamente');
+            } else {
+                console.log(`❌ TEST ${numeroTest}: Asignación falló (sin cambios)`);
+                testData.logs.push('💥 Asignación falló - no se detectaron cambios');
+                
+                // Intentar diagnosticar el problema
+                if (window.marcadoresSeleccionados.length === 0) {
+                    testData.errores.push('❌ marcadoresSeleccionados está vacío');
+                }
+                if (!window.asignaciones) {
+                    testData.errores.push('❌ Array asignaciones no existe');
+                }
+            }
+
+        } catch (error) {
+            testData.errores.push(`❌ Error general: ${error.message}`);
+            testData.exito = false;
+            console.error(`❌ Error en TEST ${numeroTest}:`, error);
+        }
+
+        this.resultados.push(testData);
+        this.mostrarResultadoTest(testData);
+    }
+
+    mostrarResultadoTest(testData) {
+        const icon = testData.exito ? '✅' : '❌';
+        const estado = testData.exito ? 'ÉXITO' : 'FALLO';
+        
+        console.log(`\n${icon} RESULTADO TEST ${testData.numero}:`);
+        console.log(`📊 Estado: ${estado}`);
+        console.log(`👮 Efectivo: ${testData.efectivo}`);
+        console.log(`📍 Puntos: ${testData.puntosSeleccionados.length}`);
+        console.log(`📈 Asignaciones: ${testData.asignacionesAntes} → ${testData.asignacionesDespues}`);
+        
+        if (testData.errores.length > 0) {
+            console.log('🚨 Errores detectados:');
+            testData.errores.forEach(error => console.log(`   ${error}`));
+        }
+    }
+
+    mostrarResumenFinal() {
+        const exitosos = this.resultados.filter(t => t.exito).length;
+        const fallidos = this.resultados.filter(t => !t.exito).length;
+        const tasaExito = (exitosos / this.resultados.length * 100).toFixed(1);
+
+        console.log('\n' + '='.repeat(80));
+        console.log('📊 RESUMEN FINAL DEL TEST SISTEMÁTICO');
+        console.log('='.repeat(80));
+        console.log(`✅ Tests exitosos: ${exitosos}/${this.totalTests}`);
+        console.log(`❌ Tests fallidos: ${fallidos}/${this.totalTests}`);
+        console.log(`📈 Tasa de éxito: ${tasaExito}%`);
+        console.log(`⏰ Hora de finalización: ${new Date().toLocaleTimeString()}`);
+
+        // Análisis de patrones
+        this.analizarPatrones();
+        
+        // Recomendaciones
+        this.generarRecomendaciones(tasaExito);
+        
+        // Mostrar detalles de cada test
+        console.log('\n📋 DETALLE DE TODOS LOS TESTS:');
+        this.resultados.forEach((test, index) => {
+            const icon = test.exito ? '✅' : '❌';
+            console.log(`Test ${index + 1}: ${icon} ${test.efectivo} (${test.puntosSeleccionados.length} puntos) - ${test.asignacionesDespues - test.asignacionesAntes} asignaciones`);
+        });
+    }
+
+    analizarPatrones() {
+        console.log('\n🔍 ANÁLISIS DE PATRONES:');
+        
+        // Analizar errores comunes
+        const erroresComunes = {};
+        this.resultados.forEach(test => {
+            test.errores.forEach(error => {
+                erroresComunes[error] = (erroresComunes[error] || 0) + 1;
+            });
+        });
+
+        if (Object.keys(erroresComunes).length > 0) {
+            console.log('🚨 Errores más frecuentes:');
+            Object.entries(erroresComunes)
+                .sort(([,a], [,b]) => b - a)
+                .forEach(([error, count]) => {
+                    console.log(`   ${error} (${count} veces)`);
+                });
+        }
+
+        // Analizar distribución temporal
+        const fallosEnPrimerosTres = this.resultados.slice(0, 3).filter(t => !t.exito).length;
+        const fallosEnUltimosTres = this.resultados.slice(-3).filter(t => !t.exito).length;
+        
+        console.log(`📊 Fallos en primeros 3 tests: ${fallosEnPrimerosTres}/3`);
+        console.log(`📊 Fallos en últimos 3 tests: ${fallosEnUltimosTres}/3`);
+        
+        if (fallosEnPrimerosTres > fallosEnUltimosTres) {
+            console.log('🔍 PATRÓN DETECTADO: Mayor tasa de fallo en tests iniciales');
+            console.log('💡 Posible causa: Inicialización de estado o condiciones de carrera');
+        }
+    }
+
+    generarRecomendaciones(tasaExito) {
+        console.log('\n💡 RECOMENDACIONES BASADAS EN RESULTADOS:');
+        
+        if (tasaExito < 50) {
+            console.log('🔧 CRÍTICO: Tasa de éxito muy baja (<50%)');
+            console.log('   - Revisar completamente la lógica de seleccionarEfectivo()');
+            console.log('   - Verificar inicialización de marcadoresSeleccionados');
+            console.log('   - Implementar validaciones robustas');
+            console.log('   - Considerar refactorización completa');
+        } else if (tasaExito < 80) {
+            console.log('⚠️ MODERADO: Tasa de éxito mejorable (50-80%)');
+            console.log('   - Investigar condiciones de carrera específicas');
+            console.log('   - Añadir delays o callbacks apropiados');
+            console.log('   - Mejorar manejo de errores y validaciones');
+            console.log('   - Implementar retry logic');
+        } else {
+            console.log('✅ BUENO: Tasa de éxito aceptable (>80%)');
+            console.log('   - Monitorear comportamiento en uso real');
+            console.log('   - Considerar optimizaciones menores');
+            console.log('   - Documentar comportamiento esperado');
+        }
+        
+        console.log('\n🔧 ACCIONES ESPECÍFICAS RECOMENDADAS:');
+        console.log('   1. Verificar que marcadoresSeleccionados se inicialice correctamente');
+        console.log('   2. Añadir validaciones antes de ejecutar asignaciones');
+        console.log('   3. Implementar logging más detallado en producción');
+        console.log('   4. Considerar usar async/await para operaciones asíncronas');
+        console.log('   5. Añadir confirmación visual inmediata al usuario');
+    }
+
+    async esperar(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}
+
+// Función global para ejecutar el test desde la consola
+window.ejecutarTestEfectivos = async function() {
+    console.log('🚀 Iniciando test sistemático de efectivos...');
+    const test = new TestEfectivos();
+    const resultados = await test.iniciarTestCompleto();
+    console.log('🏁 Test completado. Resultados disponibles en la variable de retorno.');
+    return resultados;
+};
+
+// Función para ejecutar un test rápido (3 pruebas)
+window.testRapidoEfectivos = async function() {
+    console.log('⚡ Iniciando test rápido (3 pruebas)...');
+    const test = new TestEfectivos();
+    test.totalTests = 3;
+    const resultados = await test.iniciarTestCompleto();
+    return resultados;
+};
+
+// Función de prueba simple para verificar las mejoras
+window.probarMejorasEfectivos = function() {
+    console.log('🧪 PROBANDO MEJORAS DE ASIGNACIÓN DE EFECTIVOS');
+    console.log('='.repeat(50));
+    
+    // Verificar inicialización de arrays
+    console.log('1. Verificando inicialización de arrays:');
+    console.log('   - marcadoresSeleccionados:', Array.isArray(marcadoresSeleccionados) ? '✅ Inicializado' : '❌ No inicializado');
+    console.log('   - asignaciones:', Array.isArray(asignaciones) ? '✅ Inicializado' : '❌ No inicializado');
+    console.log('   - puntosSeleccionados:', Array.isArray(puntosSeleccionados) ? '✅ Inicializado' : '❌ No inicializado');
+    
+    // Verificar estado actual
+    console.log('\n2. Estado actual:');
+    console.log('   - marcadoresSeleccionados.length:', marcadoresSeleccionados.length);
+    console.log('   - asignaciones.length:', asignaciones.length);
+    
+    // Probar validación robusta
+    console.log('\n3. Probando validación robusta:');
+    const resultado = seleccionarEfectivo('Oficial Test', 'Prueba de validación');
+    console.log('   - Resultado de prueba sin marcadores:', resultado === false ? '✅ Validación funcionando' : '❌ Validación falló');
+    
+    console.log('\n4. Funciones disponibles:');
+    console.log('   - seleccionarEfectivoConReintento() : Función con retry logic');
+    console.log('   - ejecutarTestEfectivos() : Test completo (10 pruebas)');
+    console.log('   - testRapidoEfectivos() : Test rápido (3 pruebas)');
+    
+    console.log('\n✅ Verificación de mejoras completada');
+    console.log('💡 Para probar asignación real: selecciona un punto en el mapa primero');
+    
+    return {
+        arraysInicializados: Array.isArray(marcadoresSeleccionados) && Array.isArray(asignaciones),
+        validacionFunciona: resultado === false,
+        marcadoresCount: marcadoresSeleccionados.length,
+        asignacionesCount: asignaciones.length
+    };
+};
+
+console.log('🧪 Sistema de pruebas de efectivos cargado.');
+console.log('📋 Comandos disponibles:');
+console.log('   - probarMejorasEfectivos()     : Verificar mejoras implementadas');
+console.log('   - ejecutarTestEfectivos()     : Test completo (10 pruebas)');
+console.log('   - testRapidoEfectivos()       : Test rápido (3 pruebas)');
+console.log('   - verificarAsignacionesGuardadas() : Ver asignaciones en localStorage');
+console.log('   - cargarAsignacionesGuardadas()    : Recargar asignaciones desde localStorage');
+console.log('   - limpiarMapaDespuesDeGuardar()    : Limpiar mapa manualmente');
