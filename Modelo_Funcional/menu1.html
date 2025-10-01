@@ -19,8 +19,10 @@
                 <img src="img/OperationSmart.png" alt="OperationSmart" class="header-logo">
             </div>
             <div class="header-right">
-                <i class="fas fa-bell header-icon"></i>
-                <i class="fas fa-user header-icon"></i>
+                <button class="logout-btn" onclick="cerrarSesion()" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="logout-text">Cerrar Sesión</span>
+                </button>
             </div>
         </div>
         <div class="header-separator"></div>
@@ -56,9 +58,9 @@
                 <div class="nav-section">
                     <div class="nav-section-header" data-section="operaciones-diarias">
                         <span>OPERACIONES DIARIAS</span>
-                        <i class="fas fa-chevron-down section-icon"></i>
+                        <i class="fas fa-chevron-up section-icon"></i>
                     </div>
-                    <div class="nav-section-content collapsed" id="operaciones-diarias-section">
+                    <div class="nav-section-content" id="operaciones-diarias-section">
                         <a href="#" class="nav-item" data-page="datos-generales">
                             <i class="fas fa-building"></i>
                             <span>Gestión Operativa</span>
@@ -92,9 +94,9 @@
                 <div class="nav-section">
                     <div class="nav-section-header" data-section="seguimiento">
                         <span>SEGUIMIENTO</span>
-                        <i class="fas fa-chevron-down section-icon"></i>
+                        <i class="fas fa-chevron-up section-icon"></i>
                     </div>
-                    <div class="nav-section-content collapsed" id="seguimiento-section">
+                    <div class="nav-section-content" id="seguimiento-section">
                         <a href="#" class="nav-item" data-page="seguimiento-proyectos">
                             <i class="fas fa-project-diagram"></i>
                             <span>Seguimiento de Proyectos</span>
@@ -140,9 +142,9 @@
                 <div class="nav-section">
                     <div class="nav-section-header" data-section="configuracion">
                         <span>CONFIGURACIÓN</span>
-                        <i class="fas fa-chevron-down section-icon"></i>
+                        <i class="fas fa-chevron-up section-icon"></i>
                     </div>
-                    <div class="nav-section-content collapsed" id="configuracion-section">
+                    <div class="nav-section-content" id="configuracion-section">
                         <a href="#" class="nav-item" data-page="colaboradores">
                             <i class="fas fa-users"></i>
                             <span>Crea tus Colaboradores</span>
@@ -960,5 +962,39 @@
             line-height: 1.4;
         }
     </style>
+
+    <script>
+        // Función para cerrar sesión
+        function cerrarSesion() {
+            // Mostrar confirmación antes de cerrar sesión
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                // Limpiar cualquier dato de sesión almacenado
+                localStorage.removeItem('usuario');
+                localStorage.removeItem('sesionActiva');
+                sessionStorage.clear();
+                
+                // Mostrar mensaje de despedida
+                alert('Sesión cerrada exitosamente. ¡Hasta pronto!');
+                
+                // Redirigir a la página de login
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Función para verificar si hay una sesión activa al cargar la página
+        function verificarSesion() {
+            const sesionActiva = localStorage.getItem('sesionActiva');
+            if (!sesionActiva) {
+                // Si no hay sesión activa, redirigir al login
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Verificar sesión al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Comentar esta línea si no quieres verificación automática de sesión
+            // verificarSesion();
+        });
+    </script>
 </body>
 </html> // sáb 09 ago 2025 01:52:00 -05 - Título y subtítulo del sidebar eliminados

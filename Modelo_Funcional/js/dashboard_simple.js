@@ -23,6 +23,7 @@ class DashboardManager {
         this.setupEventListeners();
         this.setupNavigation();
         this.setupSidebarToggle();
+        this.expandAllSections();
         
         // Cargar página por defecto
         this.loadPage('datos-generales');
@@ -82,6 +83,28 @@ class DashboardManager {
         }
         
         console.log('[TOGGLE] Toggle del sidebar configurado');
+    }
+
+    expandAllSections() {
+        console.log('[SECTIONS] Expandiendo todas las secciones por defecto...');
+        
+        const sections = ['operaciones-diarias', 'seguimiento', 'configuracion'];
+        
+        sections.forEach(sectionName => {
+            const section = document.getElementById(`${sectionName}-section`);
+            const header = document.querySelector(`[data-section="${sectionName}"]`);
+            const icon = header?.querySelector('.section-icon');
+            
+            if (section && header && icon) {
+                // Asegurar que la sección esté expandida
+                section.classList.remove('collapsed');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                console.log('[SECTIONS] Sección expandida:', sectionName);
+            }
+        });
+        
+        console.log('[SECTIONS] Todas las secciones expandidas');
     }
 
     toggleSidebar() {
