@@ -7691,9 +7691,9 @@ function cargarAsignacionesGuardadas() {
                     console.log(`📊 Total de asignaciones en memoria: ${asignaciones.length}`);
                     
                     // Mostrar notificación de carga exitosa
-                    if (typeof mostrarNotificacion === 'function') {
-                        mostrarNotificacion(`${datos.asignaciones.length} asignaciones cargadas desde sesión anterior`, 'success');
-                    }
+                    // if (typeof mostrarNotificacion === 'function') {
+                    //     mostrarNotificacion(`${datos.asignaciones.length} asignaciones cargadas desde sesión anterior`, 'success');
+                    // }
                 } else {
                     console.warn('⚠️ Array de asignaciones no está disponible');
                 }
