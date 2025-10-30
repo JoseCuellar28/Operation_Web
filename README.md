@@ -1,150 +1,79 @@
-# 🏢 OCA OperationSmart - Sistema de Gestión de Inventarios
+# OperationWeb
 
-## 📋 Descripción del Proyecto
+Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 
-**OCA OperationSmart** es una plataforma web para la digitalización del flujo operativo de OCA Global, enfocada en servicios de instalaciones desde la planificación web hasta la ejecución móvil en campo.
+## 📁 Estructura del Proyecto
 
-## 🎯 Objetivo Principal
+### 🏗️ Proyectos Principales
+- **OperationWeb.API**: Capa de presentación (Web API)
+- **OperationWeb.Business**: Capa de lógica de negocio
+- **OperationWeb.Business.Interfaces**: Interfaces de la capa de negocio
+- **OperationWeb.DataAccess**: Capa de acceso a datos
+- **OperationWeb.DataAccess.Interfaces**: Interfaces de acceso a datos
+- **OperationWeb.DataAccess.Entities**: Entidades del modelo de datos
+- **OperationWeb.Infrastructure**: Capa de infraestructura
+- **OperationWeb.Infrastructure.Interfaces**: Interfaces de infraestructura
+- **OperationWeb.Tests**: Pruebas unitarias
 
-Digitalizar el flujo operativo de OCA Global para servicios de instalaciones, desde la planificación web hasta la ejecución móvil en campo.
+### 📚 Documentación (`docs/`)
+- **`architecture/`**: Documentación de arquitectura y patrones
+- **`guides/`**: Guías de implementación y configuración
+- **`modules/`**: Documentación específica de módulos
+- **`templates/`**: Plantillas para nuevos desarrollos
 
-## 🏗️ Componentes del Sistema
+### 🎨 Frontend (`frontend/`)
+- **`Modelo_Funcional/`**: Prototipos y modelos funcionales
 
-- **Plataforma de Administrador**: Interfaz web para gestión y administración
-- **Aplicación de Cuadrilla**: Interfaz móvil para operaciones en campo
+### 🧪 Pruebas (`tests/`)
+- **`api/`**: Pruebas de endpoints de API
+- **`unit/`**: Pruebas unitarias
+- **`integration/`**: Pruebas de integración
 
-## 🛠️ Stack Tecnológico
+### 🛠️ Herramientas (`tools/`)
+- Utilidades y scripts de desarrollo
 
-### Frontend
-- **Web**: HTML5, CSS3, JavaScript, Bootstrap 5.3
-- **Móvil**: React Native (futuro)
-- **Fuente de Datos**: Archivos JSON locales en `/mock_data/`
+## 🚀 Tecnologías
 
-### Estructura de Archivos
-```
-Modelo_Funcional/
-├── index.html                    # Página de login
-├── menu1.html                    # Dashboard principal
-├── gestion_materiales_minimalista.html
-├── gestion_stock.html
-├── gestion_cuadrillas.html
-├── control_vehicular.html
-├── reportes.html
-├── css/
-│   ├── styles.css               # Estilos del login
-│   └── dashboard.css            # Estilos del dashboard
-├── js/
-│   ├── login.js                 # Funcionalidad del login
-│   ├── dashboard_simple.js     # Funcionalidad del dashboard
-│   ├── gestion_stock.js         # Gestión de stock
-│   └── gestion_cuadrillas.js    # Gestión de cuadrillas
-├── img/
-│   ├── OperationSmart.png      # Logo principal
-│   └── slider/                  # Imágenes del slider
-└── mock_data/
-    ├── colaboradores.json
-    ├── cuadrillas.json
-    ├── stock_almacen.json
-    ├── stock_cuadrilla.json
-    ├── trabajos.json
-    └── vehiculos.json
-```
+- .NET 9
+- Entity Framework Core
+- SQL Server
+- Clean Architecture
+- Repository Pattern
+- Dependency Injection
 
-## 🚀 Instalación y Configuración
+## ⚙️ Configuración Rápida
 
-### Prerrequisitos
-- Python 3.x
-- Navegador web moderno
+1. **Configurar la cadena de conexión** en `appsettings.json`
+2. **Ejecutar migraciones**: `dotnet ef database update --project OperationWeb.DataAccess --startup-project OperationWeb.API`
+3. **Ejecutar la aplicación**: `dotnet run --project OperationWeb.API`
+4. **Acceder a la API**: `http://localhost:5132`
 
-### Pasos de Instalación
+## 📖 Documentación Completa
 
-1. **Clonar el repositorio**
-```bash
-git clone https://github.com/[usuario]/Operation_Web.git
-cd Operation_Web
-```
+- **[Guía de Arquitectura](docs/architecture/GUIA_ARQUITECTURA_PROYECTOS.md)**: Principios y patrones utilizados
+- **[Guía de Implementación](docs/guides/GUIA_IMPLEMENTACION_PASO_A_PASO.md)**: Pasos detallados de desarrollo
+- **[Módulo de Cuadrillas](docs/modules/DOCUMENTACION_MODULO_CUADRILLAS.md)**: Documentación del módulo implementado
+- **[Template para Nuevos Módulos](docs/templates/TEMPLATE_NUEVO_MODULO.md)**: Plantilla para desarrollo de nuevos módulos
 
-2. **Iniciar el servidor local**
-```bash
-cd Modelo_Funcional
-python3 -m http.server 8080
-```
+## 🔧 Módulos Implementados
 
-3. **Acceder a la aplicación**
-```
-http://localhost:8080/Modelo_Funcional/index.html
-```
+### ✅ Módulo de Cuadrillas
+- **Entidades**: Cuadrilla, Colaborador, CuadrillaColaborador
+- **API Endpoints**: 22 endpoints completos
+- **Funcionalidades**: CRUD completo, filtros, relaciones
+- **Estado**: ✅ Completado y documentado
 
-## 🔐 Credenciales de Acceso
+## 🧪 Pruebas
 
-| Usuario | Contraseña | Descripción |
-|---------|------------|-------------|
-| `division-st` | `password123` | Usuario principal |
-| `admin` | `admin` | Administrador |
-| `colaborador` | `colaborador` | Colaborador |
+- **Pruebas de API**: Disponibles en `tests/api/test_api_endpoints.html`
+- **Cobertura**: Endpoints de Cuadrillas y Colaboradores
+- **Herramientas**: HTML interactivo para pruebas manuales
 
-## 📱 Páginas Disponibles
 
-- **🏠 Login**: `index.html` - Página de inicio de sesión
-- **📊 Dashboard**: `menu1.html` - Panel principal
-- **📦 Gestión de Materiales**: `gestion_materiales_minimalista.html`
-- **📋 Gestión de Stock**: `gestion_stock.html`
-- **👥 Gestión de Cuadrillas**: `gestion_cuadrillas.html`
-- **🚗 Control Vehicular**: `control_vehicular.html`
-- **📈 Reportes**: `reportes.html`
-
-## 🎨 Características
-
-- **Diseño Responsive**: Adaptativo para web y móvil
-- **Identidad Visual**: Color principal #1e3a8a
-- **Slider de Imágenes**: Carousel automático en el login
-- **Bootstrap 5.3**: Framework CSS moderno
-- **Datos Locales**: Archivos JSON para simulación
-
-## 🔧 Comandos Útiles
-
-### Iniciar Servidor
-```bash
-cd Modelo_Funcional
-python3 -m http.server 8080
-```
-
-### Detener Servidor
-```bash
-pkill -f "python3 -m http.server"
-```
-
-### Verificar Estado del Servidor
-```bash
-ps aux | grep "python3 -m http.server"
-```
-
-## 📋 Directivas y Reglas Fundamentales
-
-1. **Foco Exclusivo en Frontend**
-2. **Atomicidad y Precisión**
-3. **Consistencia con Bootstrap**
-4. **Simplicidad Móvil**
-5. **Identidad Visual**: #1e3a8a
 
 ## 🤝 Contribución
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
-
-## 📞 Contacto
-
-**OCA Global** - [@OCAGlobal](https://github.com/OCAGlobal)
-
-Link del Proyecto: [https://github.com/[usuario]/Operation_Web](https://github.com/[usuario]/Operation_Web)
-
----
-
-*Última actualización: Septiembre 2025*
+1. Revisar la [documentación de arquitectura](docs/architecture/)
+2. Usar el [template para nuevos módulos](docs/templates/TEMPLATE_NUEVO_MODULO.md)
+3. Seguir las [guías de implementación](docs/guides/)
+4. Ejecutar pruebas antes de hacer commit
