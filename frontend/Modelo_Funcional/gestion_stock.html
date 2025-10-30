@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo 1 - Minimalista Moderno</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        th {
+            background-color: white;
+            color: #1e3a8a;
+            font-weight: bold;
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #1e3a8a;
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .acciones {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-ver, .btn-editar {
+            color: #3b82f6;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-eliminar {
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-ver:hover, .btn-editar:hover {
+            background-color: #f0f9ff;
+            border-radius: 4px;
+        }
+        
+        .btn-eliminar:hover {
+            background-color: #fef2f2;
+            border-radius: 4px;
+        }
+        
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-top: 60px;
+            margin-bottom: 80px;
+        }
+        
+        .titulo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 60px;
+        }
+        
+        .botones {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .botones-centro {
+            display: flex;
+            gap: 15px;
+            margin-right: 30px;
+        }
+        
+        .btn-descargar {
+            background-color: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-descargar:hover {
+            background-color: #1e40af;
+        }
+        
+        .btn-cargar {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-cargar:hover {
+            background-color: #b91c1c;
+        }
+        
+        .btn-crear {
+            background-color: white;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+            padding: 10px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-crear:hover {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .btn-limpiar {
+            background-color: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-limpiar:hover {
+            background-color: #4b5563;
+        }
+        
+        /* Estilos para cabeceras ordenables */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        .sortable:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .sort-icon {
+            margin-left: 5px;
+            font-size: 12px;
+            color: #64748b;
+            transition: color 0.2s;
+        }
+        
+        .sortable.asc .sort-icon::after {
+            content: "↑";
+        }
+        
+        .sortable.desc .sort-icon::after {
+            content: "↓";
+        }
+        
+        /* MODELO 1: Filtros minimalistas modernos */
+        .filter-row {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 2px solid #e2e8f0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        
+        .filter-row td {
+            padding: 12px 8px;
+            border-bottom: none;
+            position: relative;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .filter-input::placeholder {
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        .filter-input:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .busqueda {
+            position: absolute;
+            right: 0;
+        }
+        
+        .busqueda input {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .busqueda input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .busqueda input::placeholder {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="titulo">Modelo 1 - Minimalista Moderno</h1>
+        <div class="botones">
+            <div class="botones-centro">
+                <button class="btn-descargar">Descargar Archivo</button>
+                <button class="btn-cargar">Cargar Archivo</button>
+                <button class="btn-crear">Crear Nuevo</button>
+                <button class="btn-limpiar" onclick="clearFilters()">Limpiar Filtros</button>
+            </div>
+            <div class="busqueda">
+                <input type="text" id="buscar" placeholder="Buscar materiales...">
+            </div>
+        </div>
+    </div>
+    
+    <table id="tablaMateriales">
+        <thead>
+            <tr>
+                <th class="sortable" data-sort="codigo">Código de material <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="unidad">Unidad de medida <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="categoria">Categoría <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="descripcion">Descripción <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="estado">Estado del material <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="ubicacion">Ubicación / zona <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="observaciones">Observaciones <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="fecha">Fecha de ingreso <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-sort="proveedor">Proveedor <span class="sort-icon">↕</span></th>
+                <th>Acciones</th>
+            </tr>
+            <tr class="filter-row">
+                <td><input type="text" class="filter-input" placeholder="Filtrar código..." data-filter="codigo"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar unidad..." data-filter="unidad"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar categoría..." data-filter="categoria"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar descripción..." data-filter="descripcion"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar estado..." data-filter="estado"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar ubicación..." data-filter="ubicacion"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar observaciones..." data-filter="observaciones"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar fecha..." data-filter="fecha"></td>
+                <td><input type="text" class="filter-input" placeholder="Filtrar proveedor..." data-filter="proveedor"></td>
+                <td></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>MAT-001</td>
+                <td>Unidad</td>
+                <td>EPP</td>
+                <td>Casco de seguridad</td>
+                <td>Nuevo</td>
+                <td>Almacén Central</td>
+                <td>Apto para entrega inmediata</td>
+                <td>2025-06-10</td>
+                <td>Seguridad Perú S.A.</td>
+                <td class="acciones">
+                    <button class="btn-ver" title="Ver">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <button class="btn-editar" title="Editar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-eliminar" title="Eliminar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td>MAT-002</td>
+                <td>Metro</td>
+                <td>Eléctrico</td>
+                <td>Cable eléctrico 4mm</td>
+                <td>Bueno</td>
+                <td>Zona Técnica</td>
+                <td>Rollo parcialmente usado</td>
+                <td>2025-05-28</td>
+                <td>ElectroSum S.R.L.</td>
+                <td class="acciones">
+                    <button class="btn-ver" title="Ver">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <button class="btn-editar" title="Editar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-eliminar" title="Eliminar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td>MAT-003</td>
+                <td>Saco (42.5 kg)</td>
+                <td>Construcción</td>
+                <td>Cemento Portland 42.5</td>
+                <td>Operativo</td>
+                <td>Patio Trasero</td>
+                <td>Usar antes de 2025-09-15</td>
+                <td>2025-06-15</td>
+                <td>Suministros Andinos SAC</td>
+                <td class="acciones">
+                    <button class="btn-ver" title="Ver">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <button class="btn-editar" title="Editar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-eliminar" title="Eliminar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td>MAT-004</td>
+                <td>Litro</td>
+                <td>Pintura</td>
+                <td>Pintura blanca mate</td>
+                <td>Nuevo</td>
+                <td>Estante 3</td>
+                <td>Color estándar</td>
+                <td>2025-06-20</td>
+                <td>Pinturas del Norte</td>
+                <td class="acciones">
+                    <button class="btn-ver" title="Ver">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <button class="btn-editar" title="Editar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-eliminar" title="Eliminar">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        // Variables globales para el estado de la tabla
+        let ordenActual = {};
+        let filtrosActuales = {};
+
+        // Función para limpiar filtros
+        function clearFilters() {
+            // Limpiar inputs de filtro
+            const filterInputs = document.querySelectorAll('.filter-input');
+            filterInputs.forEach(input => {
+                input.value = '';
+            });
+            
+            // Limpiar búsqueda global
+            document.getElementById('buscar').value = '';
+            
+            // Mostrar todas las filas
+            const filas = document.querySelectorAll('tbody tr');
+            filas.forEach(fila => {
+                fila.style.display = 'table-row';
+            });
+            
+            // Limpiar estado de filtros
+            filtrosActuales = {};
+        }
+
+        // Función para ordenar tabla
+        function ordenarTabla(columna) {
+            const tabla = document.getElementById('tablaMateriales');
+            const tbody = tabla.querySelector('tbody');
+            const filas = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Determinar dirección de ordenamiento
+            const direccion = ordenActual[columna] === 'asc' ? 'desc' : 'asc';
+            
+            // Limpiar ordenamiento anterior
+            Object.keys(ordenActual).forEach(col => {
+                ordenActual[col] = '';
+            });
+            ordenActual[columna] = direccion;
+            
+            // Ordenar filas
+            filas.sort((a, b) => {
+                const valorA = a.cells[columna].textContent.trim();
+                const valorB = b.cells[columna].textContent.trim();
+                
+                if (direccion === 'asc') {
+                    return valorA.localeCompare(valorB);
+                } else {
+                    return valorB.localeCompare(valorA);
+                }
+            });
+            
+            // Reinsertar filas ordenadas
+            filas.forEach(fila => {
+                tbody.appendChild(fila);
+            });
+            
+            // Actualizar iconos de ordenamiento
+            actualizarIconosOrdenamiento();
+        }
+
+        // Función para actualizar iconos de ordenamiento
+        function actualizarIconosOrdenamiento() {
+            const headers = document.querySelectorAll('.sortable');
+            headers.forEach((header, index) => {
+                const icon = header.querySelector('.sort-icon');
+                const columna = header.getAttribute('data-sort');
+                
+                if (ordenActual[columna] === 'asc') {
+                    header.classList.add('asc');
+                    header.classList.remove('desc');
+                } else if (ordenActual[columna] === 'desc') {
+                    header.classList.add('desc');
+                    header.classList.remove('asc');
+                } else {
+                    header.classList.remove('asc', 'desc');
+                }
+            });
+        }
+
+        // Función para filtrar por columna
+        function filtrarPorColumna(columna, valor) {
+            filtrosActuales[columna] = valor.toLowerCase();
+            aplicarFiltros();
+        }
+
+        // Función para aplicar todos los filtros
+        function aplicarFiltros() {
+            const filas = document.querySelectorAll('tbody tr');
+            const busquedaGlobal = document.getElementById('buscar').value.toLowerCase();
+            
+            filas.forEach(fila => {
+                let mostrarFila = true;
+                
+                // Aplicar filtros por columna
+                Object.keys(filtrosActuales).forEach(columna => {
+                    const valorFiltro = filtrosActuales[columna];
+                    if (valorFiltro) {
+                        const valorCelda = fila.cells[columna].textContent.toLowerCase();
+                        if (!valorCelda.includes(valorFiltro)) {
+                            mostrarFila = false;
+                        }
+                    }
+                });
+                
+                // Aplicar búsqueda global
+                if (busquedaGlobal && mostrarFila) {
+                    const textoFila = fila.textContent.toLowerCase();
+                    if (!textoFila.includes(busquedaGlobal)) {
+                        mostrarFila = false;
+                    }
+                }
+                
+                fila.style.display = mostrarFila ? 'table-row' : 'none';
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listeners para ordenamiento
+            const headers = document.querySelectorAll('.sortable');
+            headers.forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    ordenarTabla(index);
+                });
+            });
+            
+            // Event listener para búsqueda global
+            document.getElementById('buscar').addEventListener('input', aplicarFiltros);
+            
+            // Event listeners para filtros por columna
+            const filterInputs = document.querySelectorAll('.filter-input');
+            filterInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    filtrarPorColumna(index, e.target.value);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

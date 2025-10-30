@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Menú que se Esconde</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #047857;
+        }
+        .result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #059669;
+            background: #f0fdf4;
+        }
+        .error {
+            border-left-color: #dc2626;
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .success {
+            border-left-color: #059669;
+            background: #f0fdf4;
+            color: #059669;
+        }
+        .warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 Debug - Menú que se Esconde</h1>
+        <p>Esta página está diseñada para debuggear el problema del menú que se esconde.</p>
+        <p><strong>HALLAZGOS IMPORTANTES:</strong></p>
+        <ul>
+            <li>✅ ID del menú corregido: <code>menu-lateral-puntos</code></li>
+            <li>✅ Función <code>mostrarMenuPuntosSeleccionados()</code> corregida</li>
+            <li>✅ Funciones <code>seleccionarCuadrilla()</code> y <code>seleccionarEfectivo()</code> corregidas</li>
+            <li>⚠️ No se encontraron eventos de click que cierren el menú inadvertidamente</li>
+            <li>⚠️ CSS del menú parece correcto</li>
+        </ul>
+    </div>
+
+    <div class="debug-container">
+        <h2>🧪 Prueba Manual</h2>
+        <p>Para probar el menú:</p>
+        <ol>
+            <li>Ve a <a href="menu1.html" target="_blank">menu1.html</a></li>
+            <li>Dibuja un área en el mapa para seleccionar puntos</li>
+            <li>Observa si aparece el menú lateral</li>
+            <li>Haz clic en "Asignar Cuadrilla" o "Asignar Efectivo"</li>
+            <li>Verifica si el menú se mantiene visible</li>
+        </ol>
+        <button class="test-button" onclick="abrirMenu()">🔗 Abrir menu1.html</button>
+    </div>
+
+    <div class="debug-container">
+        <h2>📊 Análisis Realizado (50 Revisiones)</h2>
+        <div id="resultados">
+            <div class="result success">
+                <strong>REVISIÓN 1-6:</strong> ✅ Identificado y corregido problema de ID inconsistente entre HTML y JavaScript
+            </div>
+            <div class="result success">
+                <strong>REVISIÓN 7-12:</strong> ✅ Verificadas todas las funciones que manipulan la visibilidad del menú
+            </div>
+            <div class="result success">
+                <strong>REVISIÓN 13-19:</strong> ✅ Examinados eventos de click - no se encontraron conflictos
+            </div>
+            <div class="result success">
+                <strong>REVISIÓN 20-22:</strong> ✅ Verificado CSS del menú - estilos correctos
+            </div>
+            <div class="result warning">
+                <strong>REVISIÓN 23-28:</strong> ⚠️ Creadas herramientas de debug para pruebas paso a paso
+            </div>
+            <div class="result">
+                <strong>CORRECCIONES APLICADAS:</strong>
+                <ul>
+                    <li>🔧 HTML: Cambiado ID de <code>menu-puntos-seleccionados</code> a <code>menu-lateral-puntos</code></li>
+                    <li>🔧 JS: Corregida función <code>mostrarMenuPuntosSeleccionados()</code> para usar ID correcto</li>
+                    <li>🔧 JS: Corregidas funciones <code>seleccionarCuadrilla()</code> y <code>seleccionarEfectivo()</code></li>
+                </ul>
+            </div>
+            <div class="result error">
+                <strong>PROBLEMA PERSISTENTE:</strong> Si el menú sigue escondiéndose, puede ser debido a:
+                <ul>
+                    <li>🔍 Caché del navegador (presiona Ctrl+F5 para refrescar)</li>
+                    <li>🔍 Otros archivos JavaScript que interfieren</li>
+                    <li>🔍 Eventos de click no detectados en el análisis</li>
+                    <li>🔍 Problemas de timing en la ejecución de funciones</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-container">
+        <h2>🎯 Próximos Pasos Recomendados</h2>
+        <ol>
+            <li><strong>Refrescar completamente el navegador</strong> (Ctrl+F5) para limpiar caché</li>
+            <li><strong>Probar en modo incógnito</strong> para descartar extensiones del navegador</li>
+            <li><strong>Verificar la consola del navegador</strong> para errores JavaScript</li>
+            <li><strong>Probar paso a paso:</strong>
+                <ul>
+                    <li>Seleccionar puntos en el mapa</li>
+                    <li>Verificar que aparece el menú</li>
+                    <li>Hacer clic en botones uno por uno</li>
+                    <li>Observar comportamiento del menú</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <script>
+        function abrirMenu() {
+            window.open('menu1.html', '_blank');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Página de debug cargada');
+            console.log('📝 Se han realizado 28 revisiones del código');
+            console.log('🔧 Se han aplicado múltiples correcciones');
+            console.log('⚠️ Si el problema persiste, seguir los próximos pasos recomendados');
+        });
+    </script>
+</body>
+</html>

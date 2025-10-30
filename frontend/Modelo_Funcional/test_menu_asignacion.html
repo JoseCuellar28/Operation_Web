@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba del Menú de Asignación</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Pruebas del Menú de Asignación</h1>
+    
+    <div class="test-container">
+        <h2>Panel de Control de Pruebas</h2>
+        <button onclick="ejecutarTodasLasPruebas()">🚀 Ejecutar Todas las Pruebas</button>
+        <button onclick="limpiarResultados()">🧹 Limpiar Resultados</button>
+        <button onclick="abrirAplicacion()">📱 Abrir Aplicación Principal</button>
+    </div>
+
+    <div class="test-container">
+        <h2>Pruebas Individuales</h2>
+        <button onclick="probarFuncion('asignarCuadrilla')">Prueba 1: asignarCuadrilla()</button>
+        <button onclick="probarFuncion('asignarEfectivoPolicial')">Prueba 2: asignarEfectivoPolicial()</button>
+        <button onclick="probarFuncion('mostrarListaCuadrillas')">Prueba 3: mostrarListaCuadrillas()</button>
+        <button onclick="probarFuncion('mostrarListaEfectivos')">Prueba 4: mostrarListaEfectivos()</button>
+        <button onclick="probarFuncion('cerrarListaCuadrillas')">Prueba 5: cerrarListaCuadrillas()</button>
+        <button onclick="probarFuncion('cerrarListaEfectivos')">Prueba 6: cerrarListaEfectivos()</button>
+        <button onclick="probarSeleccion()">Prueba 7: Funciones de Selección</button>
+        <button onclick="probarElementosHTML()">Prueba 8: Elementos HTML</button>
+    </div>
+
+    <div id="resultados" class="test-container">
+        <h2>📊 Resultados de las Pruebas</h2>
+        <div id="lista-resultados">
+            <p>Haz clic en "Ejecutar Todas las Pruebas" para comenzar...</p>
+        </div>
+    </div>
+
+    <script>
+        let contadorPruebas = 0;
+        let pruebasExitosas = 0;
+
+        function agregarResultado(mensaje, tipo = 'success') {
+            const lista = document.getElementById('lista-resultados');
+            const div = document.createElement('div');
+            div.className = `test-result ${tipo}`;
+            div.innerHTML = `<strong>Prueba ${++contadorPruebas}:</strong> ${mensaje}`;
+            lista.appendChild(div);
+            
+            if (tipo === 'success') pruebasExitosas++;
+        }
+
+        function limpiarResultados() {
+            document.getElementById('lista-resultados').innerHTML = '';
+            contadorPruebas = 0;
+            pruebasExitosas = 0;
+        }
+
+        function abrirAplicacion() {
+            window.open('menu1.html', '_blank');
+        }
+
+        function probarFuncion(nombreFuncion) {
+            try {
+                // Simular que hay puntos seleccionados
+                if (typeof window.marcadoresSeleccionados === 'undefined') {
+                    window.marcadoresSeleccionados = [1, 2, 3]; // Simular puntos seleccionados
+                }
+
+                if (typeof window[nombreFuncion] === 'function') {
+                    agregarResultado(`✅ Función ${nombreFuncion}() existe y es ejecutable`, 'success');
+                    
+                    // Intentar ejecutar la función
+                    try {
+                        window[nombreFuncion]();
+                        agregarResultado(`✅ Función ${nombreFuncion}() se ejecutó sin errores`, 'success');
+                    } catch (error) {
+                        agregarResultado(`⚠️ Función ${nombreFuncion}() existe pero falló al ejecutarse: ${error.message}`, 'warning');
+                    }
+                } else {
+                    agregarResultado(`❌ Función ${nombreFuncion}() no está definida`, 'error');
+                }
+            } catch (error) {
+                agregarResultado(`❌ Error al probar ${nombreFuncion}(): ${error.message}`, 'error');
+            }
+        }
+
+        function probarSeleccion() {
+            const funciones = ['seleccionarCuadrilla', 'seleccionarEfectivo'];
+            funciones.forEach(func => {
+                try {
+                    if (typeof window[func] === 'function') {
+                        window[func]('Prueba', 'Detalle de prueba');
+                        agregarResultado(`✅ Función ${func}() ejecutada correctamente con parámetros`, 'success');
+                    } else {
+                        agregarResultado(`❌ Función ${func}() no está definida`, 'error');
+                    }
+                } catch (error) {
+                    agregarResultado(`❌ Error en ${func}(): ${error.message}`, 'error');
+                }
+            });
+        }
+
+        function probarElementosHTML() {
+            const elementos = [
+                'menu-puntos-seleccionados',
+                'lista-cuadrillas', 
+                'lista-efectivos',
+                'contador-puntos'
+            ];
+
+            elementos.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    agregarResultado(`✅ Elemento HTML #${id} encontrado`, 'success');
+                } else {
+                    agregarResultado(`❌ Elemento HTML #${id} no encontrado`, 'error');
+                }
+            });
+        }
+
+        function ejecutarTodasLasPruebas() {
+            limpiarResultados();
+            
+            agregarResultado('🚀 Iniciando pruebas del menú de asignación...', 'warning');
+            
+            // Cargar el script principal
+            const script = document.createElement('script');
+            script.src = 'js/dashboard_simple.js';
+            script.onload = function() {
+                agregarResultado('✅ Script dashboard_simple.js cargado correctamente', 'success');
+                
+                // Ejecutar pruebas
+                setTimeout(() => {
+                    probarFuncion('asignarCuadrilla');
+                    probarFuncion('asignarEfectivoPolicial');
+                    probarFuncion('mostrarListaCuadrillas');
+                    probarFuncion('mostrarListaEfectivos');
+                    probarFuncion('cerrarListaCuadrillas');
+                    probarFuncion('cerrarListaEfectivos');
+                    probarSeleccion();
+                    probarElementosHTML();
+                    
+                    // Resumen final
+                    setTimeout(() => {
+                        const total = contadorPruebas;
+                        const porcentaje = Math.round((pruebasExitosas / total) * 100);
+                        
+                        if (porcentaje >= 80) {
+                            agregarResultado(`🎉 PRUEBAS COMPLETADAS: ${pruebasExitosas}/${total} exitosas (${porcentaje}%) - ¡EXCELENTE!`, 'success');
+                        } else if (porcentaje >= 60) {
+                            agregarResultado(`⚠️ PRUEBAS COMPLETADAS: ${pruebasExitosas}/${total} exitosas (${porcentaje}%) - Necesita mejoras`, 'warning');
+                        } else {
+                            agregarResultado(`❌ PRUEBAS COMPLETADAS: ${pruebasExitosas}/${total} exitosas (${porcentaje}%) - Requiere atención urgente`, 'error');
+                        }
+                    }, 1000);
+                }, 500);
+            };
+            
+            script.onerror = function() {
+                agregarResultado('❌ Error al cargar dashboard_simple.js', 'error');
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        // Cargar elementos HTML del menú principal
+        window.onload = function() {
+            fetch('menu1.html')
+                .then(response => response.text())
+                .then(html => {
+                    // Extraer solo la parte del menú
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const menu = doc.getElementById('menu-puntos-seleccionados');
+                    
+                    if (menu) {
+                        // Crear un contenedor oculto para las pruebas
+                        const contenedor = document.createElement('div');
+                        contenedor.style.display = 'none';
+                        contenedor.appendChild(menu.cloneNode(true));
+                        document.body.appendChild(contenedor);
+                        
+                        agregarResultado('✅ Elementos HTML del menú cargados para pruebas', 'success');
+                    }
+                })
+                .catch(error => {
+                    agregarResultado(`❌ Error al cargar elementos HTML: ${error.message}`, 'error');
+                });
+        };
+    </script>
+</body>
+</html>

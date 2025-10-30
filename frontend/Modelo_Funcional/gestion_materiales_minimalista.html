@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Materiales - OCA OperationSmart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Header Superior */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-icon {
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .header-icon:hover {
+            color: #1e3a8a;
+        }
+
+        .header-separator {
+            height: 1px;
+            background: #e2e8f0;
+            margin-top: 60px;
+        }
+
+        /* Sidebar */
+        .dashboard-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 60px;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        .logo-section {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            background: #ef4444;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 10px;
+        }
+
+        .nav-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-section-header:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .section-icon {
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .nav-section-content {
+            display: block;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px 12px 40px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #3b82f6;
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Contenido Principal */
+        .dashboard-container {
+            flex: 1;
+            margin-left: 280px;
+            margin-top: 60px;
+            padding: 30px;
+            background: #f8fafc;
+            min-height: calc(100vh - 60px);
+        }
+
+        .content-header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+        }
+
+        .btn-new {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-new:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
+
+        .btn-calibration {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-calibration:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
+
+
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .dashboard-sidebar.open {
+                transform: translateX(0);
+            }
+
+            .dashboard-container {
+                margin-left: 0;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header Superior -->
+    <header class="top-header">
+        <div class="header-content">
+            <div class="header-left">
+                <img src="img/OperationSmart.png" alt="OCA OperationSmart" class="header-logo">
+            </div>
+            <div class="header-right">
+                <i class="fas fa-bell header-icon"></i>
+                <i class="fas fa-user header-icon"></i>
+            </div>
+        </div>
+    </header>
+    <div class="header-separator"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Izquierda -->
+        <aside class="dashboard-sidebar">
+            <!-- Logo Superior -->
+            <div class="logo-section">
+            </div>
+
+            <!-- Tarjeta Usuario -->
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name">Diego Pereyra Diaz</div>
+                    <div class="user-role">Ferreyros</div>
+                </div>
+            </div>
+
+            <!-- Botón Rojo Toggle -->
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <!-- Navegación -->
+            <nav class="sidebar-nav">
+                <!-- Sección DIVISIÓN -->
+                <div class="nav-section">
+                    <div class="nav-section-header" data-section="division">
+                        <span>DIVISIÓN</span>
+                        <i class="fas fa-chevron-up section-icon"></i>
+                    </div>
+                    <div class="nav-section-content" id="division-section">
+                        <a href="#" class="nav-item" data-page="datos-generales">
+                            <i class="fas fa-building"></i>
+                            <span>Datos Generales</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="colaboradores">
+                            <i class="fas fa-users"></i>
+                            <span>Colaboradores</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="creacion-lineas">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Creación de Lineas</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="documentos-consulta">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Documentos de Consulta</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="gestion-cuadrillas">
+                            <i class="fas fa-cogs"></i>
+                            <span>Gestión de Cuadrillas</span>
+                        </a>
+                        <a href="#" class="nav-item active" data-page="gestion-materiales">
+                            <i class="fas fa-paperclip"></i>
+                            <span>Gestión de Materiales</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="gestion-vehiculos">
+                            <i class="fas fa-truck"></i>
+                            <span>Gestión de Vehículos</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="control-vehicular">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Control Vehicular</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Sección ACCESOS -->
+                <div class="nav-section">
+                    <div class="nav-section-header" data-section="accesos">
+                        <span>ACCESOS</span>
+                        <i class="fas fa-chevron-down section-icon"></i>
+                    </div>
+                    <div class="nav-section-content" id="accesos-section" style="display: none;">
+                        <!-- Contenido de accesos -->
+                    </div>
+                </div>
+
+                <!-- Sección REPORTES -->
+                <div class="nav-section">
+                    <div class="nav-section-header" data-section="reportes">
+                        <span>REPORTES</span>
+                        <i class="fas fa-chevron-down section-icon"></i>
+                    </div>
+                    <div class="nav-section-content" id="reportes-section" style="display: none;">
+                        <!-- Contenido de reportes -->
+                    </div>
+                </div>
+
+                <!-- Sección REQUISITOS -->
+                <div class="nav-section">
+                    <div class="nav-section-header" data-section="requisitos">
+                        <span>REQUISITOS</span>
+                        <i class="fas fa-chevron-down section-icon"></i>
+                    </div>
+                    <div class="nav-section-content" id="requisitos-section" style="display: none;">
+                        <!-- Contenido de requisitos -->
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main style="margin-left: 280px;">
+            <div class="content-header">
+                <h1 class="page-title">
+                    <i class="fas fa-boxes"></i>
+                    Ingresa los datos de tus Materiales
+                </h1>
+                <p class="page-subtitle">
+                    Puede cargar un archivo Excel con su planilla de colaboradores o ingresar manualmente
+                </p>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-download">
+                        <i class="fas fa-download"></i>
+                        DESCARGAR PLANTILLA
+                    </button>
+                    <button class="btn btn-save">
+                        <i class="fas fa-save"></i>
+                        GUARDAR TU PLANTILLA
+                    </button>
+                    <button class="btn btn-new">
+                        <i class="fas fa-plus"></i>
+                        + NUEVO MATERIAL
+                    </button>
+                    <button class="btn btn-calibration">
+                        <i class="fas fa-times"></i>
+                        X CALIBRACIÓN DE EQUIPO
+                    </button>
+                </div>
+            </div>
+
+
+        </main>
+    </div>
+
+    <script>
+        // Funcionalidad del sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle del sidebar
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.dashboard-sidebar');
+            const mainContent = document.querySelector('main');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                if (sidebar.classList.contains('collapsed')) {
+                    mainContent.style.marginLeft = '60px';
+                    sidebar.style.width = '60px';
+                } else {
+                    mainContent.style.marginLeft = '280px';
+                    sidebar.style.width = '280px';
+                }
+            });
+
+            // Toggle de secciones del sidebar
+            const sectionHeaders = document.querySelectorAll('.nav-section-header');
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    const content = document.getElementById(section + '-section');
+                    const icon = this.querySelector('.section-icon');
+                    
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        content.style.display = 'none';
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+
+            // Navegación activa
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
