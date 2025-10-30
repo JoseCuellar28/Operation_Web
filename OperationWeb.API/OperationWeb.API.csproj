@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OperationWeb.Business.Interfaces\OperationWeb.Business.Interfaces.csproj" />
+    <ProjectReference Include="..\OperationWeb.Business\OperationWeb.Business.csproj" />
+    <ProjectReference Include="..\OperationWeb.DataAccess\OperationWeb.DataAccess.csproj" />
+    <ProjectReference Include="..\OperationWeb.Infrastructure\OperationWeb.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
