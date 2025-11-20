@@ -1264,10 +1264,39 @@ class DashboardManager {
                 
                 .colaboradores-botones {
                     display: flex;
-                    gap: 15px;
+                    justify-content: space-between;
+                    align-items: center;
                     margin-bottom: 40px;
                     margin-top: 30px;
+                    gap: 15px;
                     flex-wrap: wrap;
+                }
+                .colaboradores-botones-left {
+                    display: flex;
+                    gap: 15px;
+                    flex-wrap: wrap;
+                }
+                .colaboradores-counter {
+                    display: flex;
+                    align-items: center;
+                }
+                .colaboradores-counter-badge {
+                    background-color: #e5f3ff;
+                    color: #1e40af;
+                    border: 1px solid #bfdbfe;
+                    padding: 8px 12px;
+                    border-radius: 18px;
+                    font-weight: 600;
+                    font-size: 13px;
+                }
+                .upload-status-badge {
+                    background-color: #fef3c7;
+                    color: #92400e;
+                    border: 1px solid #fcd34d;
+                    padding: 6px 10px;
+                    border-radius: 16px;
+                    font-weight: 600;
+                    font-size: 12px;
                 }
                 
                                         .colaboradores-btn-descargar {
@@ -1492,24 +1521,55 @@ class DashboardManager {
                     box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
                     transform: translateY(-1px);
                 }
+                /* Paginación mejorada */
+                .pagination-container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                    margin-top: 16px;
+                }
+                .pagination-info { display: flex; gap: 12px; align-items: center; }
+                .pagination-controls { display: flex; gap: 8px; align-items: center; }
+                .pagination-numbers { display: flex; gap: 6px; align-items: center; }
+                .pagination-number { padding: 4px 8px; border-radius: 6px; border: 1px solid #e5e7eb; cursor: pointer; }
+                .pagination-number.active { background: #e5f3ff; color: #1e3a8a; border-color: #bfdbfe; font-weight: 600; }
+                .upload-form-grid { display: grid; grid-template-columns: 160px 160px 180px 120px; gap: 8px; align-items: center; }
+                .upload-input { padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; }
             </style>
             
             <div class="colaboradores-container">
                 <h1 class="colaboradores-titulo">GESTIÓN DE COLABORADORES</h1>
                 
                 <div class="colaboradores-botones">
-                    <button class="colaboradores-btn-descargar" onclick="descargarPlantillaColaboradores()">
-                        <i class="fas fa-download"></i> Descargar Archivo
-                    </button>
-                    <button class="colaboradores-btn-cargar" onclick="guardarPlantillaColaboradores()">
-                        <i class="fas fa-upload"></i> Cargar Archivo
-                    </button>
-                    <button class="colaboradores-btn-crear" onclick="mostrarModalNuevoEmpleado()">
-                        <i class="fas fa-plus"></i> Crear Nuevo
-                    </button>
-                    <button class="colaboradores-btn-limpiar" onclick="limpiarFiltrosColaboradores()">
-                        <i class="fas fa-filter"></i> Limpiar Filtros
-                    </button>
+                    <div class="colaboradores-botones-left">
+                        <button class="colaboradores-btn-descargar" onclick="descargarPlantillaColaboradores()">
+                            <i class="fas fa-download"></i> Descargar Archivo
+                        </button>
+                        <button class="colaboradores-btn-cargar" onclick="guardarPlantillaColaboradores()">
+                            <i class="fas fa-upload"></i> Cargar Archivo
+                        </button>
+                        <button class="colaboradores-btn-crear" onclick="mostrarModalNuevoEmpleado()">
+                            <i class="fas fa-plus"></i> Crear Nuevo
+                        </button>
+                        <button class="colaboradores-btn-limpiar" onclick="limpiarFiltrosColaboradores()">
+                            <i class="fas fa-filter"></i> Limpiar Filtros
+                        </button>
+                    </div>
+                    <div class="upload-form-grid">
+                        <input id="inputHojaExcel" class="upload-input" type="text" placeholder="Hoja (opcional)">
+                        <input id="inputHeaderRow" class="upload-input" type="number" placeholder="Fila encabezado (-1)" value="-1">
+                        <input id="inputUsecols" class="upload-input" type="text" placeholder="Columnas (ej. B:AA)">
+                        <select id="selectPageSize" class="upload-input" onchange="setPageSize(this.value)">
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="colaboradores-counter">
+                        <span id="contador-colaboradores" class="colaboradores-counter-badge">Mostrando 0 de 0</span>
+                    </div>
                 </div>
                 
                 <div class="colaboradores-search-container">
@@ -1519,27 +1579,29 @@ class DashboardManager {
                 <table class="colaboradores-table" id="tablaColaboradoresMinimalista">
                     <thead>
                         <tr>
-                            <th class="colaboradores-sortable" data-sort="0" onclick="ordenarTablaColaboradores(0)">ID Empleado</th>
-                            <th class="colaboradores-sortable" data-sort="1" onclick="ordenarTablaColaboradores(1)">Código</th>
-                            <th class="colaboradores-sortable" data-sort="2" onclick="ordenarTablaColaboradores(2)">Documento</th>
-                            <th class="colaboradores-sortable" data-sort="3" onclick="ordenarTablaColaboradores(3)">Nombre Completo</th>
-                            <th class="colaboradores-sortable" data-sort="4" onclick="ordenarTablaColaboradores(4)">Email</th>
-                            <th class="colaboradores-sortable" data-sort="5" onclick="ordenarTablaColaboradores(5)">Teléfono</th>
-                            <th class="colaboradores-sortable" data-sort="6" onclick="ordenarTablaColaboradores(6)">Estado</th>
-                            <th class="colaboradores-sortable" data-sort="7" onclick="ordenarTablaColaboradores(7)">Fecha Creación</th>
+                            <th class="colaboradores-sortable" data-sort="0" onclick="ordenarTablaColaboradores(0)">DNI</th>
+                            <th class="colaboradores-sortable" data-sort="1" onclick="ordenarTablaColaboradores(1)">Inspector</th>
+                            <th class="colaboradores-sortable" data-sort="2" onclick="ordenarTablaColaboradores(2)">Teléfono</th>
+                            <th class="colaboradores-sortable" data-sort="3" onclick="ordenarTablaColaboradores(3)">Distrito</th>
+                            <th class="colaboradores-sortable" data-sort="4" onclick="ordenarTablaColaboradores(4)">Tipo</th>
+                            <th class="colaboradores-sortable" data-sort="5" onclick="ordenarTablaColaboradores(5)">Estado</th>
+                            <th class="colaboradores-sortable" data-sort="6" onclick="ordenarTablaColaboradores(6)">Fecha Inicio</th>
+                            <th class="colaboradores-sortable" data-sort="7" onclick="ordenarTablaColaboradores(7)">Fecha Cese</th>
+                            <th class="colaboradores-sortable" data-sort="8" onclick="ordenarTablaColaboradores(8)">Fecha Creación</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="colaboradores-tbody">
                         <tr class="colaboradores-filter-row">
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar ID..." onkeyup="filtrarPorColumnaColaboradores(0, this.value)"></td>
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar código..." onkeyup="filtrarPorColumnaColaboradores(1, this.value)"></td>
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar documento..." onkeyup="filtrarPorColumnaColaboradores(2, this.value)"></td>
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar nombre..." onkeyup="filtrarPorColumnaColaboradores(3, this.value)"></td>
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar email..." onkeyup="filtrarPorColumnaColaboradores(4, this.value)"></td>
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar teléfono..." onkeyup="filtrarPorColumnaColaboradores(5, this.value)"></td>
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar estado..." onkeyup="filtrarPorColumnaColaboradores(6, this.value)"></td>
-                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar fecha..." onkeyup="filtrarPorColumnaColaboradores(7, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar DNI..." onkeyup="filtrarPorColumnaColaboradores(0, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar inspector..." onkeyup="filtrarPorColumnaColaboradores(1, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar teléfono..." onkeyup="filtrarPorColumnaColaboradores(2, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar distrito..." onkeyup="filtrarPorColumnaColaboradores(3, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar tipo..." onkeyup="filtrarPorColumnaColaboradores(4, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar estado..." onkeyup="filtrarPorColumnaColaboradores(5, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar fecha inicio..." onkeyup="filtrarPorColumnaColaboradores(6, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar fecha cese..." onkeyup="filtrarPorColumnaColaboradores(7, this.value)"></td>
+                            <td><input type="text" class="colaboradores-filter-input" placeholder="Filtrar fecha creación..." onkeyup="filtrarPorColumnaColaboradores(8, this.value)"></td>
                             <td></td>
                         </tr>
                         <!-- Los datos se cargarán dinámicamente desde la API -->
@@ -3120,6 +3182,7 @@ function limpiarFiltrosColaboradores() {
     });
     
     console.log('[COLABORADORES] Filtros limpiados');
+    actualizarContadorColaboradores();
 }
 
 function ordenarTablaColaboradores(columna) {
@@ -3137,9 +3200,10 @@ function ordenarTablaColaboradores(columna) {
     }
     
     // Ordenar filas
+    const colIndex = parseInt(columna, 10);
     filas.sort((a, b) => {
-        const valorA = a.cells[getColumnaIndex(columna)].textContent.trim();
-        const valorB = b.cells[getColumnaIndex(columna)].textContent.trim();
+        const valorA = a.cells[colIndex].textContent.trim();
+        const valorB = b.cells[colIndex].textContent.trim();
         
         let comparacion = 0;
         if (valorA < valorB) comparacion = -1;
@@ -3179,53 +3243,47 @@ function filtrarPorColumnaColaboradores(columna, valor) {
 
 function aplicarFiltrosColaboradores() {
     console.log('[COLABORADORES] Aplicando filtros...');
-    
-    const tabla = document.getElementById('tablaColaboradoresMinimalista');
-    const filas = tabla.querySelectorAll('tbody tr');
-    
-    filas.forEach(fila => {
-        let mostrar = true;
-        
-        // Aplicar filtros por columna
-        Object.keys(filtrosActualesColaboradores).forEach(columna => {
-            const valorFiltro = filtrosActualesColaboradores[columna];
-            if (valorFiltro) {
-                const valorCelda = fila.cells[getColumnaIndex(columna)].textContent.toLowerCase();
-                if (!valorCelda.includes(valorFiltro)) {
-                    mostrar = false;
-                }
-            }
-        });
-        
-        // Aplicar búsqueda global
-        const searchInput = document.getElementById('buscarColaboradores');
-        if (searchInput && searchInput.value.trim()) {
-            const busqueda = searchInput.value.toLowerCase();
-            const textoFila = Array.from(fila.cells).map(celda => celda.textContent).join(' ').toLowerCase();
-            if (!textoFila.includes(busqueda)) {
-                mostrar = false;
-            }
+    const searchInput = document.getElementById('buscarColaboradores');
+    const busqueda = (searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '');
+    const filtros = filtrosActualesColaboradores || {};
+    const fieldMap = { 0:'dni', 1:'inspector', 2:'telefono', 3:'distrito', 4:'tipo', 5:'estado', 6:'fechaInicio', 7:'fechaCese', 8:'fechaCreacion' };
+    empleadosFiltrados = todosLosEmpleados.filter(emp => {
+        let ok = true;
+        for (const idx of Object.keys(filtros)) {
+            const val = (filtros[idx] || '').toLowerCase();
+            if (!val) continue;
+            const key = fieldMap[idx];
+            const raw = emp[key];
+            const cell = (raw == null ? '' : raw).toString().toLowerCase();
+            if (!cell.includes(val)) { ok = false; break; }
         }
-        
-        fila.style.display = mostrar ? '' : 'none';
+        if (ok && busqueda) {
+            const rowText = [emp.dni, emp.inspector, emp.telefono, emp.distrito, emp.tipo, emp.estado, emp.fechaInicio, emp.fechaCese, emp.fechaCreacion]
+                .map(x => (x||'').toString().toLowerCase()).join(' ');
+            if (!rowText.includes(busqueda)) ok = false;
+        }
+        return ok;
     });
-    
-    console.log('[COLABORADORES] Filtros aplicados');
+    paginaActualEmpleados = 1;
+    mostrarEmpleadosPaginados();
+    actualizarControlesPaginacion();
+    actualizarContadorColaboradores();
 }
 
 function getColumnaIndex(columna) {
+    if (typeof columna === 'number') return columna;
     const columnas = {
-        'codigo': 0,
-        'nombre': 1,
-        'cargo': 2,
-        'departamento': 3,
-        'email': 4,
-        'telefono': 5,
-        'estado': 6,
-        'fecha_ingreso': 7,
-        'supervisor': 8
+        'dni': 0,
+        'inspector': 1,
+        'telefono': 2,
+        'distrito': 3,
+        'tipo': 4,
+        'estado': 5,
+        'fecha_inicio': 6,
+        'fecha_cese': 7,
+        'fecha_creacion': 8
     };
-    return columnas[columna] || 0;
+    return columnas[columna] ?? 0;
 }
 
 function inicializarColaboradores() {
@@ -3266,30 +3324,90 @@ function inicializarColaboradores() {
 
 // Variables globales para paginación de empleados
 let todosLosEmpleados = [];
+let empleadosFiltrados = [];
 let paginaActualEmpleados = 1;
-const empleadosPorPagina = 10;
+let empleadosPorPagina = 25;
+let totalEmpleadosAll = 0;
+let empleadosPagina = [];
 
 // Función para cargar empleados desde la API
 async function cargarEmpleados() {
     try {
-        console.log('[EMPLEADOS] Cargando datos desde la API...');
-        const response = await fetch('http://localhost:5132/api/empleados');
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+        const fuentesFase4 = [
+            'http://localhost:5051/api/personal',
+            'http://127.0.0.1:5051/api/personal'
+        ];
+        for (let url of fuentesFase4) {
+            url = `${url}?limit=2000&offset=0&order_by=FechaCreacion&order_dir=DESC&t=${Date.now()}`;
+            try {
+                console.log('[EMPLEADOS] Cargando datos (Fase4):', url);
+                const alt = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-cache' });
+                if (!alt.ok) { continue; }
+                const payload = await alt.json();
+                const rows = Array.isArray(payload.data) ? payload.data : [];
+                if (rows.length > 0) {
+                    const mapped = rows.map(r => ({
+                        dni: r.dni || '',
+                        inspector: r.inspector || '',
+                        telefono: r.telefono || '',
+                        distrito: r.distrito || '',
+                        tipo: r.tipo || '',
+                        estado: (r.estado || ''),
+                        fechaInicio: r.fechainicio || null,
+                        fechaCese: r.fechacese || null,
+                        fechaCreacion: r.fechacreacion || null
+                    }));
+                    todosLosEmpleados = mapped;
+                    empleadosFiltrados = [...todosLosEmpleados];
+                    paginaActualEmpleados = 1;
+                    mostrarEmpleadosPaginados();
+                    actualizarControlesPaginacion();
+                    console.log('[EMPLEADOS] Datos cargados desde Fase4');
+                    return;
+                }
+            } catch (e) {
+                console.warn('[EMPLEADOS] Fase4 no disponible en', url, e);
+            }
         }
-        
-        const empleados = await response.json();
-        console.log('[EMPLEADOS] Datos cargados:', empleados);
-        
-        // Guardar todos los empleados y mostrar la primera página
-        todosLosEmpleados = empleados;
-        paginaActualEmpleados = 1;
-        mostrarEmpleadosPaginados();
-        actualizarControlesPaginacion();
+        const fuentesNet = [
+            'http://localhost:5132/api/empleados',
+            'http://127.0.0.1:5132/api/empleados'
+        ];
+        for (let url of fuentesNet) {
+            url = `${url}?t=${Date.now()}`;
+            try {
+                console.log('[EMPLEADOS] Cargando datos (API .NET):', url);
+                const response = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-cache' });
+                if (!response.ok) { continue; }
+                const empleados = await response.json();
+                if (Array.isArray(empleados) && empleados.length > 0) {
+                    const mapped = empleados.map(e => ({
+                        dni: e.numeroDocumento || '',
+                        inspector: e.nombreCompleto || '',
+                        telefono: e.telefono || '',
+                        distrito: e.distrito || '',
+                        tipo: e.cargo || '',
+                        estado: (e.activo ? 'Activo' : 'Inactivo'),
+                        fechaInicio: e.fechaInicio || null,
+                        fechaCese: e.fechaCese || null,
+                        fechaCreacion: e.fechaCreacion || null
+                    }));
+                    todosLosEmpleados = mapped;
+                    empleadosFiltrados = [...todosLosEmpleados];
+                    paginaActualEmpleados = 1;
+                    mostrarEmpleadosPaginados();
+                    actualizarControlesPaginacion();
+                    console.log('[EMPLEADOS] Datos cargados desde API .NET');
+                    return;
+                }
+            } catch (e) {
+                console.warn('[EMPLEADOS] API .NET no disponible en', url, e);
+            }
+        }
+        console.log('[EMPLEADOS] Mostrando datos de prueba');
+        mostrarDatosPrueba();
     } catch (error) {
         console.error('[EMPLEADOS] Error al cargar datos:', error);
-        console.log('[EMPLEADOS] Mostrando datos de prueba...');
         mostrarDatosPrueba();
     }
 }
@@ -3298,33 +3416,33 @@ async function cargarEmpleados() {
 function mostrarDatosPrueba() {
     const empleadosPrueba = [
         {
-            id: 1,
-            codigo: "EMP001",
+            idEmpleado: 1,
+            codigoEmpleado: "EMP001",
             numeroDocumento: "12345678",
             nombreCompleto: "Juan Carlos Pérez García",
             email: "juan.perez@empresa.com",
             telefono: "+1 555-0123",
-            activo: true,
+            usuarioActivo: 'S',
             fechaCreacion: "2024-01-15T10:30:00"
         },
         {
-            id: 2,
-            codigo: "EMP002",
+            idEmpleado: 2,
+            codigoEmpleado: "EMP002",
             numeroDocumento: "87654321",
             nombreCompleto: "María Elena Rodríguez López",
             email: "maria.rodriguez@empresa.com",
             telefono: "+1 555-0124",
-            activo: true,
+            usuarioActivo: 'S',
             fechaCreacion: "2024-01-20T14:15:00"
         },
         {
-            id: 3,
-            codigo: "EMP003",
+            idEmpleado: 3,
+            codigoEmpleado: "EMP003",
             numeroDocumento: "11223344",
             nombreCompleto: "Carlos Alberto Mendoza Silva",
             email: "carlos.mendoza@empresa.com",
             telefono: "+1 555-0125",
-            activo: false,
+            usuarioActivo: 'N',
             fechaCreacion: "2024-02-01T09:45:00"
         }
     ];
@@ -3341,25 +3459,27 @@ function mostrarDatosPrueba() {
 function mostrarEmpleadosPaginados() {
     const inicio = (paginaActualEmpleados - 1) * empleadosPorPagina;
     const fin = inicio + empleadosPorPagina;
-    const empleadosPagina = todosLosEmpleados.slice(inicio, fin);
+    const base = Array.isArray(empleadosFiltrados) && empleadosFiltrados.length >= 0 ? empleadosFiltrados : todosLosEmpleados;
+    const empleadosPagina = base.slice(inicio, fin);
     
     mostrarEmpleadosEnTabla(empleadosPagina);
 }
 
 // Función para actualizar los controles de paginación
 function actualizarControlesPaginacion() {
-    const totalPaginas = Math.ceil(todosLosEmpleados.length / empleadosPorPagina);
+    const base = Array.isArray(empleadosFiltrados) && empleadosFiltrados.length >= 0 ? empleadosFiltrados : todosLosEmpleados;
+    const totalPaginas = Math.ceil(base.length / empleadosPorPagina);
     
     // Actualizar información de página
     const infoPagina = document.getElementById('info-pagina-empleados');
     if (infoPagina) {
-        infoPagina.textContent = totalPaginas.toString();
+        infoPagina.textContent = `Página ${paginaActualEmpleados} de ${totalPaginas}`;
     }
     
     // Actualizar total de empleados
     const totalEmpleados = document.getElementById('total-empleados');
     if (totalEmpleados) {
-        totalEmpleados.textContent = `${todosLosEmpleados.length} empleados`;
+        totalEmpleados.textContent = `Total: ${base.length} empleados`;
     }
     
     // Generar números de página
@@ -3395,24 +3515,22 @@ function actualizarControlesPaginacion() {
 function paginaAnteriorEmpleados() {
     if (paginaActualEmpleados > 1) {
         paginaActualEmpleados--;
-        mostrarEmpleadosPaginados();
-        actualizarControlesPaginacion();
+        cargarPaginaEmpleados(paginaActualEmpleados);
     }
 }
 
 // Función para ir a la página siguiente
 function paginaSiguienteEmpleados() {
-    const totalPaginas = Math.ceil(todosLosEmpleados.length / empleadosPorPagina);
+    const totalPaginas = Math.ceil((totalEmpleadosAll || 0) / empleadosPorPagina);
     if (paginaActualEmpleados < totalPaginas) {
         paginaActualEmpleados++;
-        mostrarEmpleadosPaginados();
-        actualizarControlesPaginacion();
+        cargarPaginaEmpleados(paginaActualEmpleados);
     }
 }
 
 // Función para generar números de página
 function generarNumerosPagina(totalPaginas) {
-    const paginationNumbers = document.getElementById('numeros-pagina-empleados');
+    const paginationNumbers = document.getElementById('pagination-numbers');
     if (!paginationNumbers) return;
     
     paginationNumbers.innerHTML = '';
@@ -3459,12 +3577,12 @@ function generarNumerosPagina(totalPaginas) {
             agregarElipsis();
         }
         agregarNumeroPagina(totalPaginas);
-    }
+}
 }
 
 // Función auxiliar para agregar un número de página
 function agregarNumeroPagina(numeroPagina) {
-    const paginationNumbers = document.getElementById('numeros-pagina-empleados');
+    const paginationNumbers = document.getElementById('pagination-numbers');
     const span = document.createElement('span');
     span.className = 'pagination-number';
     span.textContent = numeroPagina;
@@ -3479,7 +3597,8 @@ function agregarNumeroPagina(numeroPagina) {
 
 // Función auxiliar para agregar elipsis
 function agregarElipsis() {
-    const paginationNumbers = document.getElementById('numeros-pagina-empleados');
+    const paginationNumbers = document.getElementById('pagination-numbers');
+    if (!paginationNumbers) return;
     const span = document.createElement('span');
     span.className = 'pagination-ellipsis';
     span.textContent = '...';
@@ -3488,11 +3607,10 @@ function agregarElipsis() {
 
 // Función para ir a una página específica
 function irAPaginaEspecifica(numeroPagina) {
-    const totalPaginas = Math.ceil(todosLosEmpleados.length / empleadosPorPagina);
+    const totalPaginas = Math.ceil((totalEmpleadosAll || 0) / empleadosPorPagina);
     if (numeroPagina >= 1 && numeroPagina <= totalPaginas) {
         paginaActualEmpleados = numeroPagina;
-        mostrarEmpleadosPaginados();
-        actualizarControlesPaginacion();
+        cargarPaginaEmpleados(paginaActualEmpleados);
     }
 }
 
@@ -3519,7 +3637,7 @@ function mostrarEmpleadosEnTabla(empleados) {
     tbody.innerHTML = '';
     
     if (!empleados || empleados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #6b7280;">No hay empleados registrados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6b7280;">No hay colaboradores registrados</td></tr>';
         return;
     }
     
@@ -3527,27 +3645,28 @@ function mostrarEmpleadosEnTabla(empleados) {
     empleados.forEach(empleado => {
         const fila = document.createElement('tr');
         fila.innerHTML = `
-            <td>${empleado.idEmpleado || ''}</td>
-            <td>${empleado.codigoEmpleado || ''}</td>
-            <td>${empleado.numeroDocumento || ''}</td>
-            <td>${empleado.nombreCompleto || ''}</td>
-            <td>${empleado.email || ''}</td>
+            <td>${empleado.dni || ''}</td>
+            <td>${empleado.inspector || ''}</td>
             <td>${empleado.telefono || ''}</td>
+            <td>${empleado.distrito || ''}</td>
+            <td>${empleado.tipo || ''}</td>
             <td>
-                <span class="estado-badge ${empleado.usuarioActivo === 'S' ? 'activo' : 'inactivo'}">
-                    ${empleado.usuarioActivo === 'S' ? 'Activo' : 'Inactivo'}
+                <span class="estado-badge ${((empleado.estado || '').toLowerCase() === 'activo') ? 'activo' : ((empleado.estado || '').toLowerCase() === 'inactivo' ? 'inactivo' : 'neutro')}">
+                    ${((empleado.estado || '').toLowerCase() === 'activo') ? 'Activo' : ((empleado.estado || '').toLowerCase() === 'inactivo' ? 'Inactivo' : 'Sin estado')}
                 </span>
             </td>
+            <td>${empleado.fechaInicio ? new Date(empleado.fechaInicio).toLocaleDateString() : ''}</td>
+            <td>${empleado.fechaCese ? new Date(empleado.fechaCese).toLocaleDateString() : ''}</td>
             <td>${empleado.fechaCreacion ? new Date(empleado.fechaCreacion).toLocaleDateString() : ''}</td>
             <td>
                 <div class="colaboradores-acciones">
-                    <button class="colaboradores-btn-ver" onclick="verEmpleado(${empleado.idEmpleado})" title="Ver empleado">
+                    <button class="colaboradores-btn-ver" onclick="verEmpleado('${empleado.dni || ''}'))" title="Ver colaborador">
                         <i class="fas fa-eye colaboradores-icon"></i>
                     </button>
-                    <button class="colaboradores-btn-editar" onclick="editarEmpleado(${empleado.idEmpleado})" title="Editar empleado">
+                    <button class="colaboradores-btn-editar" onclick="editarEmpleado('${empleado.dni || ''}')" title="Editar colaborador">
                         <i class="fas fa-edit colaboradores-icon"></i>
                     </button>
-                    <button class="colaboradores-btn-eliminar" onclick="eliminarEmpleado(${empleado.idEmpleado})" title="Eliminar empleado">
+                    <button class="colaboradores-btn-eliminar" onclick="eliminarEmpleado('${empleado.dni || ''}')" title="Eliminar colaborador">
                         <i class="fas fa-trash colaboradores-icon"></i>
                     </button>
                 </div>
@@ -3557,6 +3676,22 @@ function mostrarEmpleadosEnTabla(empleados) {
     });
     
     console.log(`[EMPLEADOS] Se mostraron ${empleados.length} empleados en la tabla`);
+    actualizarContadorColaboradores();
+}
+
+function actualizarContadorColaboradores() {
+    const el = document.getElementById('contador-colaboradores');
+    if (!el) return;
+    const total = todosLosEmpleados.length;
+    const filteredTotal = (Array.isArray(empleadosFiltrados) ? empleadosFiltrados.length : total);
+    const searchInput = document.getElementById('buscarColaboradores');
+    const hasSearch = !!(searchInput && searchInput.value && searchInput.value.trim());
+    const hasFilters = Object.values(filtrosActualesColaboradores || {}).some(v => v);
+    if (hasSearch || hasFilters) {
+        el.textContent = `Coincidencias: ${filteredTotal} de ${total}`;
+    } else {
+        el.textContent = `Total: ${total} colaboradores`;
+    }
 }
 
 // Función para mostrar mensajes de error
@@ -3570,12 +3705,139 @@ function mostrarMensajeError(mensaje) {
 // Funciones de acción para colaboradores
 function descargarPlantillaColaboradores() {
     console.log('[COLABORADORES] Descargando plantilla...');
-    alert('Función de descarga de plantilla para colaboradores');
+    const headers = ['DNI','Inspector','Telefono','Distrito','Tipo','Estado','FechaInicio','FechaCese'];
+    const csv = headers.join(',') + '\n';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plantilla_colaboradores.csv';
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 function guardarPlantillaColaboradores() {
     console.log('[COLABORADORES] Guardando plantilla...');
-    alert('Función de guardado de plantilla para colaboradores');
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xlsm,.xls';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        try { input.remove(); } catch (e) {}
+        if (!file) return;
+        const statusEl = document.getElementById('upload-status');
+        const btn = document.querySelector('.colaboradores-btn-cargar');
+        if (statusEl) statusEl.textContent = 'Procesando archivo...';
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+        const form = new FormData();
+        form.append('file', file);
+        const hoja = document.getElementById('inputHojaExcel') ? document.getElementById('inputHojaExcel').value : '';
+        const headerRow = document.getElementById('inputHeaderRow') ? document.getElementById('inputHeaderRow').value : '-1';
+        const usecols = document.getElementById('inputUsecols') ? document.getElementById('inputUsecols').value : '';
+        form.append('hoja', hoja);
+        form.append('header_row', headerRow);
+        form.append('usecols', usecols);
+        try {
+            let resPrev = await fetch('http://localhost:5051/api/preview-excel', { method: 'POST', body: form });
+            if (!resPrev.ok) {
+                resPrev = await fetch('http://127.0.0.1:5051/api/preview-excel', { method: 'POST', body: form });
+            }
+            const prev = await resPrev.json();
+            if (resPrev.ok && prev.success) {
+                window.__ultimoFormDataExcel = form;
+                abrirModalPreview(prev);
+                if (statusEl) statusEl.textContent = '';
+                if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+                return;
+            }
+            let res = await fetch('http://localhost:5051/api/upload-excel', { method: 'POST', body: form });
+            if (!res.ok) {
+                res = await fetch('http://127.0.0.1:5051/api/upload-excel', { method: 'POST', body: form });
+            }
+            const data = await res.json();
+            if (res.ok && data.success) {
+                const stg = (data.staging && typeof data.staging.inserted === 'number') ? data.staging.inserted : 0;
+                const ins = (data.snapshot && typeof data.snapshot.inserted === 'number') ? data.snapshot.inserted : 0;
+                const upd = (data.snapshot && typeof data.snapshot.updated === 'number') ? data.snapshot.updated : 0;
+                let msg = `Procesado: Únicos ${data.resumen.colaboradores_unicos}, Staging +${stg}, Snapshot +${ins}/~${upd}`;
+                if (data.errors) {
+                    const parts = [];
+                    if (data.errors.staging) parts.push(`Staging: ${data.errors.staging}`);
+                    if (data.errors.snapshot) parts.push(`Snapshot: ${data.errors.snapshot}`);
+                    if (data.errors.audit) parts.push(`Audit: ${data.errors.audit}`);
+                    if (parts.length) msg += ` (Errores: ${parts.join('; ')})`;
+                }
+                if (statusEl) statusEl.textContent = msg;
+                cargarEmpleados();
+            } else {
+                if (statusEl) statusEl.textContent = `Error: ${data.message || 'desconocido'}`;
+            }
+        } catch (err) {
+            if (statusEl) statusEl.textContent = `Error de conexión: ${err.message}`;
+        }
+        setTimeout(() => { if (statusEl) statusEl.textContent = ''; if (btn) { btn.disabled = false; btn.style.opacity = '1'; } }, 5000);
+    };
+    input.click();
+}
+
+function abrirModalPreview(prev) {
+    const overlay = document.getElementById('preview-modal');
+    const sum = document.getElementById('preview-summary');
+    const thead = document.getElementById('preview-thead');
+    const tbody = document.getElementById('preview-tbody');
+    if (!overlay || !sum || !thead || !tbody) return;
+    sum.innerHTML = '';
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+    const chips = [
+        `Filas: ${prev.rows ? prev.rows.length : 0}`,
+        `Campos: ${prev.columns ? prev.columns.length : 0}`,
+        `Únicos: ${prev.resumen && prev.resumen.colaboradores_unicos ? prev.resumen.colaboradores_unicos : 0}`
+    ];
+    chips.forEach(t => { const s = document.createElement('span'); s.className = 'chip'; s.textContent = t; sum.appendChild(s); });
+    if (Array.isArray(prev.columns)) {
+        const tr = document.createElement('tr');
+        prev.columns.forEach(c => { const th = document.createElement('th'); th.textContent = c; tr.appendChild(th); });
+        thead.appendChild(tr);
+    }
+    if (Array.isArray(prev.rows)) {
+        prev.rows.forEach(r => { const tr = document.createElement('tr'); (prev.columns||[]).forEach(c => { const td = document.createElement('td'); td.textContent = r[c] == null ? '' : String(r[c]); tr.appendChild(td); }); tbody.appendChild(tr); });
+    }
+    overlay.style.display = 'flex';
+}
+
+function cerrarModalPreview() { const overlay = document.getElementById('preview-modal'); if (overlay) overlay.style.display = 'none'; }
+
+async function confirmarCargaExcel() {
+    const overlay = document.getElementById('preview-modal');
+    const statusEl = document.getElementById('upload-status');
+    const form = window.__ultimoFormDataExcel;
+    if (!form) { cerrarModalPreview(); return; }
+    try {
+        let res = await fetch('http://localhost:5051/api/upload-excel', { method: 'POST', body: form });
+        if (!res.ok) { res = await fetch('http://127.0.0.1:5051/api/upload-excel', { method: 'POST', body: form }); }
+        const data = await res.json();
+        const stg = (data.staging && typeof data.staging.inserted === 'number') ? data.staging.inserted : 0;
+        const ins = (data.snapshot && typeof data.snapshot.inserted === 'number') ? data.snapshot.inserted : 0;
+        const upd = (data.snapshot && typeof data.snapshot.updated === 'number') ? data.snapshot.updated : 0;
+        let msg = `Procesado: Únicos ${data.resumen && data.resumen.colaboradores_unicos ? data.resumen.colaboradores_unicos : 0}, Staging +${stg}, Snapshot +${ins}/~${upd}`;
+        if (data.errors) {
+            const parts = [];
+            if (data.errors.staging) parts.push(`Staging: ${data.errors.staging}`);
+            if (data.errors.snapshot) parts.push(`Snapshot: ${data.errors.snapshot}`);
+            if (data.errors.audit) parts.push(`Audit: ${data.errors.audit}`);
+            if (parts.length) msg += ` (Errores: ${parts.join('; ')})`;
+        }
+        if (statusEl) statusEl.textContent = msg;
+        cerrarModalPreview();
+        cargarEmpleados();
+    } catch (e) {
+        if (statusEl) statusEl.textContent = `Error de conexión: ${e.message}`;
+        cerrarModalPreview();
+    }
+    window.__ultimoFormDataExcel = null;
 }
 
 function mostrarModalNuevoEmpleado() {
