@@ -983,17 +983,15 @@
 
         // Función para verificar si hay una sesión activa al cargar la página
         function verificarSesion() {
-            const sesionActiva = localStorage.getItem('sesionActiva');
-            if (!sesionActiva) {
-                // Si no hay sesión activa, redirigir al login
+            const jwt = localStorage.getItem('jwt');
+            if (!jwt) {
                 window.location.href = 'index.html';
             }
         }
 
         // Verificar sesión al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
-            // Comentar esta línea si no quieres verificación automática de sesión
-            // verificarSesion();
+            verificarSesion();
         });
     </script>
 </body>

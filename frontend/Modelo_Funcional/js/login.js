@@ -1,4 +1,5 @@
 // Login Manager Class
+const API_NET = localStorage.getItem('api_net') || 'http://localhost:5132';
 class LoginManager {
     constructor() {
         console.log('🏗️ Constructor LoginManager iniciado');
@@ -136,40 +137,38 @@ class LoginManager {
     }
 
     authenticate(username, password) {
-        console.log('🔐 Iniciando autenticación...');
-        console.log('👤 Usuario recibido:', username);
-        console.log('🔑 Contraseña recibida:', password);
-        
-        // Simular login exitoso - aceptar credenciales del formulario
-        if (username === 'division-st' && password === 'password123') {
-            console.log('✅ Credenciales division-st válidas');
-            this.showMessage('¡Login exitoso!', 'success');
-            // Redirigir al menu1
-            setTimeout(() => {
-                console.log('🔄 Redirigiendo al menu1...');
-                window.location.href = 'menu1.html';
-            }, 1500);
-        } else if (username === 'admin' && password === 'admin') {
-            console.log('✅ Credenciales admin válidas');
-            this.showMessage('¡Login exitoso!', 'success');
-            // Redirigir al menu1
-            setTimeout(() => {
-                console.log('🔄 Redirigiendo al menu1...');
-                window.location.href = 'menu1.html';
-            }, 1500);
-        } else if (username === 'colaborador' && password === 'colaborador') {
-            console.log('✅ Credenciales colaborador válidas');
-            this.showMessage('¡Login exitoso!', 'success');
-            // Redirigir al menu1
-            setTimeout(() => {
-                console.log('🔄 Redirigiendo al menu1...');
-                window.location.href = 'menu1.html';
-            }, 1500);
-        } else {
-            console.log('❌ Credenciales inválidas');
-            this.showMessage('Credenciales incorrectas', 'error');
+        const urls = [
+            `${API_NET}/api/auth/login`
+        ];
+        const body = JSON.stringify({ Username: username, Password: password });
+        const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
+        (async () => {
+            let errorType = '';
+            for (let u of urls) {
+                try {
+                    const r = await fetch(u, opts);
+                    if (r.status === 401) { errorType = 'auth'; continue; }
+                    if (!r.ok) { errorType = 'network'; continue; }
+                    const data = await r.json();
+                    const token = data.token || '';
+                    if (!token) break;
+                    localStorage.setItem('jwt', token);
+                    localStorage.setItem('sesionActiva','1');
+                    localStorage.setItem('usuario', username);
+                    this.showMessage('¡Login exitoso!', 'success');
+                    setTimeout(() => { window.location.href = 'menu1.html'; }, 500);
+                    return;
+                } catch (e) {
+                    errorType = 'network';
+                }
+            }
+            if (errorType === 'auth') {
+                this.showMessage('Credenciales incorrectas', 'error');
+            } else {
+                this.showMessage('Servicio no disponible', 'error');
+            }
             this.setLoadingState(false);
-        }
+        })();
     }
 
     togglePassword() {
