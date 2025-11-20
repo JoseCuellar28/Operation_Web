@@ -24,7 +24,7 @@ class GestionTrabajos {
         try {
             console.log('📂 Cargando datos de trabajos...');
             
-            const response = await fetch('mock_data/trabajos.json');
+            const response = await fetch(`${window.location.origin}/mock_data/trabajos.json`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -117,13 +117,19 @@ class GestionTrabajos {
      * @returns {HTMLElement|null} Elemento de la columna o null si no se encuentra
      */
     obtenerColumnaPorEstado(estado) {
+        const normalizar = (s) => (s || '')
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase();
+        const key = normalizar(estado);
         const mapeoEstados = {
-            'Por Asignar': 'columna-por-asignar',
-            'En Progreso': 'columna-en-progreso',
-            'Finalizados': 'columna-finalizados'
+            'por asignar': 'columna-por-asignar',
+            'en progreso': 'columna-en-progreso',
+            'finalizados': 'columna-finalizados'
         };
-        
-        const idColumna = mapeoEstados[estado];
+        const idColumna = mapeoEstados[key];
         return idColumna ? document.getElementById(idColumna) : null;
     }
 

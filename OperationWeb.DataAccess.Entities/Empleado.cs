@@ -32,6 +32,7 @@ namespace OperationWeb.DataAccess.Entities
         public DateTime? FechaNacimiento { get; set; }
 
         [StringLength(100)]
+        [EmailAddress]
         public string? Email { get; set; }
 
         [StringLength(20)]

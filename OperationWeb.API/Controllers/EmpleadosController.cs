@@ -6,6 +6,7 @@ namespace OperationWeb.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class EmpleadosController : ControllerBase
     {
         private readonly IEmpleadoService _empleadoService;

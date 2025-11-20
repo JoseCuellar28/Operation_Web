@@ -1,3 +1,5 @@
+const API_NET = localStorage.getItem('api_net') || 'http://localhost:5132';
+const API_FASE4 = localStorage.getItem('api_fase4') || 'http://localhost:5051';
 // Dashboard Manager Class
 class DashboardManager {
     constructor() {
@@ -3334,8 +3336,7 @@ let empleadosPagina = [];
 async function cargarEmpleados() {
     try {
         const fuentesFase4 = [
-            'http://localhost:5051/api/personal',
-            'http://127.0.0.1:5051/api/personal'
+            `${API_FASE4}/api/personal`
         ];
         for (let url of fuentesFase4) {
             url = `${url}?limit=2000&offset=0&order_by=FechaCreacion&order_dir=DESC&t=${Date.now()}`;
@@ -3370,14 +3371,14 @@ async function cargarEmpleados() {
             }
         }
         const fuentesNet = [
-            'http://localhost:5132/api/empleados',
-            'http://127.0.0.1:5132/api/empleados'
+            `${API_NET}/api/empleados`
         ];
         for (let url of fuentesNet) {
             url = `${url}?t=${Date.now()}`;
             try {
                 console.log('[EMPLEADOS] Cargando datos (API .NET):', url);
-                const response = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-cache' });
+                const jwt = localStorage.getItem('jwt') || '';
+                const response = await fetch(url, { headers: { 'Accept': 'application/json', 'Authorization': jwt ? `Bearer ${jwt}` : '' }, cache: 'no-cache' });
                 if (!response.ok) { continue; }
                 const empleados = await response.json();
                 if (Array.isArray(empleados) && empleados.length > 0) {
@@ -3957,7 +3958,8 @@ function verEmpleado(id) {
 async function editarEmpleado(id) {
     console.log('[EMPLEADOS] Editando empleado:', id);
     try {
-        const response = await fetch(`http://localhost:5132/api/empleados/${id}`);
+        const jwt = localStorage.getItem('jwt') || '';
+        const response = await fetch(`${API_NET}/api/empleados/${id}`, { headers: { 'Accept': 'application/json', 'Authorization': jwt ? `Bearer ${jwt}` : '' } });
         if (response.ok) {
             const empleado = await response.json();
             console.log('[EMPLEADOS] Datos del empleado:', empleado);
@@ -3975,8 +3977,10 @@ async function eliminarEmpleado(id) {
     console.log('[EMPLEADOS] Eliminando empleado:', id);
     if (confirm(`¿Estás seguro de que quieres eliminar el empleado ${id}?`)) {
         try {
-            const response = await fetch(`http://localhost:5132/api/empleados/${id}`, {
-                method: 'DELETE'
+            const jwt = localStorage.getItem('jwt') || '';
+            const response = await fetch(`${API_NET}/api/empleados/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': jwt ? `Bearer ${jwt}` : '' }
             });
             
             if (response.ok) {
@@ -5182,10 +5186,12 @@ async function guardarNuevoEmpleado() {
     
     try {
         // Enviar datos a la API
-        const response = await fetch('http://localhost:5132/api/empleados', {
+        const jwt = localStorage.getItem('jwt') || '';
+        const response = await fetch(`${API_NET}/api/empleados`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': jwt ? `Bearer ${jwt}` : ''
             },
             body: JSON.stringify(empleado)
         });
