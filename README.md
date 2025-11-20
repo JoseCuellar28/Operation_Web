@@ -131,3 +131,72 @@ Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 2. Usar el [template para nuevos módulos](docs/templates/TEMPLATE_NUEVO_MODULO.md)
 3. Seguir las [guías de implementación](docs/guides/)
 4. Ejecutar pruebas antes de hacer commit
+## Fase 2 — Cierre y Estado
+
+- Autenticación JWT endurecida: verificación exclusiva con BCrypt; eliminado fallback a contraseña plana.
+- Clave JWT segura (≥256 bits) definida vía User Secrets.
+- CORS configurado y verificado para `http://localhost:8000`; preflight `OPTIONS` OK.
+- Entorno Development alineado: Frontend `http://localhost:8000`, API `.NET` `http://localhost:5132`.
+- Persistencia en Development: EF InMemory activado para evitar fallos de BD mientras se define el esquema definitivo.
+- Rate Limiting en login: 5 intentos por 60s por IP aplicado a `POST /api/auth/login`.
+- Frontend: login integrado y Kanban con estados normalizados (Por Asignar, En Progreso, Finalizados).
+
+### Cómo ejecutar (Desarrollo)
+
+- API `.NET`:
+  - `cd OperationWeb.API`
+  - `env ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5132 ~/.dotnet/dotnet run`
+- Frontend:
+  - `cd frontend/Modelo_Funcional`
+  - `python3 -m http.server 8000`
+- Ajustes del navegador (consola):
+  - `localStorage.setItem('api_net','http://localhost:5132')`
+  - `localStorage.removeItem('jwt')`
+
+### Pruebas rápidas
+
+- Login (debe devolver 200 con token):
+  - `curl -i -X POST http://localhost:5132/api/auth/login -H 'Content-Type: application/json' -d '{"Username":"admin","Password":"admin"}'`
+- Empleados (protegido, responde 200 con `[]` en InMemory):
+  - `curl -i http://localhost:5132/api/empleados -H "Authorization: Bearer <token>"`
+- Preflight CORS (debe devolver 204 con `Access-Control-Allow-Origin`):
+  - `curl -i -X OPTIONS http://localhost:5132/api/auth/login -H 'Origin: http://localhost:8000' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type'`
+
+### Secretos (Desarrollo)
+
+- Definir clave JWT y usuario demo (BCrypt hash):
+  - `dotnet user-secrets set "Jwt:Key" "LocalDevKey_2025_0123456789ABCDEF0123456789ABCDEF"`
+  - `dotnet user-secrets set "Jwt:DemoUser:Username" "admin"`
+  - `dotnet user-secrets set "Jwt:DemoUser:PasswordHash" "<hash BCrypt>"`
+
+> Nota: Se eliminó `Jwt:DemoUser:PasswordPlain`.
+
+## Fase 3 — Esquema de Seguridad (en progreso)
+
+- Entidades añadidas (EF Core): Users, Roles, UserRoles.
+- DbContext actualizado con índices únicos y relaciones.
+- Próximos pasos (SQL Server):
+  1. Instalar EF CLI: `~/.dotnet/dotnet tool install --global dotnet-ef --version 9.0.10` y `export PATH="$PATH:$HOME/.dotnet/tools"`.
+  2. Generar migración: `~/.dotnet/dotnet ef migrations add SecurityInit -p OperationWeb.DataAccess/OperationWeb.DataAccess.csproj -s OperationWeb.API/OperationWeb.API.csproj`.
+  3. Aplicar migración: `~/.dotnet/dotnet ef database update -p OperationWeb.DataAccess/OperationWeb.DataAccess.csproj -s OperationWeb.API/OperationWeb.API.csproj`.
+  4. Migrar `AuthController` para validar credenciales contra `Users` y emitir roles en el token.
+
+## Archivos relevantes
+
+- API `.NET`:
+  - `OperationWeb.API/Program.cs` — CORS, JWT, Rate Limiting, EF InMemory (Development).
+  - `OperationWeb.API/Controllers/AuthController.cs` — Login con BCrypt y Rate Limiting.
+  - `OperationWeb.API/appsettings.json` — URLs y plantillas de configuración.
+- DataAccess:
+  - `OperationWeb.DataAccess/OperationWebDbContext.cs` — DbSet y configuración de entidades.
+  - `OperationWeb.DataAccess.Entities/Empleado.cs` — Validaciones de entrada.
+  - `OperationWeb.DataAccess.Entities/User*.cs`, `Role*.cs` — Esquema de seguridad.
+- Frontend:
+  - `frontend/Modelo_Funcional/js/login.js` — Integración con `/api/auth/login`.
+  - `frontend/Modelo_Funcional/js/dashboard_simple.js` — Consumo de `/api/empleados` con `Bearer`.
+  - `frontend/Modelo_Funcional/js/gestion_trabajos.js` — Kanban con estados normalizados.
+
+## Estado actual
+
+- Fase 2: Cerrada y operativa en Development.
+- Fase 3: Esquema de seguridad creado (entidades); pendiente ejecutar migraciones en SQL Server y conectar el login a la tabla `Users`.
