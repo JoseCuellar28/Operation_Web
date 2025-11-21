@@ -140,7 +140,9 @@ class LoginManager {
         const urls = [
             `${API_NET}/api/auth/login`
         ];
-        const body = JSON.stringify({ Username: username, Password: password });
+        const cid = localStorage.getItem('captcha_id') || '';
+        const cans = (document.getElementById('captchaAnswer')?.value || '').trim();
+        const body = JSON.stringify({ Username: username, Password: password, CaptchaId: cid, CaptchaAnswer: cans });
         const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
         (async () => {
             let errorType = '';
@@ -148,13 +150,35 @@ class LoginManager {
                 try {
                     const r = await fetch(u, opts);
                     if (r.status === 401) { errorType = 'auth'; continue; }
-                    if (!r.ok) { errorType = 'network'; continue; }
+                    if (!r.ok) { errorType = r.status === 400 ? 'captcha' : 'network'; continue; }
                     const data = await r.json();
                     const token = data.token || '';
                     if (!token) break;
                     localStorage.setItem('jwt', token);
                     localStorage.setItem('sesionActiva','1');
                     localStorage.setItem('usuario', username);
+                    try {
+                        const meResp = await fetch(`${API_NET}/api/auth/me`, { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+                        if (meResp.ok) {
+                            const me = await meResp.json();
+                            if (me && me.fullName) localStorage.setItem('fullName', me.fullName);
+                            if (me && me.company) localStorage.setItem('company', me.company);
+                            if (me && me.role) localStorage.setItem('role', me.role);
+                        }
+                    } catch {}
+                    if (!localStorage.getItem('fullName')) {
+                        const map = {
+                            'jose.arbildo': { fullName: 'Jose Arbildo Cuellar', company: 'Ferreyros', role: 'Admin' },
+                            'edward.vega': { fullName: 'Edward Vega Vergara', company: 'Siderperu', role: 'Usuario' },
+                            'eder.torres': { fullName: 'Eder Torres Gonzales', company: 'V&V', role: 'Usuario' }
+                        };
+                        const m = map[username];
+                        if (m) {
+                            localStorage.setItem('fullName', m.fullName);
+                            localStorage.setItem('company', m.company);
+                            localStorage.setItem('role', m.role);
+                        }
+                    }
                     this.showMessage('¡Login exitoso!', 'success');
                     setTimeout(() => { window.location.href = 'menu1.html'; }, 500);
                     return;
@@ -164,6 +188,9 @@ class LoginManager {
             }
             if (errorType === 'auth') {
                 this.showMessage('Credenciales incorrectas', 'error');
+            } else if (errorType === 'captcha') {
+                this.showMessage('Captcha incorrecto', 'error');
+                try { refreshCaptcha(); } catch {}
             } else {
                 this.showMessage('Servicio no disponible', 'error');
             }

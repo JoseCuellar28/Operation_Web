@@ -79,7 +79,7 @@
                 <h2 class="form-title">Inicia Sesión</h2>
                 
                 <!-- Formulario -->
-                <form id="loginForm" class="mt-4">
+                <form id="loginForm" class="mt-4" autocomplete="off">
                     <!-- Campo Usuario -->
                     <div class="form-group mb-3">
                         <label for="username" class="form-label">Usuario</label>
@@ -87,9 +87,10 @@
                             type="text" 
                             class="form-control" 
                             id="username" 
-                            name="username"
+                            name="login_user"
                             placeholder="Escribe tu usuario"
-                            value="division-st"
+                            autocomplete="off"
+                            autocapitalize="none"
                             required
                         >
                         <div class="error-message" id="usernameError">Este campo es obligatorio.</div>
@@ -103,9 +104,9 @@
                                 type="password" 
                                 class="form-control" 
                                 id="password" 
-                                name="password"
+                                name="login_pass"
                                 placeholder="Escribe tu contraseña"
-                                value="password123"
+                                autocomplete="new-password"
                                 required
                             >
                             <button type="button" class="password-toggle" id="passwordToggle">
@@ -113,6 +114,16 @@
                             </button>
                         </div>
                         <div class="error-message" id="passwordError">Este campo es obligatorio.</div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Captcha</label>
+                        <div class="d-flex align-items-center" style="gap:10px;">
+                            <img id="captchaImage" alt="Captcha" style="border:1px solid #ddd; border-radius:6px; height:40px;">
+                            <input type="text" class="form-control" id="captchaAnswer" name="captchaAnswer" placeholder="Respuesta" required style="max-width:160px;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshCaptcha()">↻</button>
+                        </div>
+                        <div class="error-message" id="captchaError" style="display:none;">Captcha inválido</div>
                     </div>
                     
                     <!-- Link olvidé contraseña -->
@@ -137,60 +148,44 @@
     <!-- Custom JS -->
     <script src="js/login.js"></script>
     <script>
-        // Forzar redirección a menu1.html
-        console.log('🔧 Script de redirección cargado');
-        
-        // Interceptar el formulario de login
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('loginForm');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const username = document.getElementById('username').value;
-                    const password = document.getElementById('password').value;
-                    
-                    console.log('🔐 Login interceptado:', username);
-                    
-                    // Validar credenciales
-                    if ((username === 'division-st' && password === 'password123') ||
-                        (username === 'admin' && password === 'admin') ||
-                        (username === 'colaborador' && password === 'colaborador')) {
-                        
-                        console.log('✅ Credenciales válidas, redirigiendo a menu1.html');
-                        
-                        // Mostrar mensaje de éxito
-                        const messageContainer = document.getElementById('messageContainer');
-                        if (messageContainer) {
-                            messageContainer.innerHTML = `
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    ¡Login exitoso! Redirigiendo...
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            `;
-                        }
-                        
-                        // Redirigir después de 1 segundo
-                        setTimeout(() => {
-                            window.location.href = 'menu1.html';
-                        }, 1000);
-                    } else {
-                        console.log('❌ Credenciales inválidas');
-                        const messageContainer = document.getElementById('messageContainer');
-                        if (messageContainer) {
-                            messageContainer.innerHTML = `
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-exclamation-circle me-2"></i>
-                                    Credenciales incorrectas
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            `;
-                        }
-                    }
-                });
-            }
-        });
+      function setCaptchaImage(d){
+        localStorage.setItem('captcha_id', d.id);
+        var img = document.getElementById('captchaImage');
+        var base = (localStorage.getItem('api_net')||'http://localhost:5132');
+        if (!img) return;
+        if (d.image) {
+          img.src = d.image;
+          img.onerror = function(){ img.src = base + '/api/auth/captcha/image/' + d.id + '?t=' + Date.now(); };
+        } else {
+          img.src = base + '/api/auth/captcha/image/' + d.id + '?t=' + Date.now();
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', async function(){
+        var u = document.getElementById('username');
+        var p = document.getElementById('password');
+        if (u) { u.value = ''; u.setAttribute('autocomplete','off'); u.setAttribute('autocapitalize','none'); }
+        if (p) { p.value = ''; p.setAttribute('autocomplete','off'); }
+        try {
+          var r = await fetch((localStorage.getItem('api_net')||'http://localhost:5132') + '/api/auth/captcha');
+          if (r.ok) {
+            var d = await r.json();
+            setCaptchaImage(d);
+          }
+        } catch {}
+      });
+      function refreshCaptcha(){
+        fetch((localStorage.getItem('api_net')||'http://localhost:5132') + '/api/auth/captcha').then(r=>r.json()).then(d=>{ setCaptchaImage(d); });
+      }
     </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        var u = document.getElementById('username');
+        var p = document.getElementById('password');
+        if (u) { u.value = ''; u.setAttribute('autocomplete','off'); u.setAttribute('autocapitalize','none'); }
+        if (p) { p.value = ''; p.setAttribute('autocomplete','off'); }
+      });
+    </script>
+    
 </body>
 </html>

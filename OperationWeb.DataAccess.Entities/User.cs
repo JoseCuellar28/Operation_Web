@@ -21,6 +21,12 @@ namespace OperationWeb.DataAccess.Entities
         [EmailAddress]
         public string? Email { get; set; }
 
+        [StringLength(150)]
+        public string FullName { get; set; } = string.Empty;
+
+        [StringLength(100)]
+        public string? Company { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

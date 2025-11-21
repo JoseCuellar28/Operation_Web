@@ -107,6 +107,8 @@ namespace OperationWeb.DataAccess
                 entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Email).HasMaxLength(100);
+                entity.Property(e => e.FullName).HasMaxLength(150);
+                entity.Property(e => e.Company).HasMaxLength(100);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
                 entity.HasIndex(e => e.Username).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
