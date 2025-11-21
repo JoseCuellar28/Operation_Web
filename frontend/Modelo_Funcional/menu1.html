@@ -19,7 +19,7 @@
                 <img src="img/OperationSmart.png" alt="OperationSmart" class="header-logo">
             </div>
             <div class="header-right">
-                <button class="logout-btn" onclick="cerrarSesion()" title="Cerrar Sesión">
+                <button class="logout-btn" type="button" onclick="cerrarSesion()" title="Cerrar Sesión">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="logout-text">Cerrar Sesión</span>
                 </button>
@@ -41,8 +41,8 @@
                     <i class="fas fa-user"></i>
                 </div>
                 <div class="user-details">
-                    <div class="user-name">Diego Pereyra Diaz</div>
-                    <div class="user-role">Ferreyros</div>
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-role" id="userCompany"></div>
                 </div>
             </div>
 
@@ -964,22 +964,26 @@
     </style>
 
     <script>
-        // Función para cerrar sesión
         function cerrarSesion() {
-            // Mostrar confirmación antes de cerrar sesión
-            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                // Limpiar cualquier dato de sesión almacenado
-                localStorage.removeItem('usuario');
-                localStorage.removeItem('sesionActiva');
-                sessionStorage.clear();
-                
-                // Mostrar mensaje de despedida
-                alert('Sesión cerrada exitosamente. ¡Hasta pronto!');
-                
-                // Redirigir a la página de login
-                window.location.href = 'index.html';
-            }
+            var seguro = confirm('¿Estás seguro de que deseas cerrar sesión?');
+            if (!seguro) return;
+            localStorage.removeItem('usuario');
+            localStorage.removeItem('sesionActiva');
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('fullName');
+            localStorage.removeItem('company');
+            localStorage.removeItem('role');
+            sessionStorage.clear();
+            alert('Sesión cerrada exitosamente. ¡Hasta pronto!');
+            window.location.href = 'index.html';
         }
+        document.addEventListener('click', function(e){
+            var btn = e.target.closest('.logout-btn');
+            if (btn) {
+                e.preventDefault();
+                openLogoutModal();
+            }
+        });
 
         // Función para verificar si hay una sesión activa al cargar la página
         function verificarSesion() {
@@ -992,7 +996,14 @@
         // Verificar sesión al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             verificarSesion();
+            var n = localStorage.getItem('fullName') || localStorage.getItem('usuario') || '';
+            var c = localStorage.getItem('company') || '';
+            var nameEl = document.getElementById('userName');
+            var companyEl = document.getElementById('userCompany');
+            if (nameEl) nameEl.textContent = n;
+            if (companyEl) companyEl.textContent = c;
         });
     </script>
+
 </body>
 </html>

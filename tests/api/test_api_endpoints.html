@@ -198,8 +198,32 @@
         </div>
     </div>
 
+    <!-- Captcha Preview -->
+    <div class="container">
+        <h2>🔒 Captcha</h2>
+        <div class="endpoint-section">
+            <div class="endpoint-title">GET /api/auth/captcha - Generar captcha (id + imagen base64)</div>
+            <button onclick="getCaptcha()">Generar</button>
+            <div style="display:flex; gap:15px; align-items:center; margin-top:10px;">
+                <img id="captcha-img" alt="Captcha" style="height:40px; border:1px solid #ddd; border-radius:6px;">
+                <button onclick="refreshCaptcha()">↻ Refrescar</button>
+            </div>
+            <div style="margin-top:10px;">
+                <strong>Pregunta:</strong> <span id="captcha-question">(sin cargar)</span>
+            </div>
+            <div style="margin-top:10px;">
+                <strong>Id:</strong> <span id="captcha-id">(sin cargar)</span>
+            </div>
+            <div style="margin-top:10px;">
+                <strong>Imagen (endpoint directo):</strong> <a id="captcha-image-link" href="#" target="_blank">abrir</a>
+            </div>
+            <div id="captcha-response" class="response" style="margin-top:10px;"></div>
+        </div>
+    </div>
+
     <script>
-        const baseUrl = 'http://localhost:5132/api';
+        const baseUrl = localStorage.getItem('api_net') || 'http://localhost:5132/api';
+        document.getElementById('baseUrl').textContent = baseUrl;
 
         // Verificar estado de la API
         async function checkApiStatus() {
@@ -345,6 +369,38 @@
         window.onload = function() {
             checkApiStatus();
         };
+
+        // Captcha helpers
+        async function getCaptcha() {
+            try {
+                const r = await fetch(`${baseUrl}/auth/captcha`);
+                const d = await r.json();
+                displayResponse('captcha-response', d, !r.ok);
+                if (r.ok) {
+                    const img = document.getElementById('captcha-img');
+                    const q = document.getElementById('captcha-question');
+                    const idEl = document.getElementById('captcha-id');
+                    const lnk = document.getElementById('captcha-image-link');
+                    q.textContent = d.question || '(no disponible)';
+                    idEl.textContent = d.id || '(no disponible)';
+                    if (img && d.image) {
+                        img.src = d.image;
+                        img.onerror = function(){ img.src = `${baseUrl}/auth/captcha/image/${d.id}?t=${Date.now()}` }
+                    } else if (img) {
+                        img.src = `${baseUrl}/auth/captcha/image/${d.id}?t=${Date.now()}`;
+                    }
+                    if (lnk) {
+                        lnk.href = `${baseUrl}/auth/captcha/image/${d.id}?t=${Date.now()}`;
+                    }
+                }
+            } catch (error) {
+                displayResponse('captcha-response', { error: error.message }, true);
+            }
+        }
+
+        async function refreshCaptcha(){
+            await getCaptcha();
+        }
     </script>
 </body>
 </html>

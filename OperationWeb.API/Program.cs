@@ -16,6 +16,7 @@ builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddMemoryCache();
 
 // Configure Entity Framework
 if (builder.Environment.IsDevelopment())
@@ -118,5 +119,59 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<OperationWebDbContext>();
+    await db.Database.EnsureCreatedAsync();
+
+    if (!await db.Roles.AnyAsync())
+    {
+        await db.Roles.AddRangeAsync(
+            new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" },
+            new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" }
+        );
+        await db.SaveChangesAsync();
+    }
+
+    var adminRole = await db.Roles.FirstAsync(r => r.Name == "Admin");
+    var userRole = await db.Roles.FirstAsync(r => r.Name == "Usuario");
+
+    async Task<int> EnsureUserAsync(string username, string email, string fullName, string? company)
+    {
+        var existing = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (existing != null) return existing.Id;
+        var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
+        var u = new OperationWeb.DataAccess.Entities.User
+        {
+            Username = username,
+            PasswordHash = hash,
+            Email = email,
+            FullName = fullName,
+            Company = company,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        await db.Users.AddAsync(u);
+        await db.SaveChangesAsync();
+        return u.Id;
+    }
+
+    var joseId = await EnsureUserAsync("jose.arbildo", "jose.arbildo@example.local", "Jose Arbildo Cuellar", "Ferreyros");
+    var edwardId = await EnsureUserAsync("edward.vega", "edward.vega@example.local", "Edward Vega Vergara", "Siderperu");
+    var ederId = await EnsureUserAsync("eder.torres", "eder.torres@example.local", "Eder Torres Gonzales", "V&V");
+
+    async Task EnsureUserRoleAsync(int userId, int roleId)
+    {
+        var exists = await db.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
+        if (exists) return;
+        await db.UserRoles.AddAsync(new OperationWeb.DataAccess.Entities.UserRole { UserId = userId, RoleId = roleId });
+        await db.SaveChangesAsync();
+    }
+
+    await EnsureUserRoleAsync(joseId, adminRole.Id);
+    await EnsureUserRoleAsync(edwardId, userRole.Id);
+    await EnsureUserRoleAsync(ederId, userRole.Id);
+}
 
 app.Run();
