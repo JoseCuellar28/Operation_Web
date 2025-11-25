@@ -7,12 +7,12 @@ namespace OperationWeb.Business
     public class CuadrillaService : ICuadrillaService
     {
         private readonly ICuadrillaRepository _cuadrillaRepository;
-        private readonly IColaboradorRepository _colaboradorRepository;
+        private readonly IPersonalRepository _personalRepository;
 
-        public CuadrillaService(ICuadrillaRepository cuadrillaRepository, IColaboradorRepository colaboradorRepository)
+        public CuadrillaService(ICuadrillaRepository cuadrillaRepository, IPersonalRepository personalRepository)
         {
             _cuadrillaRepository = cuadrillaRepository;
-            _colaboradorRepository = colaboradorRepository;
+            _personalRepository = personalRepository;
         }
 
         public async Task<IEnumerable<Cuadrilla>> GetAllCuadrillasAsync()
@@ -25,9 +25,9 @@ namespace OperationWeb.Business
             return await _cuadrillaRepository.GetByIdAsync(id);
         }
 
-        public async Task<Cuadrilla?> GetCuadrillaWithColaboradoresAsync(int id)
+        public async Task<Cuadrilla?> GetCuadrillaWithPersonalAsync(int id)
         {
-            return await _cuadrillaRepository.GetCuadrillaWithColaboradoresAsync(id);
+            return await _cuadrillaRepository.GetCuadrillaWithPersonalAsync(id);
         }
 
         public async Task<IEnumerable<Cuadrilla>> GetCuadrillasByEstadoAsync(string estado)
@@ -75,9 +75,9 @@ namespace OperationWeb.Business
                 throw new InvalidOperationException("Ya existe otra cuadrilla con ese nombre");
 
             // Verificar que la nueva capacidad no sea menor a los colaboradores actuales
-            var colaboradoresActuales = await _cuadrillaRepository.GetColaboradoresByCuadrillaAsync(cuadrilla.Id);
-            if (cuadrilla.CapacidadMaxima < colaboradoresActuales.Count())
-                throw new InvalidOperationException($"La capacidad máxima no puede ser menor a los colaboradores actuales ({colaboradoresActuales.Count()})");
+            var personalActual = await _cuadrillaRepository.GetPersonalByCuadrillaAsync(cuadrilla.Id);
+            if (cuadrilla.CapacidadMaxima < personalActual.Count())
+                throw new InvalidOperationException($"La capacidad máxima no puede ser menor al personal actual ({personalActual.Count()})");
 
             cuadrilla.FechaModificacion = DateTime.UtcNow;
             return await _cuadrillaRepository.UpdateAsync(cuadrilla);
@@ -90,24 +90,24 @@ namespace OperationWeb.Business
                 return false;
 
             // Verificar que no tenga colaboradores asignados
-            var colaboradores = await _cuadrillaRepository.GetColaboradoresByCuadrillaAsync(id);
-            if (colaboradores.Any())
-                throw new InvalidOperationException("No se puede eliminar una cuadrilla con colaboradores asignados");
+            var personal = await _cuadrillaRepository.GetPersonalByCuadrillaAsync(id);
+            if (personal.Any())
+                throw new InvalidOperationException("No se puede eliminar una cuadrilla con personal asignado");
 
             await _cuadrillaRepository.DeleteAsync(id);
             return true;
         }
 
-        public async Task<bool> AsignarColaboradorAsync(int cuadrillaId, int colaboradorId, string? rol = null)
+        public async Task<bool> AsignarPersonalAsync(int cuadrillaId, string personalDNI, string? rol = null)
         {
             // Validar que la cuadrilla existe y está activa
             var cuadrilla = await _cuadrillaRepository.GetByIdAsync(cuadrillaId);
             if (cuadrilla == null || cuadrilla.Estado != "Activa")
                 return false;
 
-            // Validar que el colaborador existe y está activo
-            var colaborador = await _colaboradorRepository.GetByIdAsync(colaboradorId);
-            if (colaborador == null || colaborador.Estado != "Activo")
+            // Validar que el personal existe
+            var personal = await _personalRepository.GetByDNIAsync(personalDNI);
+            if (personal == null)
                 return false;
 
             // Validar capacidad disponible
@@ -115,17 +115,17 @@ namespace OperationWeb.Business
             if (capacidadDisponible <= 0)
                 return false;
 
-            return await _cuadrillaRepository.AsignarColaboradorAsync(cuadrillaId, colaboradorId, rol);
+            return await _cuadrillaRepository.AsignarPersonalAsync(cuadrillaId, personalDNI, rol);
         }
 
-        public async Task<bool> DesasignarColaboradorAsync(int cuadrillaId, int colaboradorId)
+        public async Task<bool> DesasignarPersonalAsync(int cuadrillaId, string personalDNI)
         {
-            return await _cuadrillaRepository.DesasignarColaboradorAsync(cuadrillaId, colaboradorId);
+            return await _cuadrillaRepository.DesasignarPersonalAsync(cuadrillaId, personalDNI);
         }
 
-        public async Task<IEnumerable<Colaborador>> GetColaboradoresByCuadrillaAsync(int cuadrillaId)
+        public async Task<IEnumerable<Personal>> GetPersonalByCuadrillaAsync(int cuadrillaId)
         {
-            return await _cuadrillaRepository.GetColaboradoresByCuadrillaAsync(cuadrillaId);
+            return await _cuadrillaRepository.GetPersonalByCuadrillaAsync(cuadrillaId);
         }
 
         public async Task<bool> ValidarCapacidadCuadrillaAsync(int cuadrillaId)

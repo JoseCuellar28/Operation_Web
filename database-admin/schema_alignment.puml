@@ -1,0 +1,130 @@
+@startuml
+
+!theme plain
+hide circle
+skinparam linetype ortho
+
+package "Database (SQL Server)" {
+    entity "Users" as db_Users {
+        *Id : int
+        *DNI : nvarchar(40)
+        *PasswordHash : nvarchar(200)
+        Email : nvarchar(100)
+        IsActive : bit
+        CreatedAt : datetime2
+    }
+
+    entity "Roles" as db_Roles {
+        *Id : int
+        *Name : nvarchar(50)
+        Description : nvarchar(200)
+    }
+
+    entity "UserRoles" as db_UserRoles {
+        *Id : int
+        *UserId : int
+        *RoleId : int
+    }
+
+    entity "Empleado" as db_Empleado {
+        *IdEmpleado : int
+        *DNI : nvarchar(40)
+        *Nombre : nvarchar(100)
+        ApellidoPaterno : nvarchar(100)
+        ApellidoMaterno : nvarchar(100)
+        Email : nvarchar(100)
+        Telefono : nvarchar(20)
+        CodigoEmpleado : nvarchar(50)
+    }
+
+    entity "Personal" as db_Personal {
+        *DNI : nvarchar(40)
+        Inspector : nvarchar(100)
+        Telefono : nvarchar(20)
+        Distrito : nvarchar(100)
+        Tipo : nvarchar(40)
+    }
+
+    entity "Cuadrillas" as db_Cuadrillas {
+        *Id : int
+        *Nombre : nvarchar(100)
+        Estado : nvarchar(50)
+        Supervisor : nvarchar(100)
+        Ubicacion : nvarchar(200)
+        CapacidadMaxima : int
+    }
+
+    entity "CuadrillaColaboradores" as db_CuadrillaColaboradores {
+        *Id : int
+        *CuadrillaId : int
+        *ColaboradorId : int
+        *EmpleadoId : int
+        Rol : nvarchar(50)
+        Activo : bit
+    }
+}
+
+package "C# Entities (OperationWeb.DataAccess)" {
+    class "User" as cs_User {
+        +Id : int
+        +DNI : string
+        +PasswordHash : string
+        +Email : string
+        +IsActive : bool
+    }
+
+    class "Role" as cs_Role {
+        +Id : int
+        +Name : string
+        +Description : string
+    }
+
+    class "Empleado" as cs_Empleado {
+        +IdEmpleado : int
+        +DNI : string
+        +Nombre : string
+        +ApellidoPaterno : string
+        +ApellidoMaterno : string
+        +Email : string
+    }
+
+    class "Cuadrilla" as cs_Cuadrilla {
+        +Id : int
+        +Nombre : string
+        +Estado : string
+        +Supervisor : string
+    }
+
+    class "Colaborador" as cs_Colaborador {
+        +Id : int
+        +Nombre : string
+        +Apellido : string
+        +Documento : string
+        +Cargo : string
+    }
+
+    class "CuadrillaColaborador" as cs_CuadrillaColaborador {
+        +Id : int
+        +CuadrillaId : int
+        +ColaboradorId : int
+        +Rol : string
+        +Activo : bool
+    }
+}
+
+' Alignment Relationships
+db_Users .. cs_User : "Aligned (DNI)"
+db_Roles .. cs_Role : "Aligned"
+db_Empleado .. cs_Empleado : "Aligned"
+db_Cuadrillas .. cs_Cuadrilla : "Aligned"
+
+' Misalignments
+cs_Colaborador .. db_Personal : "Possible Match?"
+cs_Colaborador .. db_Empleado : "Possible Match?"
+note "MISSING TABLE: Colaboradores\nC# Entity 'Colaborador' has no matching table." as N1
+cs_Colaborador .. N1
+
+db_CuadrillaColaboradores .. cs_CuadrillaColaborador : "Partial Match"
+note on db_CuadrillaColaboradores : Has both ColaboradorId AND EmpleadoId.\nWhich one is the foreign key?
+
+@enduml

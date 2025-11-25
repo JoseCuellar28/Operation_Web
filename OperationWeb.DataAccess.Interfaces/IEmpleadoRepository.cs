@@ -1,6 +1,6 @@
 using OperationWeb.DataAccess.Entities;
 
-namespace OperationWeb.DataAccess.Repositories
+namespace OperationWeb.DataAccess.Interfaces
 {
     public interface IEmpleadoRepository
     {

@@ -10,8 +10,8 @@ namespace OperationWeb.DataAccess.Entities
         public int Id { get; set; }
 
         [Required]
-        [StringLength(100)]
-        public string Username { get; set; } = string.Empty;
+        [StringLength(40)]
+        public string DNI { get; set; } = string.Empty;
 
         [Required]
         [StringLength(200)]
@@ -20,12 +20,6 @@ namespace OperationWeb.DataAccess.Entities
         [StringLength(100)]
         [EmailAddress]
         public string? Email { get; set; }
-
-        [StringLength(150)]
-        public string FullName { get; set; } = string.Empty;
-
-        [StringLength(100)]
-        public string? Company { get; set; }
 
         public bool IsActive { get; set; } = true;
 

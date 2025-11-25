@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OperationWeb.DataAccess.Entities;
+using OperationWeb.DataAccess.Interfaces;
 
 namespace OperationWeb.DataAccess.Repositories
 {

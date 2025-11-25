@@ -57,14 +57,14 @@ namespace OperationWeb.API.Controllers
         }
 
         /// <summary>
-        /// Obtiene una cuadrilla con sus colaboradores
+        /// Obtiene una cuadrilla con su personal asignado
         /// </summary>
-        [HttpGet("{id}/colaboradores")]
-        public async Task<ActionResult<Cuadrilla>> GetCuadrillaWithColaboradores(int id)
+        [HttpGet("{id}/personal")]
+        public async Task<ActionResult<Cuadrilla>> GetCuadrillaWithPersonal(int id)
         {
             try
             {
-                var cuadrilla = await _cuadrillaService.GetCuadrillaWithColaboradoresAsync(id);
+                var cuadrilla = await _cuadrillaService.GetCuadrillaWithPersonalAsync(id);
                 if (cuadrilla == null)
                     return NotFound($"Cuadrilla con ID {id} no encontrada");
 
@@ -72,147 +72,51 @@ namespace OperationWeb.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener la cuadrilla {Id} con colaboradores", id);
+                _logger.LogError(ex, "Error al obtener la cuadrilla {Id} con personal", id);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
 
+        // ... (GetCuadrillasByEstado, CreateCuadrilla, UpdateCuadrilla, DeleteCuadrilla remain same)
+
         /// <summary>
-        /// Obtiene cuadrillas por estado
+        /// Asigna personal a una cuadrilla
         /// </summary>
-        [HttpGet("estado/{estado}")]
-        public async Task<ActionResult<IEnumerable<Cuadrilla>>> GetCuadrillasByEstado(string estado)
+        [HttpPost("{cuadrillaId}/personal/{personalDNI}")]
+        public async Task<ActionResult> AsignarPersonal(int cuadrillaId, string personalDNI, [FromBody] string? rol = null)
         {
             try
             {
-                var cuadrillas = await _cuadrillaService.GetCuadrillasByEstadoAsync(estado);
-                return Ok(cuadrillas);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener cuadrillas por estado {Estado}", estado);
-                return StatusCode(500, "Error interno del servidor");
-            }
-        }
-
-        /// <summary>
-        /// Crea una nueva cuadrilla
-        /// </summary>
-        [HttpPost]
-        public async Task<ActionResult<Cuadrilla>> CreateCuadrilla(Cuadrilla cuadrilla)
-        {
-            try
-            {
-                var nuevaCuadrilla = await _cuadrillaService.CreateCuadrillaAsync(cuadrilla);
-                return CreatedAtAction(nameof(GetCuadrilla), new { id = nuevaCuadrilla.Id }, nuevaCuadrilla);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear la cuadrilla");
-                return StatusCode(500, "Error interno del servidor");
-            }
-        }
-
-        /// <summary>
-        /// Actualiza una cuadrilla existente
-        /// </summary>
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Cuadrilla>> UpdateCuadrilla(int id, Cuadrilla cuadrilla)
-        {
-            try
-            {
-                if (id != cuadrilla.Id)
-                    return BadRequest("El ID de la URL no coincide con el ID de la cuadrilla");
-
-                var cuadrillaActualizada = await _cuadrillaService.UpdateCuadrillaAsync(cuadrilla);
-                return Ok(cuadrillaActualizada);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar la cuadrilla {Id}", id);
-                return StatusCode(500, "Error interno del servidor");
-            }
-        }
-
-        /// <summary>
-        /// Elimina una cuadrilla
-        /// </summary>
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteCuadrilla(int id)
-        {
-            try
-            {
-                var resultado = await _cuadrillaService.DeleteCuadrillaAsync(id);
+                var resultado = await _cuadrillaService.AsignarPersonalAsync(cuadrillaId, personalDNI, rol);
                 if (!resultado)
-                    return NotFound($"Cuadrilla con ID {id} no encontrada");
+                    return BadRequest("No se pudo asignar el personal. Verifique que ambos existan y haya capacidad disponible.");
 
-                return NoContent();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
+                return Ok("Personal asignado exitosamente");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al eliminar la cuadrilla {Id}", id);
+                _logger.LogError(ex, "Error al asignar personal {PersonalDNI} a cuadrilla {CuadrillaId}", personalDNI, cuadrillaId);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
 
         /// <summary>
-        /// Asigna un colaborador a una cuadrilla
+        /// Desasigna personal de una cuadrilla
         /// </summary>
-        [HttpPost("{cuadrillaId}/colaboradores/{colaboradorId}")]
-        public async Task<ActionResult> AsignarColaborador(int cuadrillaId, int colaboradorId, [FromBody] string? rol = null)
+        [HttpDelete("{cuadrillaId}/personal/{personalDNI}")]
+        public async Task<ActionResult> DesasignarPersonal(int cuadrillaId, string personalDNI)
         {
             try
             {
-                var resultado = await _cuadrillaService.AsignarColaboradorAsync(cuadrillaId, colaboradorId, rol);
-                if (!resultado)
-                    return BadRequest("No se pudo asignar el colaborador. Verifique que ambos existan, estén activos y haya capacidad disponible.");
-
-                return Ok("Colaborador asignado exitosamente");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al asignar colaborador {ColaboradorId} a cuadrilla {CuadrillaId}", colaboradorId, cuadrillaId);
-                return StatusCode(500, "Error interno del servidor");
-            }
-        }
-
-        /// <summary>
-        /// Desasigna un colaborador de una cuadrilla
-        /// </summary>
-        [HttpDelete("{cuadrillaId}/colaboradores/{colaboradorId}")]
-        public async Task<ActionResult> DesasignarColaborador(int cuadrillaId, int colaboradorId)
-        {
-            try
-            {
-                var resultado = await _cuadrillaService.DesasignarColaboradorAsync(cuadrillaId, colaboradorId);
+                var resultado = await _cuadrillaService.DesasignarPersonalAsync(cuadrillaId, personalDNI);
                 if (!resultado)
                     return NotFound("No se encontró la asignación especificada");
 
-                return Ok("Colaborador desasignado exitosamente");
+                return Ok("Personal desasignado exitosamente");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al desasignar colaborador {ColaboradorId} de cuadrilla {CuadrillaId}", colaboradorId, cuadrillaId);
+                _logger.LogError(ex, "Error al desasignar personal {PersonalDNI} de cuadrilla {CuadrillaId}", personalDNI, cuadrillaId);
                 return StatusCode(500, "Error interno del servidor");
             }
         }

@@ -17,30 +17,30 @@ namespace OperationWeb.DataAccess
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Cuadrilla>> GetCuadrillasWithColaboradoresAsync()
+        public async Task<IEnumerable<Cuadrilla>> GetCuadrillasWithPersonalAsync()
         {
             return await _dbSet
                 .Include(c => c.CuadrillaColaboradores)
-                    .ThenInclude(cc => cc.Colaborador)
+                    .ThenInclude(cc => cc.Personal)
                 .ToListAsync();
         }
 
-        public async Task<Cuadrilla?> GetCuadrillaWithColaboradoresAsync(int id)
+        public async Task<Cuadrilla?> GetCuadrillaWithPersonalAsync(int id)
         {
             return await _dbSet
                 .Include(c => c.CuadrillaColaboradores.Where(cc => cc.Activo))
-                    .ThenInclude(cc => cc.Colaborador)
+                    .ThenInclude(cc => cc.Personal)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<bool> AsignarColaboradorAsync(int cuadrillaId, int colaboradorId, string? rol = null)
+        public async Task<bool> AsignarPersonalAsync(int cuadrillaId, string personalDNI, string? rol = null)
         {
             try
             {
                 // Verificar si ya existe una asignación activa
                 var existeAsignacion = await _context.CuadrillaColaboradores
                     .AnyAsync(cc => cc.CuadrillaId == cuadrillaId && 
-                                   cc.ColaboradorId == colaboradorId && 
+                                   cc.PersonalDNI == personalDNI && 
                                    cc.Activo);
 
                 if (existeAsignacion)
@@ -54,7 +54,7 @@ namespace OperationWeb.DataAccess
                 var asignacion = new CuadrillaColaborador
                 {
                     CuadrillaId = cuadrillaId,
-                    ColaboradorId = colaboradorId,
+                    PersonalDNI = personalDNI,
                     Rol = rol,
                     FechaAsignacion = DateTime.UtcNow,
                     Activo = true
@@ -70,13 +70,13 @@ namespace OperationWeb.DataAccess
             }
         }
 
-        public async Task<bool> DesasignarColaboradorAsync(int cuadrillaId, int colaboradorId)
+        public async Task<bool> DesasignarPersonalAsync(int cuadrillaId, string personalDNI)
         {
             try
             {
                 var asignacion = await _context.CuadrillaColaboradores
                     .FirstOrDefaultAsync(cc => cc.CuadrillaId == cuadrillaId && 
-                                              cc.ColaboradorId == colaboradorId && 
+                                              cc.PersonalDNI == personalDNI && 
                                               cc.Activo);
 
                 if (asignacion == null)
@@ -94,12 +94,12 @@ namespace OperationWeb.DataAccess
             }
         }
 
-        public async Task<IEnumerable<Colaborador>> GetColaboradoresByCuadrillaAsync(int cuadrillaId)
+        public async Task<IEnumerable<Personal>> GetPersonalByCuadrillaAsync(int cuadrillaId)
         {
             return await _context.CuadrillaColaboradores
                 .Where(cc => cc.CuadrillaId == cuadrillaId && cc.Activo)
-                .Include(cc => cc.Colaborador)
-                .Select(cc => cc.Colaborador)
+                .Include(cc => cc.Personal)
+                .Select(cc => cc.Personal)
                 .ToListAsync();
         }
 

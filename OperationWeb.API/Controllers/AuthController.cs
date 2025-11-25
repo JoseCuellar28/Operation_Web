@@ -23,11 +23,11 @@ namespace OperationWeb.API.Controllers
             _cache = cache;
         }
 
-        public record LoginRequest(string Username, string Password, string? CaptchaId, string? CaptchaAnswer);
-        public record UserDto(int Id, string Username, string? Email, bool IsActive, DateTime CreatedAt);
+        public record LoginRequest(string DNI, string Password, string? CaptchaId, string? CaptchaAnswer);
+        public record UserDto(int Id, string DNI, string? Email, bool IsActive, DateTime CreatedAt);
         public record RoleDto(int Id, string Name, string? Description);
         public record UserRoleDto(int Id, int UserId, int RoleId);
-        public record MeDto(string Username, string? Email, string FullName, string? Company, string Role);
+        public record MeDto(string DNI, string? Email, string Role);
         public record CaptchaData(string Question, int Expected);
 
         [HttpPost("login")]
@@ -43,10 +43,10 @@ namespace OperationWeb.API.Controllers
             if (!int.TryParse(cans, out var ans) || ans != cd.Expected) return BadRequest("Captcha incorrecto");
             _cache.Remove(cacheKey);
             var role = "User";
-            var username = req.Username ?? string.Empty;
+            var dni = req.DNI ?? string.Empty;
             var password = req.Password ?? string.Empty;
 
-            var user = _db.Users.FirstOrDefault(u => u.Username == username && u.IsActive);
+            var user = _db.Users.FirstOrDefault(u => u.DNI == dni && u.IsActive);
             bool ok = false;
             if (user != null)
             {
@@ -63,7 +63,7 @@ namespace OperationWeb.API.Controllers
             else
             {
                 var demoUser = _config.GetSection("Jwt:DemoUser");
-                var u = demoUser["Username"] ?? "";
+                var u = demoUser["DNI"] ?? "";
                 var h = demoUser["PasswordHash"] ?? "";
                 var p = demoUser["PasswordPlain"] ?? "";
                 role = demoUser["Role"] ?? "User";
@@ -76,7 +76,7 @@ namespace OperationWeb.API.Controllers
                 {
                     ok = string.Equals(password, p);
                 }
-                ok = ok && string.Equals(username, u, System.StringComparison.OrdinalIgnoreCase);
+                ok = ok && string.Equals(dni, u, System.StringComparison.OrdinalIgnoreCase);
                 if (!ok) return Unauthorized();
             }
 
@@ -85,7 +85,7 @@ namespace OperationWeb.API.Controllers
             var key = _config["Jwt:Key"] ?? "REEMPLAZAR";
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
+                new Claim(JwtRegisteredClaimNames.Sub, dni),
                 new Claim(ClaimTypes.Role, role),
             };
             var creds = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), SecurityAlgorithms.HmacSha256);
@@ -98,11 +98,11 @@ namespace OperationWeb.API.Controllers
         [Microsoft.AspNetCore.Authorization.Authorize]
         public ActionResult<MeDto> Me()
         {
-            var username = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? string.Empty;
+            var dni = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? string.Empty;
             var role = User.FindFirstValue(ClaimTypes.Role) ?? "User";
-            var u = _db.Users.FirstOrDefault(x => x.Username == username);
+            var u = _db.Users.FirstOrDefault(x => x.DNI == dni);
             if (u == null) return NotFound();
-            return Ok(new MeDto(u.Username, u.Email, u.FullName, u.Company, role));
+            return Ok(new MeDto(u.DNI, u.Email, role));
         }
 
         [HttpGet("captcha")]
@@ -115,7 +115,15 @@ namespace OperationWeb.API.Controllers
             var id = System.Guid.NewGuid().ToString("N");
             var data = new CaptchaData($"{a} + {b}", a + b);
             _cache.Set("captcha:" + id, data, new Microsoft.Extensions.Caching.Memory.MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = System.TimeSpan.FromMinutes(2) });
-            return Ok(new { id = id, question = data.Question });
+            var escaped = System.Security.SecurityElement.Escape(data.Question);
+            var svg = $@"<svg xmlns='http://www.w3.org/2000/svg' width='180' height='50'>
+                <rect width='100%' height='100%' fill='rgb(248,249,250)' />
+                <g transform='translate(90,25)'>
+                    <text x='0' y='8' text-anchor='middle' dominant-baseline='middle' font-family='Arial, Helvetica, sans-serif' font-size='24' font-weight='700' fill='rgb(60,60,60)'>{escaped}</text>
+                </g>
+            </svg>";
+            var dataUrl = "data:image/svg+xml;utf8," + System.Uri.EscapeDataString(svg);
+            return Ok(new { id = id, question = data.Question, image = dataUrl });
         }
 
         [HttpGet("captcha/image/{id}")]
@@ -124,26 +132,27 @@ namespace OperationWeb.API.Controllers
         {
             var cacheKey = "captcha:" + id;
             if (!(_cache.TryGetValue(cacheKey, out var obj) && obj is CaptchaData cd)) return NotFound();
-            using var bmp = new System.Drawing.Bitmap(180, 50);
-            using var g = System.Drawing.Graphics.FromImage(bmp);
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.Clear(System.Drawing.Color.FromArgb(248, 249, 250));
             var rnd = new System.Random();
+            var rotate = rnd.NextDouble() * 10 - 5;
+            var noise = new System.Text.StringBuilder();
             for (int i = 0; i < 6; i++)
             {
-                using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(30, 0, 0, 0), 1);
-                g.DrawLine(pen, rnd.Next(0, 180), rnd.Next(0, 50), rnd.Next(0, 180), rnd.Next(0, 50));
+                var x1 = rnd.Next(0, 180);
+                var y1 = rnd.Next(0, 50);
+                var x2 = rnd.Next(0, 180);
+                var y2 = rnd.Next(0, 50);
+                noise.Append($"<line x1='" + x1 + "' y1='" + y1 + "' x2='" + x2 + "' y2='" + y2 + "' stroke='rgba(0,0,0,0.15)' stroke-width='1' />");
             }
-            using var font = new System.Drawing.Font("Arial", 24, System.Drawing.FontStyle.Bold);
-            using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(60, 60, 60));
-            var format = new System.Drawing.StringFormat { Alignment = System.Drawing.StringAlignment.Center, LineAlignment = System.Drawing.StringAlignment.Center };
-            g.TranslateTransform(90, 25);
-            g.RotateTransform((float)(rnd.NextDouble() * 12 - 6));
-            g.DrawString(cd.Question, font, brush, 0, 0, format);
-            g.ResetTransform();
-            using var ms = new System.IO.MemoryStream();
-            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-            return File(ms.ToArray(), "image/png");
+            var escaped = System.Security.SecurityElement.Escape(cd.Question);
+            var svg = $@"<svg xmlns='http://www.w3.org/2000/svg' width='180' height='50' viewBox='0 0 180 50' preserveAspectRatio='xMidYMid meet'>
+                <rect width='180' height='50' fill='rgb(248,249,250)' />
+                {noise}
+                <g transform='translate(90,25) rotate({rotate})'>
+                    <text x='0' y='0' text-anchor='middle' dominant-baseline='central' font-family='Arial, Helvetica, sans-serif' font-size='22' font-weight='700' fill='rgb(60,60,60)'>{escaped}</text>
+                </g>
+            </svg>";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(svg);
+            return File(bytes, "image/svg+xml");
         }
 
         [HttpGet("ping")]
@@ -158,8 +167,8 @@ namespace OperationWeb.API.Controllers
         public ActionResult<IEnumerable<UserDto>> GetUsers()
         {
             var users = _db.Users
-                .Select(u => new UserDto(u.Id, u.Username, u.Email, u.IsActive, u.CreatedAt))
-                .OrderBy(u => u.Username)
+                .Select(u => new UserDto(u.Id, u.DNI, u.Email, u.IsActive, u.CreatedAt))
+                .OrderBy(u => u.DNI)
                 .ToList();
             return Ok(users);
         }

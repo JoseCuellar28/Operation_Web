@@ -6,7 +6,7 @@
 - IP/host de la BD accesible (ej. Tailscale `100.112.55.58`)
 
 ## Instalación
-- `cd fase4-standalone`
+- `cd etl-service`
 - `python3 -m venv .venv`
 - `source .venv/bin/activate`
 - `pip install -r requirements.txt`
@@ -23,7 +23,7 @@ DB_PASSWORD=TuPassword
 ```
 
 ## Scripts SQL
-- Copia los archivos de `fase4/sql/*.sql` a `fase4-standalone/sql/`
+- Copia los archivos de `fase4/sql/*.sql` a `etl-service/sql/`
 - Despliegue:
 ```
 python lib/db_tools.py deploy

@@ -105,7 +105,12 @@ def api_personal():
         port = int(os.getenv('DB_PORT', '1433'))
         if pytds is None:
             return jsonify({"error": "python-tds no instalado"}), 500
-        with pytds.connect(server=server, user=user, password=password, database=database, port=port, autocommit=True) as conn:
+        encrypt = (os.getenv('DB_ENCRYPT', 'true').lower() in ('1','true','yes'))
+        trust = (os.getenv('DB_TRUST_CERT', 'false').lower() in ('1','true','yes'))
+        connect_kwargs = dict(server=server, user=user, password=password, database=database, port=port, autocommit=True)
+        if trust:
+            connect_kwargs.update({'cafile': None, 'validate_host': False})
+        with pytds.connect(**connect_kwargs) as conn:
             cur = conn.cursor()
             # Parámetros opcionales: paginación y orden
             limit = request.args.get('limit', '')
@@ -156,7 +161,12 @@ def api_table_schema():
         port = int(os.getenv('DB_PORT', '1433'))
         if pytds is None:
             return jsonify({"error": "python-tds no instalado"}), 500
-        with pytds.connect(server=server, user=user, password=password, database=database, port=port, autocommit=True) as conn:
+        encrypt = (os.getenv('DB_ENCRYPT', 'true').lower() in ('1','true','yes'))
+        trust = (os.getenv('DB_TRUST_CERT', 'false').lower() in ('1','true','yes'))
+        connect_kwargs = dict(server=server, user=user, password=password, database=database, port=port, autocommit=True)
+        if trust:
+            connect_kwargs.update({'cafile': None, 'validate_host': False})
+        with pytds.connect(**connect_kwargs) as conn:
             cur = conn.cursor()
             cur.execute(
                 "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = %s ORDER BY ORDINAL_POSITION",

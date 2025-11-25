@@ -10,12 +10,17 @@ namespace OperationWeb.DataAccess
         }
 
         public DbSet<Cuadrilla> Cuadrillas { get; set; }
-        public DbSet<Colaborador> Colaboradores { get; set; }
         public DbSet<CuadrillaColaborador> CuadrillaColaboradores { get; set; }
         public DbSet<Empleado> Empleados { get; set; }
+        public DbSet<Personal> Personal { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<UserActivation> UserActivations { get; set; }
+        public DbSet<PersonalEventoLaboral> PersonalEventosLaborales { get; set; }
+        public DbSet<PersonalStaging> PersonalStaging { get; set; }
+        public DbSet<HistorialCargaPersonal> HistorialCargasPersonal { get; set; }
+        public DbSet<MotivoCese> MotivosCese { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,50 +36,9 @@ namespace OperationWeb.DataAccess
                 entity.Property(e => e.Supervisor).HasMaxLength(100);
                 entity.Property(e => e.Ubicacion).HasMaxLength(200);
                 entity.Property(e => e.FechaCreacion).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.CapacidadMaxima).HasDefaultValue(0);
 
                 entity.HasIndex(e => e.Nombre).IsUnique();
-            });
-
-            // Configuración de Colaborador
-            modelBuilder.Entity<Colaborador>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Apellido).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Documento).HasMaxLength(20);
-                entity.Property(e => e.Email).HasMaxLength(100);
-                entity.Property(e => e.Telefono).HasMaxLength(20);
-                entity.Property(e => e.Cargo).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Estado).IsRequired().HasMaxLength(50).HasDefaultValue("Activo");
-                entity.Property(e => e.FechaIngreso).HasDefaultValueSql("GETUTCDATE()");
-
-                entity.HasIndex(e => e.Documento).IsUnique();
-                entity.HasIndex(e => e.Email).IsUnique();
-            });
-
-            // Configuración de CuadrillaColaborador
-            modelBuilder.Entity<CuadrillaColaborador>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Rol).HasMaxLength(50);
-                entity.Property(e => e.FechaAsignacion).HasDefaultValueSql("GETUTCDATE()");
-                entity.Property(e => e.Activo).HasDefaultValue(true);
-
-                // Relaciones
-                entity.HasOne(e => e.Cuadrilla)
-                    .WithMany(c => c.CuadrillaColaboradores)
-                    .HasForeignKey(e => e.CuadrillaId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.Colaborador)
-                    .WithMany(c => c.CuadrillaColaboradores)
-                    .HasForeignKey(e => e.ColaboradorId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                // Índice único para evitar duplicados activos
-                entity.HasIndex(e => new { e.CuadrillaId, e.ColaboradorId, e.Activo })
-                    .IsUnique()
-                    .HasFilter("[Activo] = 1");
             });
 
             // Configuración de Empleado
@@ -93,24 +57,56 @@ namespace OperationWeb.DataAccess
                 entity.Property(e => e.UsuarioActivo).HasMaxLength(1);
                 entity.Property(e => e.UsuarioCreacion).HasMaxLength(50);
                 entity.Property(e => e.UsuarioModificacion).HasMaxLength(50);
+                entity.Property(e => e.DNI).IsRequired().HasMaxLength(40);
 
                 // Índices únicos
                 entity.HasIndex(e => e.NumeroDocumento).IsUnique().HasFilter("[NumeroDocumento] IS NOT NULL");
                 entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
                 entity.HasIndex(e => e.CodigoEmpleado).IsUnique().HasFilter("[CodigoEmpleado] IS NOT NULL");
+                entity.HasIndex(e => e.DNI).IsUnique();
             });
 
-            // Seguridad: Users, Roles, UserRoles
+            // Configuración de Personal
+            modelBuilder.Entity<Personal>(entity =>
+            {
+                entity.HasKey(e => e.DNI);
+                entity.ToTable("Personal");
+            });
+
+            // Configuración de CuadrillaColaborador
+            modelBuilder.Entity<CuadrillaColaborador>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Rol).HasMaxLength(50);
+                entity.Property(e => e.FechaAsignacion).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.Activo).HasDefaultValue(true);
+
+                // Relaciones
+                entity.HasOne(e => e.Cuadrilla)
+                    .WithMany(c => c.CuadrillaColaboradores)
+                    .HasForeignKey(e => e.CuadrillaId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Personal)
+                    .WithMany()
+                    .HasForeignKey(e => e.PersonalDNI)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Índice único para evitar duplicados activos
+                entity.HasIndex(e => new { e.CuadrillaId, e.PersonalDNI, e.Activo })
+                    .IsUnique()
+                    .HasFilter("[Activo] = 1");
+            });
+
+            // Seguridad: Users, Roles, UserRoles, UserActivations
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.DNI).IsRequired().HasMaxLength(40);
                 entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Email).HasMaxLength(100);
-                entity.Property(e => e.FullName).HasMaxLength(150);
-                entity.Property(e => e.Company).HasMaxLength(100);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.HasIndex(e => e.Username).IsUnique();
+                entity.HasIndex(e => e.DNI).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
             });
 
@@ -136,18 +132,67 @@ namespace OperationWeb.DataAccess
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<UserActivation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Token).IsUnique();
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Procesos
+            modelBuilder.Entity<PersonalEventoLaboral>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Personal)
+                      .WithMany()
+                      .HasForeignKey(e => e.DNI);
+            });
+
+            modelBuilder.Entity<PersonalStaging>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Personal)
+                      .WithMany()
+                      .HasForeignKey(e => e.DNI);
+                
+                entity.HasOne(e => e.MotivoCeseNavigation)
+                      .WithMany()
+                      .HasForeignKey(e => e.MotivoDeCese);
+            });
+
+            modelBuilder.Entity<HistorialCargaPersonal>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            modelBuilder.Entity<MotivoCese>(entity =>
+            {
+                entity.HasKey(e => e.Codigo);
+            });
+
             // Datos semilla
             SeedData(modelBuilder);
         }
 
         private void SeedData(ModelBuilder modelBuilder)
         {
-            // Colaboradores semilla
-            modelBuilder.Entity<Colaborador>().HasData(
-                new Colaborador { Id = 1, Nombre = "Juan", Apellido = "Pérez", Documento = "12345678", Email = "juan.perez@empresa.com", Telefono = "555-0001", Cargo = "Técnico", Estado = "Activo", FechaIngreso = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc) },
-                new Colaborador { Id = 2, Nombre = "María", Apellido = "González", Documento = "87654321", Email = "maria.gonzalez@empresa.com", Telefono = "555-0002", Cargo = "Supervisor", Estado = "Activo", FechaIngreso = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-                new Colaborador { Id = 3, Nombre = "Carlos", Apellido = "Rodríguez", Documento = "11223344", Email = "carlos.rodriguez@empresa.com", Telefono = "555-0003", Cargo = "Operario", Estado = "Activo", FechaIngreso = new DateTime(2024, 9, 1, 0, 0, 0, DateTimeKind.Utc) },
-                new Colaborador { Id = 4, Nombre = "Ana", Apellido = "López", Documento = "44332211", Email = "ana.lopez@empresa.com", Telefono = "555-0004", Cargo = "Técnico", Estado = "Activo", FechaIngreso = new DateTime(2024, 4, 1, 0, 0, 0, DateTimeKind.Utc) }
+            // Personal semilla (Necesarios para CuadrillaColaboradores)
+            modelBuilder.Entity<Personal>().HasData(
+                new Personal { DNI = "12345678", Inspector = "Juan Pérez", Telefono = "555-0001", Distrito = "Lima", Tipo = "Técnico", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
+                new Personal { DNI = "87654321", Inspector = "María González", Telefono = "555-0002", Distrito = "Miraflores", Tipo = "Supervisor", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
+                new Personal { DNI = "11223344", Inspector = "Carlos Rodríguez", Telefono = "555-0003", Distrito = "San Isidro", Tipo = "Operario", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
+                new Personal { DNI = "44332211", Inspector = "Ana López", Telefono = "555-0004", Distrito = "Surco", Tipo = "Técnico", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow }
+            );
+
+            // Empleados semilla (Modelo Operativo)
+            modelBuilder.Entity<Empleado>().HasData(
+                new Empleado { IdEmpleado = 1, Nombre = "Juan", ApellidoPaterno = "Pérez", DNI = "12345678", Email = "juan.perez@empresa.com", Telefono = "555-0001", FechaCreacion = DateTime.UtcNow },
+                new Empleado { IdEmpleado = 2, Nombre = "María", ApellidoPaterno = "González", DNI = "87654321", Email = "maria.gonzalez@empresa.com", Telefono = "555-0002", FechaCreacion = DateTime.UtcNow },
+                new Empleado { IdEmpleado = 3, Nombre = "Carlos", ApellidoPaterno = "Rodríguez", DNI = "11223344", Email = "carlos.rodriguez@empresa.com", Telefono = "555-0003", FechaCreacion = DateTime.UtcNow },
+                new Empleado { IdEmpleado = 4, Nombre = "Ana", ApellidoPaterno = "López", DNI = "44332211", Email = "ana.lopez@empresa.com", Telefono = "555-0004", FechaCreacion = DateTime.UtcNow }
             );
 
             // Cuadrillas semilla
@@ -159,10 +204,10 @@ namespace OperationWeb.DataAccess
 
             // Asignaciones semilla
             modelBuilder.Entity<CuadrillaColaborador>().HasData(
-                new CuadrillaColaborador { Id = 1, CuadrillaId = 1, ColaboradorId = 2, Rol = "Supervisor", FechaAsignacion = new DateTime(2024, 10, 1, 0, 0, 0, DateTimeKind.Utc), Activo = true },
-                new CuadrillaColaborador { Id = 2, CuadrillaId = 1, ColaboradorId = 1, Rol = "Técnico", FechaAsignacion = new DateTime(2024, 11, 1, 0, 0, 0, DateTimeKind.Utc), Activo = true },
-                new CuadrillaColaborador { Id = 3, CuadrillaId = 2, ColaboradorId = 3, Rol = "Operario", FechaAsignacion = new DateTime(2024, 11, 1, 0, 0, 0, DateTimeKind.Utc), Activo = true },
-                new CuadrillaColaborador { Id = 4, CuadrillaId = 2, ColaboradorId = 4, Rol = "Técnico", FechaAsignacion = new DateTime(2024, 11, 15, 0, 0, 0, DateTimeKind.Utc), Activo = true }
+                new CuadrillaColaborador { Id = 1, CuadrillaId = 1, PersonalDNI = "87654321", Rol = "Supervisor", FechaAsignacion = new DateTime(2024, 10, 1, 0, 0, 0, DateTimeKind.Utc), Activo = true },
+                new CuadrillaColaborador { Id = 2, CuadrillaId = 1, PersonalDNI = "12345678", Rol = "Técnico", FechaAsignacion = new DateTime(2024, 11, 1, 0, 0, 0, DateTimeKind.Utc), Activo = true },
+                new CuadrillaColaborador { Id = 3, CuadrillaId = 2, PersonalDNI = "11223344", Rol = "Operario", FechaAsignacion = new DateTime(2024, 11, 1, 0, 0, 0, DateTimeKind.Utc), Activo = true },
+                new CuadrillaColaborador { Id = 4, CuadrillaId = 2, PersonalDNI = "44332211", Rol = "Técnico", FechaAsignacion = new DateTime(2024, 11, 15, 0, 0, 0, DateTimeKind.Utc), Activo = true }
             );
         }
     }

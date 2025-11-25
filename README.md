@@ -54,13 +54,13 @@ Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 - Frontend (HTML/CSS/JS):
   - Estático; consumo de API con `fetch` en `frontend/Modelo_Funcional/js/dashboard_simple.js:3361–3390`; reescritura estática `vercel.json:1`.
 - Servicio Python (standalone):
-  - Flask + `flask_cors` (`fase4-standalone/server.py:16–27`), `pandas`, `pytds`, `.env`.
-  - Endpoints de salud, tablas, personal y carga Excel (`fase4-standalone/server.py:29–145`).
+  - Flask + `flask_cors` (`etl-service/server.py:16–27`), `pandas`, `pytds`, `.env`.
+  - Endpoints de salud, tablas, personal y carga Excel (`etl-service/server.py:29–145`).
 
 ### Autenticación y Autorización
 - API .NET: `UseAuthorization()` activo (`OperationWeb.API/Program.cs:54`) sin `AddAuthentication`/`UseAuthentication`; no hay `[Authorize]` en controladores (`OperationWeb.API/Controllers/*.cs`).
 - Frontend: login simulado sin tokens/sesión servidor (`frontend/Modelo_Funcional/js/login.js:138–173`); “sesión” cliente vía `localStorage` (`frontend/Modelo_Funcional/menu1.html:967–997`).
-- Python: sin autenticación; CORS abierto (`fase4-standalone/server.py:26–27`).
+- Python: sin autenticación; CORS abierto (`etl-service/server.py:26–27`).
 
 ### Manejo de Datos
 - Datos sensibles:
@@ -72,7 +72,7 @@ Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 - Validaciones:
   - Unicidad EF (`NumeroDocumento`, `Email`, `CodigoEmpleado`) (`OperationWeb.DataAccess/OperationWebDbContext.cs:94–98`).
   - Validación básica `ModelState` en `EmpleadosController` (`OperationWeb.API/Controllers/EmpleadosController.cs:103–107,131–135`).
-  - Validación de extensión Excel (`fase4-standalone/server.py:181–186`).
+  - Validación de extensión Excel (`etl-service/server.py:181–186`).
 
 ### Interfaz de Red y Comunicación
 - HTTPS: `UseHttpsRedirection` en API .NET (`Program.cs:50`); Flask sin TLS.

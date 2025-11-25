@@ -1,0 +1,4 @@
+python-tds
+python-dotenv
+tabulate
+pandas

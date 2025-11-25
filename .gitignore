@@ -39,7 +39,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+
 lib64/
 parts/
 sdist/
@@ -58,8 +58,8 @@ wheels/
 
 # Archivos de servidor local
 .python-http-server/
-fase4-standalone/tmp/
-fase4-standalone/*.xlsx
+etl-service/tmp/
+etl-service/*.xlsx
 
 # .NET Core / .NET Framework
 bin/

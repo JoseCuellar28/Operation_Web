@@ -20,6 +20,10 @@ namespace OperationWeb.DataAccess.Entities
         public string? NumeroDocumento { get; set; }
 
         [Required]
+        [StringLength(40)]
+        public string DNI { get; set; } = string.Empty;
+
+        [Required]
         [StringLength(100)]
         public string Nombre { get; set; } = string.Empty;
 

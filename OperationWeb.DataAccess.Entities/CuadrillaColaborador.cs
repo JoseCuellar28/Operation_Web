@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OperationWeb.DataAccess.Entities
 {
@@ -11,7 +12,8 @@ namespace OperationWeb.DataAccess.Entities
         public int CuadrillaId { get; set; }
 
         [Required]
-        public int ColaboradorId { get; set; }
+        [StringLength(40)]
+        public string PersonalDNI { get; set; } = string.Empty;
 
         public DateTime FechaAsignacion { get; set; } = DateTime.UtcNow;
 
@@ -25,6 +27,8 @@ namespace OperationWeb.DataAccess.Entities
 
         // Navegación
         public virtual Cuadrilla Cuadrilla { get; set; } = null!;
-        public virtual Colaborador Colaborador { get; set; } = null!;
+        
+        [ForeignKey("PersonalDNI")]
+        public virtual Personal Personal { get; set; } = null!;
     }
 }

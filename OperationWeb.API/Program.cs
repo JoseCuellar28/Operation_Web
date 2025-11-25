@@ -4,42 +4,58 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.OpenApi;
 using OperationWeb.DataAccess;
 using OperationWeb.DataAccess.Interfaces;
 using OperationWeb.Business.Interfaces;
 using OperationWeb.Business;
 
+// Load .env file
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "http://localhost:5132");
 
 // Add services to the container.
 builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache();
 
-// Configure Entity Framework
-if (builder.Environment.IsDevelopment())
+// Configure Entity Framework (prefer InMemory when no valid SQL connection)
+var isDev = builder.Environment.IsDevelopment() ||
+            string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase);
+
+// Try to get connection string from environment variable first, then configuration
+var conn = Environment.GetEnvironmentVariable("DefaultConnection") ?? 
+           builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+           string.Empty;
+
+// Check if we should use SQL:
+// 1. Must have a connection string
+// 2. Connection string must NOT contain "REEMPLAZAR" (placeholder)
+var useSql = !string.IsNullOrWhiteSpace(conn) && !conn.Contains("REEMPLAZAR", StringComparison.OrdinalIgnoreCase);
+
+if (useSql)
 {
-    builder.Services.AddDbContext<OperationWebDbContext>(options =>
-        options.UseInMemoryDatabase("DevOperationWeb"));
+    builder.Services.AddDbContext<OperationWebDbContext>(options => options.UseSqlServer(conn));
 }
 else
 {
-    builder.Services.AddDbContext<OperationWebDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddDbContext<OperationWebDbContext>(options => options.UseInMemoryDatabase("DevOperationWeb"));
 }
 
 // Register repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<ICuadrillaRepository, CuadrillaRepository>();
-builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
-builder.Services.AddScoped<OperationWeb.DataAccess.Repositories.IEmpleadoRepository, OperationWeb.DataAccess.Repositories.EmpleadoRepository>();
+builder.Services.AddScoped<OperationWeb.DataAccess.Interfaces.IEmpleadoRepository, OperationWeb.DataAccess.Repositories.EmpleadoRepository>();
+builder.Services.AddScoped<OperationWeb.DataAccess.Interfaces.IPersonalRepository, OperationWeb.DataAccess.Repositories.PersonalRepository>();
 
 // Register services
 builder.Services.AddScoped<ICuadrillaService, CuadrillaService>();
-builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
-builder.Services.AddScoped<OperationWeb.Business.Services.IEmpleadoService, OperationWeb.Business.Services.EmpleadoService>();
+builder.Services.AddScoped<OperationWeb.Business.Interfaces.IEmpleadoService, OperationWeb.Business.Services.EmpleadoService>();
 
 // Add CORS
 var corsSection = builder.Configuration.GetSection("Cors");
@@ -103,12 +119,9 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
     app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseHttpsRedirection();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseRouting();
@@ -120,58 +133,67 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<OperationWebDbContext>();
-    await db.Database.EnsureCreatedAsync();
-
-    if (!await db.Roles.AnyAsync())
+    using (var scope = app.Services.CreateScope())
     {
-        await db.Roles.AddRangeAsync(
-            new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" },
-            new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" }
-        );
-        await db.SaveChangesAsync();
-    }
+        var db = scope.ServiceProvider.GetRequiredService<OperationWebDbContext>();
+        await db.Database.EnsureCreatedAsync();
 
-    var adminRole = await db.Roles.FirstAsync(r => r.Name == "Admin");
-    var userRole = await db.Roles.FirstAsync(r => r.Name == "Usuario");
-
-    async Task<int> EnsureUserAsync(string username, string email, string fullName, string? company)
-    {
-        var existing = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
-        if (existing != null) return existing.Id;
-        var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
-        var u = new OperationWeb.DataAccess.Entities.User
+        if (!await db.Roles.AnyAsync())
         {
-            Username = username,
-            PasswordHash = hash,
-            Email = email,
-            FullName = fullName,
-            Company = company,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-        await db.Users.AddAsync(u);
-        await db.SaveChangesAsync();
-        return u.Id;
+            await db.Roles.AddRangeAsync(
+                new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" },
+                new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        var adminRole = await db.Roles.FirstAsync(r => r.Name == "Admin");
+        var userRole = await db.Roles.FirstAsync(r => r.Name == "Usuario");
+
+        async Task<int> EnsureUserAsync(string dni, string email)
+        {
+            var existing = await db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
+            if (existing != null) return existing.Id;
+            var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
+            var u = new OperationWeb.DataAccess.Entities.User
+            {
+                DNI = dni,
+                PasswordHash = hash,
+                Email = email,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            await db.Users.AddAsync(u);
+            await db.SaveChangesAsync();
+            return u.Id;
+        }
+
+        var joseId = await EnsureUserAsync("12345678", "jose.arbildo@example.local");
+        var edwardId = await EnsureUserAsync("87654321", "edward.vega@example.local");
+        var ederId = await EnsureUserAsync("11223344", "eder.torres@example.local");
+
+        async Task EnsureUserRoleAsync(int userId, int roleId)
+        {
+            var exists = await db.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
+            if (exists) return;
+            await db.UserRoles.AddAsync(new OperationWeb.DataAccess.Entities.UserRole { UserId = userId, RoleId = roleId });
+            await db.SaveChangesAsync();
+        }
+
+        await EnsureUserRoleAsync(joseId, adminRole.Id);
+        await EnsureUserRoleAsync(edwardId, userRole.Id);
+        await EnsureUserRoleAsync(ederId, userRole.Id);
     }
-
-    var joseId = await EnsureUserAsync("jose.arbildo", "jose.arbildo@example.local", "Jose Arbildo Cuellar", "Ferreyros");
-    var edwardId = await EnsureUserAsync("edward.vega", "edward.vega@example.local", "Edward Vega Vergara", "Siderperu");
-    var ederId = await EnsureUserAsync("eder.torres", "eder.torres@example.local", "Eder Torres Gonzales", "V&V");
-
-    async Task EnsureUserRoleAsync(int userId, int roleId)
-    {
-        var exists = await db.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
-        if (exists) return;
-        await db.UserRoles.AddAsync(new OperationWeb.DataAccess.Entities.UserRole { UserId = userId, RoleId = roleId });
-        await db.SaveChangesAsync();
-    }
-
-    await EnsureUserRoleAsync(joseId, adminRole.Id);
-    await EnsureUserRoleAsync(edwardId, userRole.Id);
-    await EnsureUserRoleAsync(ederId, userRole.Id);
 }
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Error inicializando la base de datos");
+}
+
+app.Logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
+app.Logger.LogInformation("DB provider: {Provider}", (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DefaultConnection")) && !builder.Configuration.GetConnectionString("DefaultConnection")!.Contains("REEMPLAZAR", StringComparison.OrdinalIgnoreCase) && !app.Environment.IsDevelopment()) ? "SqlServer" : "InMemory");
+app.Logger.LogInformation("Listening on: {Urls}", builder.Configuration["Urls"] ?? "http://localhost:5132");
 
 app.Run();

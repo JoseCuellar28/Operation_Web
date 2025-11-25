@@ -1,6 +1,6 @@
 using OperationWeb.DataAccess.Entities;
 
-namespace OperationWeb.Business.Services
+namespace OperationWeb.Business.Interfaces
 {
     public interface IEmpleadoService
     {
