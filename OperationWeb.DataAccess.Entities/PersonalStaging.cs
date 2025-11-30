@@ -52,5 +52,54 @@ namespace OperationWeb.DataAccess.Entities
 
         [ForeignKey(nameof(MotivoDeCese))]
         public MotivoCese? MotivoCeseNavigation { get; set; }
+
+        // Nuevos campos sincronizados con Excel
+        [StringLength(20)]
+        public string? CodigoEmpleado { get; set; }
+
+        [StringLength(100)]
+        public string? Categoria { get; set; }
+
+        [StringLength(100)]
+        public string? Division { get; set; }
+
+        [StringLength(100)]
+        public string? LineaNegocio { get; set; }
+
+        [StringLength(100)]
+        public string? Area { get; set; }
+
+        [StringLength(100)]
+        public string? Seccion { get; set; }
+
+        [StringLength(200)]
+        public string? DetalleCebe { get; set; }
+
+        [StringLength(50)]
+        public string? CodigoCebe { get; set; }
+
+        [StringLength(200)]
+        public string? MotivoCeseDesc { get; set; }
+
+        [StringLength(500)]
+        public string? Comentario { get; set; }
+
+        public DateTime? FechaNacimiento { get; set; }
+
+        [StringLength(20)]
+        public string? Sexo { get; set; }
+
+        public int? Edad { get; set; }
+
+        public decimal? Permanencia { get; set; }
+
+        [StringLength(100)]
+        public string? Email { get; set; }
+
+        [StringLength(100)]
+        public string? EmailPersonal { get; set; }
+
+        [StringLength(200)]
+        public string? JefeInmediato { get; set; }
     }
 }

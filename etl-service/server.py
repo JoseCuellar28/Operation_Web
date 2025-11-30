@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os
 from pathlib import Path
-from lib.db_tools import test, deploy_sql, tables, load_staging, merge_snapshot, audit
+from lib.db_tools import test, deploy_sql, tables, load_staging, merge_snapshot, audit, _conn
 from lib.procesar_personas import procesar_archivo
 import pandas as pd
 try:
@@ -125,7 +125,9 @@ def api_personal():
             total = cur.fetchone()[0]
 
             base_select = (
-                f"SELECT DNI, Inspector, Telefono, Distrito, Tipo, Estado, FechaInicio, FechaCese, FechaCreacion "
+                f"SELECT DNI, Inspector, Telefono, Distrito, Tipo, Estado, FechaInicio, FechaCese, FechaCreacion, "
+                f"CodigoEmpleado, Categoria, Division, LineaNegocio, Area, Seccion, DetalleCebe, CodigoCebe, "
+                f"MotivoCeseDesc, Comentario, FechaNacimiento, Sexo, Edad, Permanencia, Email, EmailPersonal, JefeInmediato "
                 f"FROM dbo.Personal ORDER BY {order_by} {order_dir}"
             )
 
@@ -147,6 +149,36 @@ def api_personal():
             return jsonify({"success": True, "data": data, "total": total})
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "details": repr(e)}), 500
+
+@app.get('/api/personal/<dni>/history')
+def get_personal_history(dni):
+    try:
+        with _conn() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT 
+                    TipoEvento,
+                    Motivo,
+                    FechaEvento,
+                    Periodo,
+                    UsuarioCreacion,
+                    FechaCreacion
+                FROM Personal_EventoLaboral
+                WHERE DNI = %s
+                ORDER BY FechaEvento DESC, FechaCreacion DESC
+            """, (dni,))
+            
+            if cur.description:
+                columns = [column[0] for column in cur.description]
+                results = []
+                for row in cur.fetchall():
+                    results.append(dict(zip(columns, row)))
+                return jsonify(results), 200
+            else:
+                return jsonify([]), 200
+                
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.get('/api/table-schema')
 def api_table_schema():
@@ -220,17 +252,58 @@ def api_upload_excel():
         except Exception as e:
             audit_error = str(e)
         # Resumen
+        # Generate preview rows from normalized data
+        rows = []
+        df_norm = res.get('normalizado')
+        if df_norm is not None and not getattr(df_norm, 'empty', True):
+            cols = list(df_norm.columns)
+            for i, row in df_norm.head(5).iterrows():
+                outrow = {}
+                for c in cols:
+                    val = row.get(c)
+                    outrow[c] = str(val) if val is not None else None
+                rows.append(outrow)
+
         out = {
             "success": True,
             "resumen": res["resumen"],
             "staging": stg,
             "snapshot": snap,
             "audit": aud,
-            "errors": {"staging": stg_error, "snapshot": snap_error, "audit": audit_error}
+            "errors": {"staging": stg_error, "snapshot": snap_error, "audit": audit_error},
+            "rows": rows # Add preview rows
         }
+        
+        if stg_error or snap_error or audit_error:
+            print(f"ERROR EN CARGA: Staging={stg_error}, Snapshot={snap_error}, Audit={audit_error}")
+            
         return jsonify(out), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 200
+
+
+@app.post('/api/list-sheets')
+def api_list_sheets():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "message": "Archivo no adjuntado"}), 400
+        f = request.files['file']
+        filename = f.filename or ''
+        if not filename.lower().endswith(('.xlsx', '.xlsm')):
+            return jsonify({"success": False, "message": "Formato no soportado"}), 400
+            
+        base = Path(__file__).resolve().parent
+        tmpdir = base / 'tmp'
+        tmpdir.mkdir(exist_ok=True)
+        tmp_path = tmpdir / filename
+        f.save(str(tmp_path))
+        
+        xl = pd.ExcelFile(str(tmp_path))
+        sheets = xl.sheet_names
+        
+        return jsonify({"success": True, "sheets": sheets}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.post('/api/preview-excel')
 def api_preview_excel():

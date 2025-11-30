@@ -56,10 +56,14 @@ builder.Services.AddScoped<OperationWeb.DataAccess.Interfaces.IPersonalRepositor
 // Register services
 builder.Services.AddScoped<ICuadrillaService, CuadrillaService>();
 builder.Services.AddScoped<OperationWeb.Business.Interfaces.IEmpleadoService, OperationWeb.Business.Services.EmpleadoService>();
+builder.Services.AddScoped<OperationWeb.Business.Interfaces.IPersonalService, OperationWeb.Business.Services.PersonalService>();
+builder.Services.AddScoped<OperationWeb.Business.Services.IEncryptionService, OperationWeb.Business.Services.EncryptionService>();
+builder.Services.AddScoped<OperationWeb.Business.Interfaces.IEmailService, OperationWeb.Business.Services.EmailService>();
+builder.Services.AddScoped<OperationWeb.Business.Interfaces.IUserService, OperationWeb.Business.Services.UserService>();
 
 // Add CORS
 var corsSection = builder.Configuration.GetSection("Cors");
-var allowedOrigins = corsSection.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:8000" };
+var allowedOrigins = corsSection.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:8000", "http://localhost:8080" };
 var allowAnyOriginInDev = corsSection.GetValue<bool>("AllowAnyOriginInDev");
 builder.Services.AddCors(options =>
 {
@@ -140,39 +144,62 @@ try
         var db = scope.ServiceProvider.GetRequiredService<OperationWebDbContext>();
         await db.Database.EnsureCreatedAsync();
 
-        if (!await db.Roles.AnyAsync())
+        // Ensure Roles exist
+        var adminRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+        if (adminRole == null)
         {
-            await db.Roles.AddRangeAsync(
-                new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" },
-                new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" }
-            );
+            adminRole = new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" };
+            await db.Roles.AddAsync(adminRole);
             await db.SaveChangesAsync();
         }
 
-        var adminRole = await db.Roles.FirstAsync(r => r.Name == "Admin");
-        var userRole = await db.Roles.FirstAsync(r => r.Name == "Usuario");
+        var userRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Usuario");
+        if (userRole == null)
+        {
+            userRole = new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" };
+            await db.Roles.AddAsync(userRole);
+            await db.SaveChangesAsync();
+        }
 
         async Task<int> EnsureUserAsync(string dni, string email)
         {
-            var existing = await db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
-            if (existing != null) return existing.Id;
-            var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
-            var u = new OperationWeb.DataAccess.Entities.User
+            try
             {
-                DNI = dni,
-                PasswordHash = hash,
-                Email = email,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            await db.Users.AddAsync(u);
-            await db.SaveChangesAsync();
-            return u.Id;
+                var existing = await db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
+                if (existing != null) 
+                {
+                    // Ensure Role is set (fix for existing users with null/empty role)
+                    if (string.IsNullOrEmpty(existing.Role))
+                    {
+                        existing.Role = "USER";
+                        await db.SaveChangesAsync();
+                    }
+                    return existing.Id;
+                }
+                var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
+                var u = new OperationWeb.DataAccess.Entities.User
+                {
+                    DNI = dni,
+                    PasswordHash = hash,
+                    Email = email,
+                    Role = "USER", // Default role for seeding
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await db.Users.AddAsync(u);
+                await db.SaveChangesAsync();
+                return u.Id;
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogError(ex, "Error creating user {DNI}", dni);
+                throw;
+            }
         }
 
-        var joseId = await EnsureUserAsync("12345678", "jose.arbildo@example.local");
-        var edwardId = await EnsureUserAsync("87654321", "edward.vega@example.local");
-        var ederId = await EnsureUserAsync("11223344", "eder.torres@example.local");
+        var joseId = await EnsureUserAsync("10103488", "jose.arbildo@example.local");
+        // var edwardId = await EnsureUserAsync("87654321", "edward.vega@example.local"); // Commented out as they might not exist
+        // var ederId = await EnsureUserAsync("11223344", "eder.torres@example.local");
 
         async Task EnsureUserRoleAsync(int userId, int roleId)
         {
@@ -183,8 +210,11 @@ try
         }
 
         await EnsureUserRoleAsync(joseId, adminRole.Id);
-        await EnsureUserRoleAsync(edwardId, userRole.Id);
-        await EnsureUserRoleAsync(ederId, userRole.Id);
+        // Update Jose to be Admin in Role column too
+        var jose = await db.Users.FindAsync(joseId);
+        if (jose != null) { jose.Role = "ADMIN"; await db.SaveChangesAsync(); }
+        // await EnsureUserRoleAsync(edwardId, userRole.Id);
+        // await EnsureUserRoleAsync(ederId, userRole.Id);
     }
 }
 catch (Exception ex)
@@ -193,7 +223,9 @@ catch (Exception ex)
 }
 
 app.Logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
-app.Logger.LogInformation("DB provider: {Provider}", (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("DefaultConnection")) && !builder.Configuration.GetConnectionString("DefaultConnection")!.Contains("REEMPLAZAR", StringComparison.OrdinalIgnoreCase) && !app.Environment.IsDevelopment()) ? "SqlServer" : "InMemory");
+app.Logger.LogInformation("DB provider: {Provider}", useSql ? "SqlServer" : "InMemory");
 app.Logger.LogInformation("Listening on: {Urls}", builder.Configuration["Urls"] ?? "http://localhost:5132");
 
 app.Run();
+
+public partial class Program { }

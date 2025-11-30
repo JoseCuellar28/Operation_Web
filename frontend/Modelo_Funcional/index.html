@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OCA OperationSmart - Login</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -12,6 +13,7 @@
     <!-- Custom CSS -->
     <link href="css/styles.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="login-container">
         <!-- Panel izquierdo con ruleta de imágenes -->
@@ -40,7 +42,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Controles de navegación -->
             <div class="slider-controls">
                 <button class="slider-btn prev" id="prevBtn">
@@ -50,21 +52,21 @@
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
-            
+
             <!-- Indicadores -->
             <div class="slider-indicators" id="sliderIndicators">
                 <span class="indicator active" data-index="0"></span>
                 <span class="indicator" data-index="1"></span>
                 <span class="indicator" data-index="2"></span>
             </div>
-            
+
             <!-- Overlay con contenido -->
             <div class="image-overlay">
                 <div class="image-content">
                 </div>
             </div>
         </div>
-        
+
         <!-- Formulario de login (lado derecho) -->
         <div class="login-form">
             <div class="form-container">
@@ -74,41 +76,26 @@
                         <img src="img/OperationSmart.png" alt="OCA OperationSmart" class="logo-image">
                     </div>
                 </div>
-                
+
                 <!-- Título del formulario -->
                 <h2 class="form-title">Inicia Sesión</h2>
-                
+
                 <!-- Formulario -->
                 <form id="loginForm" class="mt-4" autocomplete="off">
                     <!-- Campo Usuario -->
                     <div class="form-group mb-3">
                         <label for="username" class="form-label">Usuario</label>
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            id="username" 
-                            name="login_user"
-                            placeholder="Escribe tu usuario"
-                            autocomplete="off"
-                            autocapitalize="none"
-                            required
-                        >
+                        <input type="text" class="form-control" id="username" name="login_user"
+                            placeholder="Escribe tu usuario" autocomplete="off" autocapitalize="none" required>
                         <div class="error-message" id="usernameError">Este campo es obligatorio.</div>
                     </div>
-                    
+
                     <!-- Campo Contraseña -->
                     <div class="form-group mb-3">
                         <label for="password" class="form-label">Contraseña</label>
                         <div class="password-input-group">
-                            <input 
-                                type="password" 
-                                class="form-control" 
-                                id="password" 
-                                name="login_pass"
-                                placeholder="Escribe tu contraseña"
-                                autocomplete="new-password"
-                                required
-                            >
+                            <input type="password" class="form-control" id="password" name="login_pass"
+                                placeholder="Escribe tu contraseña" autocomplete="new-password" required>
                             <button type="button" class="password-toggle" id="passwordToggle">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -119,26 +106,60 @@
                     <div class="form-group mb-3">
                         <label class="form-label">Captcha</label>
                         <div class="d-flex align-items-center" style="gap:10px;">
-                            <img id="captchaImage" alt="Captcha" style="border:1px solid #ddd; border-radius:6px; height:40px;">
-                            <input type="text" class="form-control" id="captchaAnswer" name="captchaAnswer" placeholder="Respuesta" required style="max-width:160px;">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshCaptcha()">↻</button>
+                            <img id="captchaImage" alt="Captcha"
+                                style="border:1px solid #ddd; border-radius:6px; height:40px;">
+                            <input type="text" class="form-control" id="captchaAnswer" name="captchaAnswer"
+                                placeholder="Respuesta" required style="max-width:160px;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                onclick="refreshCaptcha()">↻</button>
                         </div>
                         <div class="error-message" id="captchaError" style="display:none;">Captcha inválido</div>
                     </div>
-                    
+
                     <!-- Link olvidé contraseña -->
                     <div class="text-end mb-4">
                         <a href="#" class="forgot-password">¿Olvidaste la contraseña?</a>
                     </div>
-                    
+
                     <!-- Botón de ingreso -->
                     <button type="submit" class="btn btn-login w-100">
                         Ingresar
                     </button>
                 </form>
-                
+
                 <!-- Contenedor de mensajes -->
                 <div id="messageContainer" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambio de Contraseña -->
+    <div class="modal fade" id="changePasswordModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Cambio de Contraseña Obligatorio</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Por seguridad, debes cambiar tu contraseña temporal.</p>
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña Actual</label>
+                            <input type="password" class="form-control" id="oldPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="newPassword" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="confirmNewPassword" required minlength="6">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -148,44 +169,45 @@
     <!-- Custom JS -->
     <script src="js/login.js"></script>
     <script>
-      function setCaptchaImage(d){
-        localStorage.setItem('captcha_id', d.id);
-        var img = document.getElementById('captchaImage');
-        var base = (localStorage.getItem('api_net')||'http://localhost:5132');
-        if (!img) return;
-        if (d.image) {
-          img.src = d.image;
-          img.onerror = function(){ img.src = base + '/api/auth/captcha/image/' + d.id + '?t=' + Date.now(); };
-        } else {
-          img.src = base + '/api/auth/captcha/image/' + d.id + '?t=' + Date.now();
+        function setCaptchaImage(d) {
+            localStorage.setItem('captcha_id', d.id);
+            var img = document.getElementById('captchaImage');
+            var base = (localStorage.getItem('api_net') || 'http://localhost:5132');
+            if (!img) return;
+            if (d.image) {
+                img.src = d.image;
+                img.onerror = function () { img.src = base + '/api/auth/captcha/image/' + d.id + '?t=' + Date.now(); };
+            } else {
+                img.src = base + '/api/auth/captcha/image/' + d.id + '?t=' + Date.now();
+            }
         }
-      }
 
-      document.addEventListener('DOMContentLoaded', async function(){
-        var u = document.getElementById('username');
-        var p = document.getElementById('password');
-        if (u) { u.value = ''; u.setAttribute('autocomplete','off'); u.setAttribute('autocapitalize','none'); }
-        if (p) { p.value = ''; p.setAttribute('autocomplete','off'); }
-        try {
-          var r = await fetch((localStorage.getItem('api_net')||'http://localhost:5132') + '/api/auth/captcha');
-          if (r.ok) {
-            var d = await r.json();
-            setCaptchaImage(d);
-          }
-        } catch {}
-      });
-      function refreshCaptcha(){
-        fetch((localStorage.getItem('api_net')||'http://localhost:5132') + '/api/auth/captcha').then(r=>r.json()).then(d=>{ setCaptchaImage(d); });
-      }
+        document.addEventListener('DOMContentLoaded', async function () {
+            var u = document.getElementById('username');
+            var p = document.getElementById('password');
+            if (u) { u.value = ''; u.setAttribute('autocomplete', 'off'); u.setAttribute('autocapitalize', 'none'); }
+            if (p) { p.value = ''; p.setAttribute('autocomplete', 'off'); }
+            try {
+                var r = await fetch((localStorage.getItem('api_net') || 'http://localhost:5132') + '/api/auth/captcha');
+                if (r.ok) {
+                    var d = await r.json();
+                    setCaptchaImage(d);
+                }
+            } catch { }
+        });
+        function refreshCaptcha() {
+            fetch((localStorage.getItem('api_net') || 'http://localhost:5132') + '/api/auth/captcha').then(r => r.json()).then(d => { setCaptchaImage(d); });
+        }
     </script>
     <script>
-      document.addEventListener('DOMContentLoaded', function(){
-        var u = document.getElementById('username');
-        var p = document.getElementById('password');
-        if (u) { u.value = ''; u.setAttribute('autocomplete','off'); u.setAttribute('autocapitalize','none'); }
-        if (p) { p.value = ''; p.setAttribute('autocomplete','off'); }
-      });
+        document.addEventListener('DOMContentLoaded', function () {
+            var u = document.getElementById('username');
+            var p = document.getElementById('password');
+            if (u) { u.value = ''; u.setAttribute('autocomplete', 'off'); u.setAttribute('autocapitalize', 'none'); }
+            if (p) { p.value = ''; p.setAttribute('autocomplete', 'off'); }
+        });
     </script>
-    
+
 </body>
+
 </html>

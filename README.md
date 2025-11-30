@@ -198,5 +198,12 @@ Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 
 ## Estado actual
 
-- Fase 2: Cerrada y operativa en Development.
 - Fase 3: Esquema de seguridad creado (entidades); pendiente ejecutar migraciones en SQL Server y conectar el login a la tabla `Users`.
+
+## 🛠️ Solución de Problemas y Notas Técnicas
+
+### Borrado de Personal y Restricciones FK
+- **Problema**: Error 500 al borrar un empleado debido a la restricción `FK_Users_Personal_DNI` en la base de datos, la cual no estaba explícita en el modelo EF Core.
+- **Solución**: Se implementó un borrado en cascada manual en `PersonalRepository.DeleteByDNIAsync`.
+- **Detalle Crítico**: Se dividió `SaveChangesAsync` en dos llamadas. La primera confirma el borrado de dependencias (`Users`, `UserRoles`, etc.) y la segunda borra el registro de `Personal`. Esto es necesario para evitar conflictos de FK cuando EF Core no gestiona la relación directamente.
+

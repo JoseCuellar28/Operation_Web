@@ -14,6 +14,7 @@ namespace OperationWeb.DataAccess
         public DbSet<Empleado> Empleados { get; set; }
         public DbSet<Personal> Personal { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<UserActivation> UserActivations { get; set; }
@@ -48,7 +49,7 @@ namespace OperationWeb.DataAccess
                 entity.ToTable("Empleado");
                 
                 entity.Property(e => e.CodigoEmpleado).HasMaxLength(50);
-                entity.Property(e => e.NumeroDocumento).HasMaxLength(20);
+                // NumeroDocumento removed
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.ApellidoPaterno).HasMaxLength(100);
                 entity.Property(e => e.ApellidoMaterno).HasMaxLength(100);
@@ -60,7 +61,7 @@ namespace OperationWeb.DataAccess
                 entity.Property(e => e.DNI).IsRequired().HasMaxLength(40);
 
                 // Índices únicos
-                entity.HasIndex(e => e.NumeroDocumento).IsUnique().HasFilter("[NumeroDocumento] IS NOT NULL");
+                // NumeroDocumento index removed
                 entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
                 entity.HasIndex(e => e.CodigoEmpleado).IsUnique().HasFilter("[CodigoEmpleado] IS NOT NULL");
                 entity.HasIndex(e => e.DNI).IsUnique();

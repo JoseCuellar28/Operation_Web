@@ -30,7 +30,17 @@ namespace OperationWeb.DataAccess.Repositories
         public async Task<Empleado?> GetByDocumentoAsync(string numeroDocumento)
         {
             return await _context.Empleados
-                .FirstOrDefaultAsync(e => e.NumeroDocumento == numeroDocumento);
+                .FirstOrDefaultAsync(e => e.DNI == numeroDocumento);
+        }
+
+        public async Task<bool> ExistsDocumentoAsync(string numeroDocumento, int? excludeId = null)
+        {
+            var query = _context.Empleados.Where(e => e.DNI == numeroDocumento);
+            
+            if (excludeId.HasValue)
+                query = query.Where(e => e.IdEmpleado != excludeId.Value);
+                
+            return await query.AnyAsync();
         }
 
         public async Task<Empleado?> GetByEmailAsync(string email)
@@ -78,15 +88,7 @@ namespace OperationWeb.DataAccess.Repositories
             return true;
         }
 
-        public async Task<bool> ExistsDocumentoAsync(string numeroDocumento, int? excludeId = null)
-        {
-            var query = _context.Empleados.Where(e => e.NumeroDocumento == numeroDocumento);
-            
-            if (excludeId.HasValue)
-                query = query.Where(e => e.IdEmpleado != excludeId.Value);
-                
-            return await query.AnyAsync();
-        }
+
 
         public async Task<bool> ExistsEmailAsync(string email, int? excludeId = null)
         {

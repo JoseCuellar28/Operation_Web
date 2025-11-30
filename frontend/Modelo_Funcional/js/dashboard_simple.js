@@ -10,32 +10,32 @@ class DashboardManager {
 
     init() {
         console.log('[INIT] Iniciando dashboard...');
-        
+
         // Verificar elementos críticos
         const mainContent = document.querySelector('.main-content');
         const navItems = document.querySelectorAll('.nav-item');
         const sidebarToggle = document.getElementById('sidebarToggle');
-        
+
         console.log('[INIT] Elementos encontrados:', {
             mainContent: !!mainContent,
             navItems: navItems.length,
             sidebarToggle: !!sidebarToggle
         });
-        
+
         this.setupEventListeners();
         this.setupNavigation();
         this.setupSidebarToggle();
         this.expandAllSections();
-        
+
         // Cargar página por defecto
         this.loadPage('datos-generales');
-        
+
         console.log('[INIT] Dashboard inicializado correctamente');
     }
 
     setupEventListeners() {
         console.log('[EVENTS] Configurando event listeners...');
-        
+
         // Event listeners para secciones colapsables
         const sectionHeaders = document.querySelectorAll('.nav-section-header');
         sectionHeaders.forEach(header => {
@@ -50,10 +50,10 @@ class DashboardManager {
 
     setupNavigation() {
         console.log('[NAV] Configurando navegación...');
-        
+
         const navItems = document.querySelectorAll('.nav-item');
         console.log('[NAV] Elementos de navegación encontrados:', navItems.length);
-        
+
         navItems.forEach(item => {
             item.classList.remove('active');
             item.addEventListener('click', (e) => {
@@ -63,13 +63,13 @@ class DashboardManager {
                 this.loadPage(pageName);
             });
         });
-        
+
         console.log('[NAV] Navegación configurada');
     }
 
     setupSidebarToggle() {
         console.log('[TOGGLE] Configurando toggle del sidebar...');
-        
+
         const sidebarToggle = document.getElementById('sidebarToggle');
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', () => {
@@ -77,26 +77,26 @@ class DashboardManager {
                 this.toggleSidebar();
             });
         }
-        
+
         // Restaurar estado del sidebar desde localStorage
         const savedState = localStorage.getItem('sidebarCollapsed');
         if (savedState === 'true') {
             this.collapseSidebar();
         }
-        
+
         console.log('[TOGGLE] Toggle del sidebar configurado');
     }
 
     expandAllSections() {
         console.log('[SECTIONS] Expandiendo todas las secciones por defecto...');
-        
+
         const sections = ['operaciones-diarias', 'seguimiento', 'configuracion'];
-        
+
         sections.forEach(sectionName => {
             const section = document.getElementById(`${sectionName}-section`);
             const header = document.querySelector(`[data-section="${sectionName}"]`);
             const icon = header?.querySelector('.section-icon');
-            
+
             if (section && header && icon) {
                 // Asegurar que la sección esté expandida
                 section.classList.remove('collapsed');
@@ -105,13 +105,13 @@ class DashboardManager {
                 console.log('[SECTIONS] Sección expandida:', sectionName);
             }
         });
-        
+
         console.log('[SECTIONS] Todas las secciones expandidas');
     }
 
     toggleSidebar() {
         console.log('[TOGGLE] Alternando sidebar...');
-        
+
         if (this.sidebarCollapsed) {
             this.expandSidebar();
         } else {
@@ -121,50 +121,50 @@ class DashboardManager {
 
     collapseSidebar() {
         console.log('[TOGGLE] Colapsando sidebar...');
-        
+
         const sidebar = document.querySelector('.dashboard-sidebar');
         const toggle = document.getElementById('sidebarToggle');
-        
+
         if (sidebar && toggle) {
             sidebar.classList.add('sidebar-collapsed');
             toggle.querySelector('i').classList.remove('fa-chevron-left');
             toggle.querySelector('i').classList.add('fa-chevron-right');
-            
+
             this.sidebarCollapsed = true;
             localStorage.setItem('sidebarCollapsed', 'true');
-            
+
             console.log('[TOGGLE] Sidebar colapsado');
         }
     }
 
     expandSidebar() {
         console.log('[TOGGLE] Expandiendo sidebar...');
-        
+
         const sidebar = document.querySelector('.dashboard-sidebar');
         const toggle = document.getElementById('sidebarToggle');
-        
+
         if (sidebar && toggle) {
             sidebar.classList.remove('sidebar-collapsed');
             toggle.querySelector('i').classList.remove('fa-chevron-right');
             toggle.querySelector('i').classList.add('fa-chevron-left');
-            
+
             this.sidebarCollapsed = false;
             localStorage.setItem('sidebarCollapsed', 'false');
-            
+
             console.log('[TOGGLE] Sidebar expandido');
         }
     }
 
     toggleSection(sectionName) {
         console.log('[SECTION] Alternando sección:', sectionName);
-        
+
         const section = document.getElementById(`${sectionName}-section`);
         const header = document.querySelector(`[data-section="${sectionName}"]`);
         const icon = header.querySelector('.section-icon');
-        
+
         if (section && header && icon) {
             const isCollapsed = section.classList.contains('collapsed');
-            
+
             if (isCollapsed) {
                 // Expandir sección
                 section.classList.remove('collapsed');
@@ -183,51 +183,59 @@ class DashboardManager {
 
     loadPage(pageName) {
         console.log('[PAGE] Cargando página:', pageName);
-        
+
+
+
         // Remover clase active de todos los items
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => item.classList.remove('active'));
-        
+
         // Agregar clase active al item seleccionado
         const activeItem = document.querySelector(`[data-page="${pageName}"]`);
         if (activeItem) {
             activeItem.classList.add('active');
         }
-        
+
         this.currentPage = pageName;
         this.loadPageContent(pageName);
-        
+
         // Inicializar funcionalidad específica después de cargar el contenido
         if (pageName === 'gestion-materiales') {
             setTimeout(() => {
                 inicializarMateriales();
             }, 100);
         }
-        
+
         if (pageName === 'colaboradores') {
             setTimeout(() => {
                 inicializarColaboradores();
             }, 100);
         }
-        
+
         if (pageName === 'gestion-vehiculos') {
             setTimeout(() => {
                 inicializarVehiculos();
             }, 100);
         }
-        
+
         if (pageName === 'creacion-proyectos') {
             setTimeout(() => {
                 inicializarProyectos();
             }, 100);
         }
-        
+
         if (pageName === 'gestion-cuadrillas') {
             setTimeout(() => {
                 inicializarCuadrillas();
             }, 100);
         }
-        
+
+        if (pageName === 'configuracion-sistema') {
+            setTimeout(() => {
+                cargarConfiguracion();
+            }, 100);
+        }
+
         console.log('[PAGE] Página cargada:', pageName);
     }
 
@@ -262,13 +270,16 @@ class DashboardManager {
             case 'gestion-cuadrillas':
                 content = this.getGestionCuadrillasContent();
                 break;
+            case 'configuracion-sistema':
+                content = this.getConfiguracionSistemaContent();
+                break;
             default:
                 content = this.getWelcomeContent();
         }
 
         mainContent.innerHTML = content;
         console.log('[CONTENT] Contenido cargado para:', pageName);
-        
+
         // Cargar datos específicos según la página
         if (pageName === 'colaboradores') {
             // Usar setTimeout para asegurar que el DOM esté listo
@@ -1552,7 +1563,8 @@ class DashboardManager {
                         <button class="colaboradores-btn-cargar" onclick="guardarPlantillaColaboradores()">
                             <i class="fas fa-upload"></i> Cargar Archivo
                         </button>
-                        <button class="colaboradores-btn-crear" onclick="mostrarModalNuevoEmpleado()">
+
+                        <button class="colaboradores-btn-crear" onclick="abrirModalColaborador('create')">
                             <i class="fas fa-plus"></i> Crear Nuevo
                         </button>
                         <button class="colaboradores-btn-limpiar" onclick="limpiarFiltrosColaboradores()">
@@ -1560,9 +1572,9 @@ class DashboardManager {
                         </button>
                     </div>
                     <div class="upload-form-grid">
-                        <input id="inputHojaExcel" class="upload-input" type="text" placeholder="Hoja (opcional)">
-                        <input id="inputHeaderRow" class="upload-input" type="number" placeholder="Fila encabezado (-1)" value="-1">
-                        <input id="inputUsecols" class="upload-input" type="text" placeholder="Columnas (ej. B:AA)">
+
+                        <input id="inputHeaderRow" class="upload-input" type="number" placeholder="Fila encabezado (3)" value="3">
+                        <input id="inputUsecols" class="upload-input" type="text" placeholder="Columnas (ej. B:AA)" value="B:AA">
                         <select id="selectPageSize" class="upload-input" onchange="setPageSize(this.value)">
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
@@ -2845,6 +2857,100 @@ class DashboardManager {
         `;
     }
 
+    getConfiguracionSistemaContent() {
+        return `
+            <style>
+                .config-container {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+                .config-header {
+                    margin-bottom: 30px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 15px;
+                }
+                .config-header h2 {
+                    color: #1e3a8a;
+                    margin: 0;
+                    font-size: 24px;
+                }
+                .form-group {
+                    margin-bottom: 20px;
+                }
+                .form-group label {
+                    display: block;
+                    margin-bottom: 8px;
+                    font-weight: 500;
+                    color: #374151;
+                }
+                .form-control {
+                    width: 100%;
+                    padding: 10px 12px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    transition: border-color 0.2s;
+                }
+                .form-control:focus {
+                    border-color: #2563eb;
+                    outline: none;
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+                }
+                .btn-save-config {
+                    background-color: #1e3a8a;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                }
+                .btn-save-config:hover {
+                    background-color: #1e40af;
+                }
+            </style>
+            <div class="config-container">
+                <div class="config-header">
+                    <h2>Configuración de Correo (SMTP)</h2>
+                    <p class="text-muted">Configure los parámetros para el envío de correos electrónicos del sistema.</p>
+                </div>
+                <form id="form-configuracion-smtp" onsubmit="event.preventDefault(); guardarConfiguracion();">
+                    <div class="form-group">
+                        <label>Servidor SMTP (Host)</label>
+                        <input type="text" id="smtp-host" class="form-control" placeholder="smtp.gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Puerto SMTP</label>
+                        <input type="number" id="smtp-port" class="form-control" placeholder="587">
+                    </div>
+                    <div class="form-group">
+                        <label>Usuario SMTP</label>
+                        <input type="text" id="smtp-user" class="form-control" placeholder="tu-email@gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña SMTP</label>
+                        <input type="password" id="smtp-password" class="form-control" placeholder="********">
+                        <small class="text-muted">Dejar en blanco para no cambiar</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Remitente (From)</label>
+                        <input type="email" id="smtp-from" class="form-control" placeholder="no-reply@tu-dominio.com">
+                    </div>
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn-secondary" onclick="probarEmail()" style="margin-right: 10px; padding: 12px 24px; border-radius: 6px; border: 1px solid #ccc; background: #f3f4f6;">Probar Conexión</button>
+                        <button type="submit" class="btn-save-config">Guardar Configuración</button>
+                    </div>
+                </form>
+            </div>
+        `;
+    }
+
     getWelcomeContent() {
         return `
             <div style="padding: 20px; text-align: center;">
@@ -2865,17 +2971,17 @@ function limpiarFiltrosMateriales() {
     filterInputs.forEach(input => {
         input.value = '';
     });
-    
+
     const buscarInput = document.getElementById('buscarMateriales');
     if (buscarInput) {
         buscarInput.value = '';
     }
-    
+
     const filas = document.querySelectorAll('#tablaMaterialesMinimalista tbody tr');
     filas.forEach(fila => {
         fila.style.display = 'table-row';
     });
-    
+
     filtrosActualesMateriales = {};
     console.log('🧹 Filtros limpiados');
 }
@@ -2887,32 +2993,32 @@ function ordenarTablaMateriales(columna) {
         console.log('❌ Tabla no encontrada');
         return;
     }
-    
+
     const tbody = tabla.querySelector('tbody');
     const filas = Array.from(tbody.querySelectorAll('tr'));
-    
+
     const direccion = ordenActualMateriales[columna] === 'asc' ? 'desc' : 'asc';
-    
+
     Object.keys(ordenActualMateriales).forEach(col => {
         ordenActualMateriales[col] = '';
     });
     ordenActualMateriales[columna] = direccion;
-    
+
     filas.sort((a, b) => {
         const valorA = a.cells[columna].textContent.trim();
         const valorB = b.cells[columna].textContent.trim();
-        
+
         if (direccion === 'asc') {
             return valorA.localeCompare(valorB);
         } else {
             return valorB.localeCompare(valorA);
         }
     });
-    
+
     filas.forEach(fila => {
         tbody.appendChild(fila);
     });
-    
+
     actualizarIconosOrdenamientoMateriales();
     console.log('📊 Tabla ordenada por columna:', columna, 'dirección:', direccion);
 }
@@ -2922,7 +3028,7 @@ function actualizarIconosOrdenamientoMateriales() {
     const headers = document.querySelectorAll('.materiales-sortable');
     headers.forEach((header, index) => {
         const columna = header.getAttribute('data-sort');
-        
+
         if (ordenActualMateriales[columna] === 'asc') {
             header.classList.add('asc');
             header.classList.remove('desc');
@@ -2946,10 +3052,10 @@ function aplicarFiltrosMateriales() {
     const filas = document.querySelectorAll('#tablaMaterialesMinimalista tbody tr');
     const buscarInput = document.getElementById('buscarMateriales');
     const busquedaGlobal = buscarInput ? buscarInput.value.toLowerCase() : '';
-    
+
     filas.forEach(fila => {
         let mostrarFila = true;
-        
+
         // Aplicar filtros por columna
         Object.keys(filtrosActualesMateriales).forEach(columna => {
             const valorFiltro = filtrosActualesMateriales[columna];
@@ -2960,7 +3066,7 @@ function aplicarFiltrosMateriales() {
                 }
             }
         });
-        
+
         // Aplicar búsqueda global
         if (busquedaGlobal && mostrarFila) {
             const textoFila = fila.textContent.toLowerCase();
@@ -2968,10 +3074,10 @@ function aplicarFiltrosMateriales() {
                 mostrarFila = false;
             }
         }
-        
+
         fila.style.display = mostrarFila ? 'table-row' : 'none';
     });
-    
+
     const filasVisibles = document.querySelectorAll('#tablaMaterialesMinimalista tbody tr[style="display: table-row;"]').length;
     console.log('🔍 Búsqueda aplicada:', busquedaGlobal);
     console.log('📊 Filas visibles:', filasVisibles);
@@ -2980,13 +3086,13 @@ function aplicarFiltrosMateriales() {
 // Inicializar funcionalidad de materiales cuando se carga la página
 function inicializarMateriales() {
     console.log('🚀 Inicializando funcionalidad de materiales...');
-    
+
     const tabla = document.getElementById('tablaMaterialesMinimalista');
     if (!tabla) {
         console.log('❌ Tabla no encontrada, reintentando...');
         return false;
     }
-    
+
     const headers = document.querySelectorAll('.materiales-sortable');
     console.log('📋 Headers encontrados:', headers.length);
     headers.forEach((header, index) => {
@@ -2994,7 +3100,7 @@ function inicializarMateriales() {
             ordenarTablaMateriales(index);
         });
     });
-    
+
     const buscarInput = document.getElementById('buscarMateriales');
     if (buscarInput) {
         console.log('✅ Campo de búsqueda encontrado:', buscarInput);
@@ -3007,7 +3113,7 @@ function inicializarMateriales() {
         console.log('❌ Campo de búsqueda NO encontrado');
         return false;
     }
-    
+
     const filterInputs = document.querySelectorAll('.materiales-filter-input');
     console.log('🔍 Filtros encontrados:', filterInputs.length);
     filterInputs.forEach((input, index) => {
@@ -3015,7 +3121,7 @@ function inicializarMateriales() {
             filtrarPorColumnaMateriales(index, e.target.value);
         });
     });
-    
+
     console.log('✅ Funcionalidad de materiales inicializada correctamente');
     return true;
 }
@@ -3132,7 +3238,7 @@ function mostrarModalNuevoMaterial() {
             </div>
         </div>
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     console.log('Modal de nuevo material creado');
 }
@@ -3161,65 +3267,65 @@ let filtrosActualesColaboradores = {};
 
 function limpiarFiltrosColaboradores() {
     console.log('[COLABORADORES] Limpiando filtros...');
-    
+
     // Limpiar inputs de filtro
     const filterInputs = document.querySelectorAll('.colaboradores-filter-input');
     filterInputs.forEach(input => {
         input.value = '';
     });
-    
+
     // Limpiar búsqueda global
     const searchInput = document.getElementById('buscarColaboradores');
     if (searchInput) {
         searchInput.value = '';
     }
-    
+
     // Limpiar variables
     filtrosActualesColaboradores = {};
-    
+
     // Mostrar todas las filas
     const rows = document.querySelectorAll('#tablaColaboradoresMinimalista tbody tr');
     rows.forEach(row => {
         row.style.display = '';
     });
-    
+
     console.log('[COLABORADORES] Filtros limpiados');
     actualizarContadorColaboradores();
 }
 
 function ordenarTablaColaboradores(columna) {
     console.log('[COLABORADORES] Ordenando por columna:', columna);
-    
+
     const tabla = document.getElementById('tablaColaboradoresMinimalista');
     const tbody = tabla.querySelector('tbody');
     const filas = Array.from(tbody.querySelectorAll('tr'));
-    
+
     // Cambiar orden
     if (ordenActualColaboradores[columna] === 'asc') {
         ordenActualColaboradores[columna] = 'desc';
     } else {
         ordenActualColaboradores[columna] = 'asc';
     }
-    
+
     // Ordenar filas
     const colIndex = parseInt(columna, 10);
     filas.sort((a, b) => {
         const valorA = a.cells[colIndex].textContent.trim();
         const valorB = b.cells[colIndex].textContent.trim();
-        
+
         let comparacion = 0;
         if (valorA < valorB) comparacion = -1;
         if (valorA > valorB) comparacion = 1;
-        
+
         return ordenActualColaboradores[columna] === 'asc' ? comparacion : -comparacion;
     });
-    
+
     // Reinsertar filas ordenadas
     filas.forEach(fila => tbody.appendChild(fila));
-    
+
     // Actualizar iconos
     actualizarIconosOrdenamientoColaboradores();
-    
+
     console.log('[COLABORADORES] Tabla ordenada');
 }
 
@@ -3228,7 +3334,7 @@ function actualizarIconosOrdenamientoColaboradores() {
     headers.forEach(header => {
         const columna = header.getAttribute('data-sort');
         const icon = header.querySelector('.colaboradores-sort-icon');
-        
+
         if (ordenActualColaboradores[columna]) {
             icon.textContent = ordenActualColaboradores[columna] === 'asc' ? '↑' : '↓';
         } else {
@@ -3248,7 +3354,7 @@ function aplicarFiltrosColaboradores() {
     const searchInput = document.getElementById('buscarColaboradores');
     const busqueda = (searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '');
     const filtros = filtrosActualesColaboradores || {};
-    const fieldMap = { 0:'dni', 1:'inspector', 2:'telefono', 3:'distrito', 4:'tipo', 5:'estado', 6:'fechaInicio', 7:'fechaCese', 8:'fechaCreacion' };
+    const fieldMap = { 0: 'dni', 1: 'inspector', 2: 'telefono', 3: 'distrito', 4: 'tipo', 5: 'estado', 6: 'fechaInicio', 7: 'fechaCese', 8: 'fechaCreacion' };
     empleadosFiltrados = todosLosEmpleados.filter(emp => {
         let ok = true;
         for (const idx of Object.keys(filtros)) {
@@ -3261,7 +3367,7 @@ function aplicarFiltrosColaboradores() {
         }
         if (ok && busqueda) {
             const rowText = [emp.dni, emp.inspector, emp.telefono, emp.distrito, emp.tipo, emp.estado, emp.fechaInicio, emp.fechaCese, emp.fechaCreacion]
-                .map(x => (x||'').toString().toLowerCase()).join(' ');
+                .map(x => (x || '').toString().toLowerCase()).join(' ');
             if (!rowText.includes(busqueda)) ok = false;
         }
         return ok;
@@ -3290,7 +3396,7 @@ function getColumnaIndex(columna) {
 
 function inicializarColaboradores() {
     console.log('[EMPLEADOS] Inicializando funcionalidad...');
-    
+
     // Event listeners para ordenamiento
     const sortableHeaders = document.querySelectorAll('.colaboradores-sortable');
     sortableHeaders.forEach(header => {
@@ -3299,7 +3405,7 @@ function inicializarColaboradores() {
             ordenarTablaColaboradores(columna);
         });
     });
-    
+
     // Event listeners para filtros por columna
     const filterInputs = document.querySelectorAll('.colaboradores-filter-input');
     filterInputs.forEach(input => {
@@ -3309,7 +3415,7 @@ function inicializarColaboradores() {
             filtrarPorColumnaColaboradores(columna, valor);
         });
     });
-    
+
     // Event listener para búsqueda global
     const searchInput = document.getElementById('buscarColaboradores');
     if (searchInput) {
@@ -3317,10 +3423,10 @@ function inicializarColaboradores() {
             aplicarFiltrosColaboradores();
         });
     }
-    
+
     // Cargar datos de empleados desde la API
     cargarEmpleados();
-    
+
     console.log('[EMPLEADOS] Funcionalidad inicializada');
 }
 
@@ -3371,7 +3477,7 @@ async function cargarEmpleados() {
             }
         }
         const fuentesNet = [
-            `${API_NET}/api/empleados`
+            `${API_NET}/api/personal`
         ];
         for (let url of fuentesNet) {
             url = `${url}?t=${Date.now()}`;
@@ -3383,15 +3489,17 @@ async function cargarEmpleados() {
                 const empleados = await response.json();
                 if (Array.isArray(empleados) && empleados.length > 0) {
                     const mapped = empleados.map(e => ({
-                        dni: e.numeroDocumento || '',
-                        inspector: e.nombreCompleto || '',
+                        dni: e.dni || '',
+                        inspector: e.inspector || '',
                         telefono: e.telefono || '',
                         distrito: e.distrito || '',
-                        tipo: e.cargo || '',
-                        estado: (e.activo ? 'Activo' : 'Inactivo'),
+                        tipo: e.tipo || '',
+                        estado: e.estado || '',
                         fechaInicio: e.fechaInicio || null,
                         fechaCese: e.fechaCese || null,
-                        fechaCreacion: e.fechaCreacion || null
+                        fechaCreacion: e.fechaCreacion || null,
+                        hasUser: e.hasUser || false,
+                        userIsActive: e.userIsActive || false
                     }));
                     todosLosEmpleados = mapped;
                     empleadosFiltrados = [...todosLosEmpleados];
@@ -3447,7 +3555,7 @@ function mostrarDatosPrueba() {
             fechaCreacion: "2024-02-01T09:45:00"
         }
     ];
-    
+
     // Para datos de prueba, también usar paginación
     todosLosEmpleados = empleadosPrueba;
     paginaActualEmpleados = 1;
@@ -3462,7 +3570,7 @@ function mostrarEmpleadosPaginados() {
     const fin = inicio + empleadosPorPagina;
     const base = Array.isArray(empleadosFiltrados) && empleadosFiltrados.length >= 0 ? empleadosFiltrados : todosLosEmpleados;
     const empleadosPagina = base.slice(inicio, fin);
-    
+
     mostrarEmpleadosEnTabla(empleadosPagina);
 }
 
@@ -3470,41 +3578,41 @@ function mostrarEmpleadosPaginados() {
 function actualizarControlesPaginacion() {
     const base = Array.isArray(empleadosFiltrados) && empleadosFiltrados.length >= 0 ? empleadosFiltrados : todosLosEmpleados;
     const totalPaginas = Math.ceil(base.length / empleadosPorPagina);
-    
+
     // Actualizar información de página
     const infoPagina = document.getElementById('info-pagina-empleados');
     if (infoPagina) {
         infoPagina.textContent = `Página ${paginaActualEmpleados} de ${totalPaginas}`;
     }
-    
+
     // Actualizar total de empleados
     const totalEmpleados = document.getElementById('total-empleados');
     if (totalEmpleados) {
         totalEmpleados.textContent = `Total: ${base.length} empleados`;
     }
-    
+
     // Generar números de página
     generarNumerosPagina(totalPaginas);
-    
+
     // Actualizar campo de entrada de página
     const inputPagina = document.getElementById('input-pagina-empleados');
     if (inputPagina) {
         inputPagina.max = totalPaginas;
         inputPagina.value = paginaActualEmpleados;
     }
-    
+
     // Actualizar botones de navegación
     const btnAnterior = document.getElementById('btn-anterior-empleados');
     const btnSiguiente = document.getElementById('btn-siguiente-empleados');
-    
+
     if (btnAnterior) {
         btnAnterior.disabled = paginaActualEmpleados <= 1;
     }
-    
+
     if (btnSiguiente) {
         btnSiguiente.disabled = paginaActualEmpleados >= totalPaginas;
     }
-    
+
     // Mostrar/ocultar controles de paginación si no hay empleados
     const paginacionContainer = document.getElementById('paginacion-empleados');
     if (paginacionContainer) {
@@ -3512,20 +3620,27 @@ function actualizarControlesPaginacion() {
     }
 }
 
+// Función para cargar una página específica
+function cargarPaginaEmpleados(pagina) {
+    paginaActualEmpleados = pagina;
+    mostrarEmpleadosPaginados();
+    actualizarControlesPaginacion();
+}
+
 // Función para ir a la página anterior
 function paginaAnteriorEmpleados() {
     if (paginaActualEmpleados > 1) {
-        paginaActualEmpleados--;
-        cargarPaginaEmpleados(paginaActualEmpleados);
+        cargarPaginaEmpleados(paginaActualEmpleados - 1);
     }
 }
 
 // Función para ir a la página siguiente
 function paginaSiguienteEmpleados() {
-    const totalPaginas = Math.ceil((totalEmpleadosAll || 0) / empleadosPorPagina);
+    const base = Array.isArray(empleadosFiltrados) && empleadosFiltrados.length >= 0 ? empleadosFiltrados : todosLosEmpleados;
+    const totalPaginas = Math.ceil(base.length / empleadosPorPagina);
+
     if (paginaActualEmpleados < totalPaginas) {
-        paginaActualEmpleados++;
-        cargarPaginaEmpleados(paginaActualEmpleados);
+        cargarPaginaEmpleados(paginaActualEmpleados + 1);
     }
 }
 
@@ -3533,19 +3648,19 @@ function paginaSiguienteEmpleados() {
 function generarNumerosPagina(totalPaginas) {
     const paginationNumbers = document.getElementById('pagination-numbers');
     if (!paginationNumbers) return;
-    
+
     paginationNumbers.innerHTML = '';
-    
+
     if (totalPaginas <= 1) return;
-    
+
     // Lógica para mostrar números de página con elipsis
     const maxVisible = 7; // Máximo de números visibles
     let startPage = 1;
     let endPage = totalPaginas;
-    
+
     if (totalPaginas > maxVisible) {
         const halfVisible = Math.floor(maxVisible / 2);
-        
+
         if (paginaActualEmpleados <= halfVisible + 1) {
             // Cerca del inicio
             endPage = maxVisible - 1;
@@ -3558,7 +3673,7 @@ function generarNumerosPagina(totalPaginas) {
             endPage = paginaActualEmpleados + halfVisible - 1;
         }
     }
-    
+
     // Agregar primera página si no está visible
     if (startPage > 1) {
         agregarNumeroPagina(1);
@@ -3566,19 +3681,19 @@ function generarNumerosPagina(totalPaginas) {
             agregarElipsis();
         }
     }
-    
+
     // Agregar páginas visibles
     for (let i = startPage; i <= endPage; i++) {
         agregarNumeroPagina(i);
     }
-    
+
     // Agregar última página si no está visible
     if (endPage < totalPaginas) {
         if (endPage < totalPaginas - 1) {
             agregarElipsis();
         }
         agregarNumeroPagina(totalPaginas);
-}
+    }
 }
 
 // Función auxiliar para agregar un número de página
@@ -3588,11 +3703,11 @@ function agregarNumeroPagina(numeroPagina) {
     span.className = 'pagination-number';
     span.textContent = numeroPagina;
     span.onclick = () => irAPaginaEspecifica(numeroPagina);
-    
+
     if (numeroPagina === paginaActualEmpleados) {
         span.classList.add('active');
     }
-    
+
     paginationNumbers.appendChild(span);
 }
 
@@ -3608,10 +3723,11 @@ function agregarElipsis() {
 
 // Función para ir a una página específica
 function irAPaginaEspecifica(numeroPagina) {
-    const totalPaginas = Math.ceil((totalEmpleadosAll || 0) / empleadosPorPagina);
+    const base = Array.isArray(empleadosFiltrados) && empleadosFiltrados.length >= 0 ? empleadosFiltrados : todosLosEmpleados;
+    const totalPaginas = Math.ceil(base.length / empleadosPorPagina);
+
     if (numeroPagina >= 1 && numeroPagina <= totalPaginas) {
-        paginaActualEmpleados = numeroPagina;
-        cargarPaginaEmpleados(paginaActualEmpleados);
+        cargarPaginaEmpleados(numeroPagina);
     }
 }
 
@@ -3633,18 +3749,49 @@ function mostrarEmpleadosEnTabla(empleados) {
         console.error('[EMPLEADOS] No se encontró el tbody de la tabla');
         return;
     }
-    
+
     // Limpiar tabla
     tbody.innerHTML = '';
-    
+
     if (!empleados || empleados.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6b7280;">No hay colaboradores registrados</td></tr>';
         return;
     }
-    
+
     // Agregar filas de empleados
     empleados.forEach(empleado => {
         const fila = document.createElement('tr');
+
+        // Lógica de estado
+        let estadoClass = 'neutro';
+        let estadoText = 'Sin Estado';
+        const estadoLower = (empleado.estado || '').toLowerCase();
+
+        if (estadoLower === 'cesado') {
+            estadoClass = 'inactivo'; // Rojo
+            estadoText = 'Cesado';
+        } else if (empleado.hasUser && !empleado.userIsActive) {
+            estadoClass = 'pendiente'; // Amarillo (usamos pendiente como warning)
+            estadoText = 'Usuario Inactivo';
+        } else if (estadoLower === 'activo' || (empleado.hasUser && empleado.userIsActive)) {
+            estadoClass = 'activo'; // Verde
+            estadoText = 'Activo';
+        }
+
+        // Botón Toggle User
+        const toggleBtn = empleado.hasUser ? `
+            <button class="colaboradores-btn-toggle ${empleado.userIsActive ? 'active' : ''}" onclick="toggleUsuario('${empleado.dni}')" title="${empleado.userIsActive ? 'Desactivar Usuario' : 'Activar Usuario'}">
+                <i class="fas fa-power-off colaboradores-icon" style="color: ${empleado.userIsActive ? '#10b981' : '#ef4444'};"></i>
+            </button>
+        ` : '';
+
+        // Botón Cesar (solo si no está cesado)
+        const cesarBtn = estadoLower !== 'cesado' ? `
+            <button class="colaboradores-btn-cesar" onclick="cesarColaborador('${empleado.dni}')" title="Cesar Colaborador">
+                <i class="fas fa-user-times colaboradores-icon" style="color: #ef4444;"></i>
+            </button>
+        ` : '';
+
         fila.innerHTML = `
             <td>${empleado.dni || ''}</td>
             <td>${empleado.inspector || ''}</td>
@@ -3652,8 +3799,8 @@ function mostrarEmpleadosEnTabla(empleados) {
             <td>${empleado.distrito || ''}</td>
             <td>${empleado.tipo || ''}</td>
             <td>
-                <span class="estado-badge ${((empleado.estado || '').toLowerCase() === 'activo') ? 'activo' : ((empleado.estado || '').toLowerCase() === 'inactivo' ? 'inactivo' : 'neutro')}">
-                    ${((empleado.estado || '').toLowerCase() === 'activo') ? 'Activo' : ((empleado.estado || '').toLowerCase() === 'inactivo' ? 'Inactivo' : 'Sin estado')}
+                <span class="estado-badge ${estadoClass}">
+                    ${estadoText}
                 </span>
             </td>
             <td>${empleado.fechaInicio ? new Date(empleado.fechaInicio).toLocaleDateString() : ''}</td>
@@ -3661,12 +3808,14 @@ function mostrarEmpleadosEnTabla(empleados) {
             <td>${empleado.fechaCreacion ? new Date(empleado.fechaCreacion).toLocaleDateString() : ''}</td>
             <td>
                 <div class="colaboradores-acciones">
-                    <button class="colaboradores-btn-ver" onclick="verEmpleado('${empleado.dni || ''}'))" title="Ver colaborador">
+                    <button class="colaboradores-btn-ver" onclick="verEmpleado('${empleado.dni || ''}')" title="Ver colaborador">
                         <i class="fas fa-eye colaboradores-icon"></i>
                     </button>
                     <button class="colaboradores-btn-editar" onclick="editarEmpleado('${empleado.dni || ''}')" title="Editar colaborador">
                         <i class="fas fa-edit colaboradores-icon"></i>
                     </button>
+                    ${toggleBtn}
+                    ${cesarBtn}
                     <button class="colaboradores-btn-eliminar" onclick="eliminarEmpleado('${empleado.dni || ''}')" title="Eliminar colaborador">
                         <i class="fas fa-trash colaboradores-icon"></i>
                     </button>
@@ -3675,7 +3824,7 @@ function mostrarEmpleadosEnTabla(empleados) {
         `;
         tbody.appendChild(fila);
     });
-    
+
     console.log(`[EMPLEADOS] Se mostraron ${empleados.length} empleados en la tabla`);
     actualizarContadorColaboradores();
 }
@@ -3706,7 +3855,7 @@ function mostrarMensajeError(mensaje) {
 // Funciones de acción para colaboradores
 function descargarPlantillaColaboradores() {
     console.log('[COLABORADORES] Descargando plantilla...');
-    const headers = ['DNI','Inspector','Telefono','Distrito','Tipo','Estado','FechaInicio','FechaCese'];
+    const headers = ['DNI', 'Inspector', 'Telefono', 'Distrito', 'Tipo', 'Estado', 'FechaInicio', 'FechaCese'];
     const csv = headers.join(',') + '\n';
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -3718,77 +3867,164 @@ function descargarPlantillaColaboradores() {
 }
 
 function guardarPlantillaColaboradores() {
-    console.log('[COLABORADORES] Guardando plantilla...');
+    console.log('[COLABORADORES] Iniciando carga de archivo...');
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.xlsx,.xlsm,.xls';
     input.style.display = 'none';
     document.body.appendChild(input);
+
     input.onchange = async (e) => {
         const file = e.target.files[0];
-        try { input.remove(); } catch (e) {}
+        try { input.remove(); } catch (e) { }
         if (!file) return;
+
         const statusEl = document.getElementById('upload-status');
         const btn = document.querySelector('.colaboradores-btn-cargar');
-        if (statusEl) statusEl.textContent = 'Procesando archivo...';
+        if (statusEl) statusEl.textContent = 'Analizando archivo...';
         if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+
         const form = new FormData();
         form.append('file', file);
-        const hoja = document.getElementById('inputHojaExcel') ? document.getElementById('inputHojaExcel').value : '';
-        const headerRow = document.getElementById('inputHeaderRow') ? document.getElementById('inputHeaderRow').value : '-1';
-        const usecols = document.getElementById('inputUsecols') ? document.getElementById('inputUsecols').value : '';
-        form.append('hoja', hoja);
-        form.append('header_row', headerRow);
-        form.append('usecols', usecols);
+
         try {
-            let resPrev = await fetch('http://localhost:5051/api/preview-excel', { method: 'POST', body: form });
-            if (!resPrev.ok) {
-                resPrev = await fetch('http://127.0.0.1:5051/api/preview-excel', { method: 'POST', body: form });
-            }
-            const prev = await resPrev.json();
-            if (resPrev.ok && prev.success) {
-                window.__ultimoFormDataExcel = form;
-                abrirModalPreview(prev);
-                if (statusEl) statusEl.textContent = '';
-                if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-                return;
-            }
-            let res = await fetch('http://localhost:5051/api/upload-excel', { method: 'POST', body: form });
-            if (!res.ok) {
-                res = await fetch('http://127.0.0.1:5051/api/upload-excel', { method: 'POST', body: form });
-            }
+            // 1. Obtener lista de hojas
+            let res = await fetch('http://localhost:5051/api/list-sheets', { method: 'POST', body: form });
+            if (!res.ok) res = await fetch('http://127.0.0.1:5051/api/list-sheets', { method: 'POST', body: form });
+
             const data = await res.json();
-            if (res.ok && data.success) {
-                const stg = (data.staging && typeof data.staging.inserted === 'number') ? data.staging.inserted : 0;
-                const ins = (data.snapshot && typeof data.snapshot.inserted === 'number') ? data.snapshot.inserted : 0;
-                const upd = (data.snapshot && typeof data.snapshot.updated === 'number') ? data.snapshot.updated : 0;
-                let msg = `Procesado: Únicos ${data.resumen.colaboradores_unicos}, Staging +${stg}, Snapshot +${ins}/~${upd}`;
-                if (data.errors) {
-                    const parts = [];
-                    if (data.errors.staging) parts.push(`Staging: ${data.errors.staging}`);
-                    if (data.errors.snapshot) parts.push(`Snapshot: ${data.errors.snapshot}`);
-                    if (data.errors.audit) parts.push(`Audit: ${data.errors.audit}`);
-                    if (parts.length) msg += ` (Errores: ${parts.join('; ')})`;
+
+            if (res.ok && data.success && Array.isArray(data.sheets)) {
+                if (data.sheets.length === 1) {
+                    // Si solo hay una hoja, cargarla directamente
+                    procesarHojaSeleccionada(file, data.sheets[0]);
+                } else {
+                    // Si hay varias, mostrar modal
+                    mostrarModalSeleccionHoja(file, data.sheets);
+                    if (statusEl) statusEl.textContent = 'Seleccione una hoja...';
                 }
-                if (statusEl) statusEl.textContent = msg;
-                cargarEmpleados();
             } else {
-                if (statusEl) statusEl.textContent = `Error: ${data.message || 'desconocido'}`;
+                throw new Error(data.message || 'Error al leer hojas del archivo');
             }
         } catch (err) {
-            if (statusEl) statusEl.textContent = `Error de conexión: ${err.message}`;
+            console.error(err);
+            if (statusEl) statusEl.textContent = `Error: ${err.message}`;
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
         }
-        setTimeout(() => { if (statusEl) statusEl.textContent = ''; if (btn) { btn.disabled = false; btn.style.opacity = '1'; } }, 5000);
     };
     input.click();
 }
 
+function mostrarModalSeleccionHoja(file, sheets) {
+    console.log('[SHEET_SELECTION] Mostrando modal para sheets:', sheets);
+    const modal = document.getElementById('sheet-selection-modal');
+    const list = document.getElementById('sheet-list');
+    if (!modal) { console.error('[SHEET_SELECTION] Modal no encontrado'); return; }
+    if (!list) { console.error('[SHEET_SELECTION] Lista no encontrada'); return; }
+
+    // Ensure modal is direct child of body to avoid nesting issues
+    if (modal.parentNode !== document.body) {
+        console.log('[SHEET_SELECTION] Moving modal to body root');
+        document.body.appendChild(modal);
+    }
+
+    // Debugging styles
+    setTimeout(() => {
+        const style = window.getComputedStyle(modal);
+        console.log('[SHEET_SELECTION] Computed Display:', style.display);
+        console.log('[SHEET_SELECTION] Computed Visibility:', style.visibility);
+        console.log('[SHEET_SELECTION] Computed Opacity:', style.opacity);
+        console.log('[SHEET_SELECTION] Computed Z-Index:', style.zIndex);
+        console.log('[SHEET_SELECTION] Modal Rect:', modal.getBoundingClientRect());
+    }, 100);
+
+    list.innerHTML = '';
+    sheets.forEach(sheet => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-primary'; // Asumiendo bootstrap o similar, sino estilo inline
+        btn.style.padding = '10px';
+        btn.style.textAlign = 'left';
+        btn.style.border = '1px solid #ddd';
+        btn.style.borderRadius = '4px';
+        btn.style.background = '#f8f9fa';
+        btn.style.cursor = 'pointer';
+        btn.style.transition = 'all 0.2s';
+        btn.textContent = sheet;
+
+        btn.onmouseover = () => btn.style.background = '#e9ecef';
+        btn.onmouseout = () => btn.style.background = '#f8f9fa';
+
+        btn.onclick = () => {
+            cerrarModalSeleccionHoja();
+            procesarHojaSeleccionada(file, sheet);
+        };
+        list.appendChild(btn);
+    });
+
+    modal.style.setProperty('display', 'flex', 'important');
+}
+
+function cerrarModalSeleccionHoja() {
+    const modal = document.getElementById('sheet-selection-modal');
+    if (modal) modal.style.display = 'none';
+    const btn = document.querySelector('.colaboradores-btn-cargar');
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    const statusEl = document.getElementById('upload-status');
+    if (statusEl && statusEl.textContent === 'Seleccione una hoja...') statusEl.textContent = '';
+}
+
+async function procesarHojaSeleccionada(file, sheetName) {
+    const statusEl = document.getElementById('upload-status');
+    const btn = document.querySelector('.colaboradores-btn-cargar');
+    if (statusEl) statusEl.textContent = `Procesando hoja: ${sheetName}...`;
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('hoja', sheetName);
+    const headerRowInput = document.getElementById('inputHeaderRow');
+    const headerRowVal = headerRowInput ? headerRowInput.value : '3';
+    form.append('header_row', headerRowVal);
+
+    const usecolsInput = document.getElementById('inputUsecols');
+    const usecolsVal = usecolsInput ? usecolsInput.value : 'B:AA';
+    form.append('usecols', usecolsVal);
+
+    try {
+        let resPrev = await fetch('http://localhost:5051/api/preview-excel', { method: 'POST', body: form });
+        if (!resPrev.ok) {
+            resPrev = await fetch('http://127.0.0.1:5051/api/preview-excel', { method: 'POST', body: form });
+        }
+        const prev = await resPrev.json();
+        if (resPrev.ok && prev.success) {
+            window.__ultimoFormDataExcel = form;
+            abrirModalPreview(prev);
+            if (statusEl) statusEl.textContent = '';
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        } else {
+            throw new Error(prev.message || 'Error en previsualización');
+        }
+    } catch (err) {
+        if (statusEl) statusEl.textContent = `Error: ${err.message}`;
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    }
+}
+
 function abrirModalPreview(prev) {
+    console.log('[PREVIEW] Abriendo modal con datos:', prev);
     const overlay = document.getElementById('preview-modal');
     const sum = document.getElementById('preview-summary');
     const thead = document.getElementById('preview-thead');
     const tbody = document.getElementById('preview-tbody');
-    if (!overlay || !sum || !thead || !tbody) return;
+
+    if (!overlay) { console.error('[PREVIEW] Modal no encontrado'); return; }
+    if (!sum || !thead || !tbody) { console.error('[PREVIEW] Elementos internos no encontrados'); return; }
+
+    // Ensure modal is direct child of body
+    if (overlay.parentNode !== document.body) {
+        console.log('[PREVIEW] Moving modal to body root');
+        document.body.appendChild(overlay);
+    }
+
     sum.innerHTML = '';
     thead.innerHTML = '';
     tbody.innerHTML = '';
@@ -3804,142 +4040,105 @@ function abrirModalPreview(prev) {
         thead.appendChild(tr);
     }
     if (Array.isArray(prev.rows)) {
-        prev.rows.forEach(r => { const tr = document.createElement('tr'); (prev.columns||[]).forEach(c => { const td = document.createElement('td'); td.textContent = r[c] == null ? '' : String(r[c]); tr.appendChild(td); }); tbody.appendChild(tr); });
+        prev.rows.forEach(r => { const tr = document.createElement('tr'); (prev.columns || []).forEach(c => { const td = document.createElement('td'); td.textContent = r[c] == null ? '' : String(r[c]); tr.appendChild(td); }); tbody.appendChild(tr); });
     }
-    overlay.style.display = 'flex';
+
+    // Debugging styles
+    setTimeout(() => {
+        const style = window.getComputedStyle(overlay);
+        console.log('[PREVIEW] Computed Display:', style.display);
+        console.log('[PREVIEW] Computed Visibility:', style.visibility);
+        console.log('[PREVIEW] Computed Opacity:', style.opacity);
+        console.log('[PREVIEW] Computed Z-Index:', style.zIndex);
+        console.log('[PREVIEW] Modal Rect:', overlay.getBoundingClientRect());
+    }, 100);
+
+    overlay.style.setProperty('display', 'flex', 'important');
 }
 
 function cerrarModalPreview() { const overlay = document.getElementById('preview-modal'); if (overlay) overlay.style.display = 'none'; }
 
 async function confirmarCargaExcel() {
+    console.log('[UPLOAD] Confirmando carga...');
     const overlay = document.getElementById('preview-modal');
     const statusEl = document.getElementById('upload-status');
     const form = window.__ultimoFormDataExcel;
-    if (!form) { cerrarModalPreview(); return; }
-    try {
-        let res = await fetch('http://localhost:5051/api/upload-excel', { method: 'POST', body: form });
-        if (!res.ok) { res = await fetch('http://127.0.0.1:5051/api/upload-excel', { method: 'POST', body: form }); }
-        const data = await res.json();
-        const stg = (data.staging && typeof data.staging.inserted === 'number') ? data.staging.inserted : 0;
-        const ins = (data.snapshot && typeof data.snapshot.inserted === 'number') ? data.snapshot.inserted : 0;
-        const upd = (data.snapshot && typeof data.snapshot.updated === 'number') ? data.snapshot.updated : 0;
-        let msg = `Procesado: Únicos ${data.resumen && data.resumen.colaboradores_unicos ? data.resumen.colaboradores_unicos : 0}, Staging +${stg}, Snapshot +${ins}/~${upd}`;
-        if (data.errors) {
-            const parts = [];
-            if (data.errors.staging) parts.push(`Staging: ${data.errors.staging}`);
-            if (data.errors.snapshot) parts.push(`Snapshot: ${data.errors.snapshot}`);
-            if (data.errors.audit) parts.push(`Audit: ${data.errors.audit}`);
-            if (parts.length) msg += ` (Errores: ${parts.join('; ')})`;
-        }
-        if (statusEl) statusEl.textContent = msg;
+
+    if (!form) {
+        console.error('[UPLOAD] No hay FormData guardado');
         cerrarModalPreview();
-        cargarEmpleados();
-    } catch (e) {
-        if (statusEl) statusEl.textContent = `Error de conexión: ${e.message}`;
-        cerrarModalPreview();
+        return;
     }
-    window.__ultimoFormDataExcel = null;
+
+    // Log form data keys to verify
+    for (var pair of form.entries()) {
+        console.log('[UPLOAD] Form Data:', pair[0], pair[1]);
+    }
+
+    try {
+        if (statusEl) statusEl.textContent = 'Enviando datos al servidor...';
+        let res = await fetch('http://localhost:5051/api/upload-excel', { method: 'POST', body: form });
+        if (!res.ok) {
+            console.warn('[UPLOAD] Falló localhost, intentando 127.0.0.1');
+            res = await fetch('http://127.0.0.1:5051/api/upload-excel', { method: 'POST', body: form });
+        }
+
+        const data = await res.json();
+        console.log('[UPLOAD] Respuesta servidor (RAW):', JSON.stringify(data));
+
+        if (res.ok && data.success) {
+            console.log('[UPLOAD] Procesando respuesta exitosa...');
+            const stg = (data.staging && typeof data.staging.inserted === 'number') ? data.staging.inserted : 0;
+            const ins = (data.snapshot && typeof data.snapshot.inserted === 'number') ? data.snapshot.inserted : 0;
+            const upd = (data.snapshot && typeof data.snapshot.updated === 'number') ? data.snapshot.updated : 0;
+
+            console.log(`[UPLOAD] Stats: Staging=${stg}, Inserted=${ins}, Updated=${upd}`);
+
+            let msg = `Procesado: Únicos ${data.resumen && data.resumen.colaboradores_unicos ? data.resumen.colaboradores_unicos : 0}, Staging +${stg}, Snapshot +${ins}/~${upd}`;
+
+            if (data.errors) {
+                const parts = [];
+                if (data.errors.staging) parts.push(`Staging: ${data.errors.staging}`);
+                if (data.errors.snapshot) parts.push(`Snapshot: ${data.errors.snapshot}`);
+                if (data.errors.audit) parts.push(`Audit: ${data.errors.audit}`);
+                if (parts.length) msg += ` (Errores: ${parts.join('; ')})`;
+            }
+
+            console.log('[UPLOAD] Mensaje estado:', msg);
+            if (statusEl) statusEl.textContent = msg;
+
+            console.log('[UPLOAD] Cerrando modal...');
+            cerrarModalPreview();
+
+            console.log('[UPLOAD] Recargando empleados...');
+            if (typeof cargarEmpleados === 'function') {
+                cargarEmpleados();
+            } else {
+                console.error('[UPLOAD] cargarEmpleados no es una función');
+            }
+        } else {
+            console.error('[UPLOAD] Error en respuesta:', data);
+            if (statusEl) statusEl.textContent = `Error: ${data.message || 'desconocido'}`;
+            // No cerramos el modal para que vea el error
+        }
+    } catch (err) {
+        console.error('[UPLOAD] Error de conexión:', err);
+        if (statusEl) statusEl.textContent = `Error de conexión: ${err.message}`;
+    }
 }
 
-function mostrarModalNuevoEmpleado() {
-    const modalHTML = `
-        <div class="modal-overlay" id="modalNuevoEmpleado" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;">
-            <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative;">
-                <!-- Header del Modal -->
-                <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                    <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">NUEVO EMPLEADO</h2>
-                    <button class="modal-close" onclick="cerrarModalNuevoEmpleado()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
-                </div>
-                
-                <!-- Contenido del Modal -->
-                <div class="modal-content" style="padding: 24px 32px; display: flex; gap: 32px;">
-                    <!-- Sección Izquierda - Imagen -->
-                    <div class="modal-left-section" style="flex: 0 0 200px;">
-                        <div class="image-placeholder" style="width: 200px; height: 200px; border: 2px dashed #d1d5db; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f9fafb; margin-bottom: 16px;">
-                            <div class="image-circle" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; margin-bottom: 12px;">
-                                <i class="fas fa-user" style="font-size: 32px; color: white;"></i>
-                            </div>
-                            <div class="image-text" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; color: #6b7280; text-align: center;">Foto del Empleado</div>
-                        </div>
-                        <div class="info-box" style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                            <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #6b7280; line-height: 1.4;">La foto se habilitará después de guardar</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Sección Derecha - Formulario -->
-                    <div class="modal-right-section" style="flex: 1;">
-                        <!-- Información Personal -->
-                        <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Información Personal</div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Código Empleado *</label>
-                                <input type="text" id="codigo" class="form-input" placeholder="Ej: EMP001" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Número de Documento *</label>
-                                <input type="text" id="numeroDocumento" class="form-input" placeholder="Ej: 12345678" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Nombre Completo *</label>
-                                <input type="text" id="nombreCompleto" class="form-input" placeholder="Ej: Juan Carlos Pérez García" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Email *</label>
-                                <input type="email" id="email" class="form-input" placeholder="ejemplo@empresa.com" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Teléfono</label>
-                                <input type="tel" id="telefono" class="form-input" placeholder="+1 555-0123" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <!-- Información Laboral -->
-                        <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Información Laboral</div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Empresa ID</label>
-                                <input type="number" id="empresaId" class="form-input" placeholder="1" value="1" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Estado</label>
-                                <select id="activo" class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
-                                    <option value="true">Activo</option>
-                                    <option value="false">Inactivo</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Footer del Modal -->
-                <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                    <button class="btn-secondary" onclick="cerrarModalNuevoEmpleado()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
-                    <button class="btn-primary" onclick="guardarNuevoEmpleado()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Guardar Nuevo Empleado</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    console.log('Modal de nuevo colaborador creado');
-}
+
+
+
 
 function verColaborador(id) {
     console.log('[COLABORADORES] Viendo colaborador:', id);
-    alert(`Viendo detalles del colaborador: ${id}`);
+    alert(`Viendo detalles del colaborador: ${id} `);
 }
 
 function editarColaborador(id) {
     console.log('[COLABORADORES] Editando colaborador:', id);
-    alert(`Editando colaborador: ${id}`);
+    alert(`Editando colaborador: ${id} `);
 }
 
 function eliminarColaborador(id) {
@@ -3949,21 +4148,518 @@ function eliminarColaborador(id) {
     }
 }
 
+// Funciones para el Modal de Colaborador
+let currentModalMode = 'view';
+
+function abrirModalColaborador(mode) {
+    console.log('[MODAL] Intentando abrir modal en modo:', mode);
+    try {
+        const modal = document.getElementById('modal-colaborador');
+        if (!modal) {
+            console.error('[MODAL] No se encontró el elemento modal-colaborador');
+            alert('Error: No se encontró el modal en el DOM');
+            return;
+        }
+
+        // Ensure modal is direct child of body to avoid stacking context issues
+        if (modal.parentNode !== document.body) {
+            console.log('[MODAL] Moving modal to document.body');
+            document.body.appendChild(modal);
+        }
+
+        const title = document.getElementById('modal-colaborador-title');
+        const btnSave = modal.querySelector('.btn-save');
+        const inputs = document.querySelectorAll('#form-colaborador input, #form-colaborador select');
+
+        currentModalMode = mode;
+        modal.style.display = 'flex';
+        modal.style.zIndex = '20000'; // Force z-index via JS
+
+        // Debugging visibility
+        setTimeout(() => {
+            const style = window.getComputedStyle(modal);
+            const rect = modal.getBoundingClientRect();
+            const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+
+            console.log('[MODAL] Diagnostics:', {
+                computedDisplay: style.display,
+                computedZIndex: style.zIndex,
+                computedVisibility: style.visibility,
+                computedOpacity: style.opacity,
+                rect: rect,
+                elementAtCenter: centerEl,
+                isModalAtCenter: centerEl === modal || modal.contains(centerEl)
+            });
+
+            if (centerEl !== modal && !modal.contains(centerEl)) {
+                console.error('[MODAL] Modal is NOT on top! Top element is:', centerEl);
+                alert('Error: El modal está oculto detrás de otro elemento.');
+            }
+        }, 100);
+
+        if (mode === 'view') {
+            title.textContent = 'Detalles del Colaborador';
+            if (btnSave) btnSave.style.display = 'none';
+            inputs.forEach(input => input.disabled = true);
+            const btnCamera = document.querySelector('.btn-camera');
+            if (btnCamera) btnCamera.style.display = 'none';
+            const sigBox = document.querySelector('.signature-box');
+            if (sigBox) sigBox.style.pointerEvents = 'none';
+        } else if (mode === 'create') {
+            title.textContent = 'Nuevo Colaborador';
+            if (btnSave) {
+                btnSave.style.display = 'block';
+                btnSave.textContent = 'Crear Usuario';
+            }
+            inputs.forEach(input => input.disabled = false);
+
+            // Reset form
+            document.getElementById('form-colaborador').reset();
+            document.getElementById('colab-foto-preview').src = 'img/placeholder-user.png';
+
+            const dniInput = document.getElementById('colab-num-doc');
+            if (dniInput) dniInput.disabled = false; // DNI editable for new
+
+            const btnCamera = document.querySelector('.btn-camera');
+            if (btnCamera) btnCamera.style.display = 'flex';
+            const sigBox = document.querySelector('.signature-box');
+            if (sigBox) sigBox.style.pointerEvents = 'auto';
+
+            // Hide create user section
+            const sectionCrearUsuario = document.getElementById('section-crear-usuario');
+            if (sectionCrearUsuario) sectionCrearUsuario.style.display = 'none';
+        } else {
+            title.textContent = 'Editar Colaborador';
+            if (btnSave) {
+                btnSave.style.display = 'block';
+                btnSave.textContent = 'Guardar Cambios';
+            }
+            inputs.forEach(input => input.disabled = false);
+            const dniInput = document.getElementById('colab-num-doc');
+            if (dniInput) dniInput.disabled = true; // DNI no editable
+            const btnCamera = document.querySelector('.btn-camera');
+            if (btnCamera) btnCamera.style.display = 'flex';
+            const sigBox = document.querySelector('.signature-box');
+            if (sigBox) sigBox.style.pointerEvents = 'auto';
+        }
+    } catch (e) {
+        console.error('[MODAL] Error al abrir modal:', e);
+        alert('Error al abrir el modal: ' + e.message);
+    }
+}
+
+function cerrarModalColaborador() {
+    document.getElementById('modal-colaborador').style.display = 'none';
+    document.getElementById('form-colaborador').reset();
+    document.getElementById('colab-foto-preview').src = 'img/placeholder-user.png';
+    document.getElementById('colab-firma-preview').style.display = 'none';
+    document.getElementById('signature-placeholder').style.display = 'flex';
+
+    // Reset Crear Usuario section
+    const sectionCrearUsuario = document.getElementById('section-crear-usuario');
+    if (sectionCrearUsuario) {
+        sectionCrearUsuario.style.display = 'none';
+        document.getElementById('crear-usuario-dni').value = '';
+        document.getElementById('crear-usuario-rol').selectedIndex = 0;
+    }
+}
+
+function previewImage(input, imgId, placeholderId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById(imgId).src = e.target.result;
+            document.getElementById(imgId).style.display = 'block';
+            if (placeholderId) {
+                document.getElementById(placeholderId).style.display = 'none';
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function popularModalColaborador(data) {
+    const fullName = data.inspector || '';
+    // Intentar separar nombre y apellido
+    const nameParts = fullName.split(' ');
+    const nombre = nameParts[0] || '';
+    const apellidoP = nameParts.slice(1).join(' ') || '';
+
+    document.getElementById('colab-nombre').value = nombre;
+    document.getElementById('colab-apellido-paterno').value = apellidoP;
+
+    document.getElementById('colab-telefono').value = data.telefono || '';
+    document.getElementById('colab-tipo-doc').value = 'DNI';
+    document.getElementById('colab-num-doc').value = data.dni || '';
+
+    const emailInput = document.getElementById('colab-email');
+    if (emailInput) emailInput.value = data.email || '';
+
+    // Helper to set select value, adding option if missing
+    const setSelectValue = (id, value) => {
+        const select = document.getElementById(id);
+        if (!select || !value) return;
+
+        let found = false;
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === value) {
+                select.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.text = value;
+            select.add(option);
+            select.value = value;
+        }
+    };
+
+    // Use setTimeout to ensure DOM is ready and bypass any race conditions
+    setTimeout(() => {
+        console.log('[MODAL] Populating with data:', data);
+
+        // --- NAME PARSING LOGIC ---
+        // Heuristic to split full name into Paternal, Maternal, and Names
+        // Handles compound surnames like "GUERRA DE UTIA" or "DE LA CRUZ"
+        const parseFullName = (fullName) => {
+            if (!fullName) return { paterno: '', materno: '', nombres: '' };
+
+            const tokens = fullName.trim().split(/\s+/);
+            const connectors = ['DE', 'DEL', 'LA', 'LAS', 'LOS', 'SAN', 'SANTA', 'Y', 'VAN', 'VON', 'DA', 'DI'];
+
+            let paterno = '';
+            let materno = '';
+            let nombres = '';
+            let i = 0;
+
+            // 1. Extract Paternal Surname
+            if (i < tokens.length) {
+                paterno = tokens[i];
+                i++;
+                while (i < tokens.length) {
+                    // If current word is a connector OR previous word was a connector, append
+                    // Logic: "DE" (append next), "DE LA" (append next)
+                    // Check if current token is a connector
+                    if (connectors.includes(tokens[i - 1].toUpperCase())) {
+                        paterno += ' ' + tokens[i];
+                        i++;
+                    } else if (connectors.includes(tokens[i].toUpperCase())) {
+                        paterno += ' ' + tokens[i];
+                        i++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // 2. Extract Maternal Surname
+            if (i < tokens.length) {
+                materno = tokens[i];
+                i++;
+                while (i < tokens.length) {
+                    if (connectors.includes(tokens[i - 1].toUpperCase())) {
+                        materno += ' ' + tokens[i];
+                        i++;
+                    } else if (connectors.includes(tokens[i].toUpperCase())) {
+                        materno += ' ' + tokens[i];
+                        i++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // 3. Extract Names (Rest of the string)
+            if (i < tokens.length) {
+                nombres = tokens.slice(i).join(' ');
+            }
+
+            return { paterno, materno, nombres };
+        };
+
+        // Apply parsing if we have the full name (inspector)
+        if (data.inspector || data.Inspector) {
+            const parsed = parseFullName(data.inspector || data.Inspector);
+            console.log('[MODAL] Parsed Name:', parsed);
+
+            const nombreInput = document.getElementById('colab-nombre');
+            if (nombreInput) nombreInput.value = parsed.nombres;
+
+            const paternoInput = document.getElementById('colab-apellido-paterno');
+            if (paternoInput) paternoInput.value = parsed.paterno;
+
+            const maternoInput = document.getElementById('colab-apellido-materno');
+            if (maternoInput) maternoInput.value = parsed.materno;
+        }
+
+        // Mapeo de nuevos campos (handle lowercase, PascalCase, and camelCase)
+        // User Request: Unidad -> Area, Area -> DetalleCebe
+        setSelectValue('colab-unidad', data.area || data.Area);
+        setSelectValue('colab-area', data.detalleCebe || data.DetalleCebe || data.detallecebe);
+
+        // Campos adicionales - Codigo Empleado
+        const codigoInput = document.getElementById('colab-codigo');
+        // Check all possible casings: lowercase, PascalCase, camelCase
+        const codigoVal = data.codigoempleado || data.CodigoEmpleado || data.codigoEmpleado || '';
+        if (codigoInput) {
+            codigoInput.value = codigoVal;
+            codigoInput.setAttribute('value', codigoVal); // Force attribute
+            console.log('[MODAL] Set Codigo:', codigoVal);
+        } else {
+            console.error('[MODAL] Element colab-codigo not found');
+        }
+
+        const jefeInput = document.getElementById('colab-jefe');
+        const jefeVal = data.jefeinmediato || data.JefeInmediato || data.jefeInmediato || '';
+        if (jefeInput) jefeInput.value = jefeVal;
+
+        // Fechas
+        const fechaNac = data.fechanacimiento || data.FechaNacimiento || data.fechaNacimiento;
+        if (fechaNac) {
+            try {
+                const date = new Date(fechaNac);
+                if (!isNaN(date.getTime())) {
+                    const day = String(date.getUTCDate()).padStart(2, '0');
+                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                    const year = date.getUTCFullYear();
+                    const formattedDate = `${year} -${month} -${day} `;
+
+                    const dateInput = document.getElementById('colab-fecha-nacimiento');
+                    if (dateInput) {
+                        dateInput.value = formattedDate;
+                        dateInput.setAttribute('value', formattedDate);
+                        console.log('[MODAL] Set Fecha:', formattedDate);
+                    } else {
+                        console.error('[MODAL] Element colab-fecha-nacimiento not found');
+                    }
+                }
+            } catch (e) {
+                console.error('[MODAL] Error parsing date:', e);
+            }
+        }
+
+        const puestoSelect = document.getElementById('colab-puesto');
+        const tipoVal = data.tipo || data.Tipo;
+        if (tipoVal) {
+            setSelectValue('colab-puesto', tipoVal);
+        }
+
+        // Email Logic: Prefer 'email' unless it is 'No Aplica' or empty, then use 'emailpersonal'
+        // Handle all casings for email and emailPersonal
+        const emailVal = data.email || data.Email;
+        const emailPersonalVal = data.emailpersonal || data.EmailPersonal || data.emailPersonal;
+
+        let emailToShow = emailVal;
+        if (!emailToShow || emailToShow === 'No Aplica' || emailToShow.trim() === '') {
+            emailToShow = emailPersonalVal || '';
+        }
+
+        document.getElementById('colab-nombre-completo').textContent = fullName;
+        document.getElementById('colab-puesto-display').textContent = tipoVal || 'Colaborador';
+        document.getElementById('colab-telefono-display').textContent = data.telefono || data.Telefono || '-';
+        document.getElementById('colab-email-display').textContent = emailToShow || '-';
+
+        // Also update the input field
+        const emailInput = document.getElementById('colab-email');
+        if (emailInput) {
+            emailInput.value = emailToShow;
+            emailInput.setAttribute('value', emailToShow);
+        }
+
+    }, 100); // Increased timeout slightly to 100ms
+}
+
+async function guardarColaborador() {
+    const dni = document.getElementById('colab-num-doc').value;
+    const nombre = document.getElementById('colab-nombre').value;
+    const apellidoPaterno = document.getElementById('colab-apellido-paterno').value;
+    const apellidoMaterno = document.getElementById('colab-apellido-materno').value;
+    const email = document.getElementById('colab-email').value;
+    const telefono = document.getElementById('colab-telefono').value;
+    const codigo = document.getElementById('colab-codigo').value;
+    const unidad = document.getElementById('colab-unidad').value;
+    const area = document.getElementById('colab-area').value;
+    const puesto = document.getElementById('colab-puesto').value;
+    const jefe = document.getElementById('colab-jefe').value;
+    const fechaNacimiento = document.getElementById('colab-fecha-nacimiento').value;
+
+    const inspectorName = `${nombre} ${apellidoPaterno} ${apellidoMaterno} `.trim();
+
+    const personal = {
+        dni: dni,
+        inspector: inspectorName,
+        telefono: telefono,
+        distrito: unidad, // Mapping legacy field
+        tipo: puesto,
+        estado: 'Activo',
+        usuarioModificacion: localStorage.getItem('usuario') || 'System',
+        // New fields matching the entity
+        nombre: nombre,
+        apellidoPaterno: apellidoPaterno,
+        apellidoMaterno: apellidoMaterno,
+        email: email,
+        codigoEmpleado: codigo,
+        area: area,
+        detalleCebe: area, // Mapping legacy field
+        jefeInmediato: jefe,
+        fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento).toISOString() : null
+    };
+
+    const jwt = localStorage.getItem('jwt') || '';
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': jwt ? `Bearer ${jwt} ` : ''
+    };
+
+    try {
+        let response;
+        if (currentModalMode === 'create') {
+            response = await fetch(`${API_NET}/api/personal`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(personal)
+            });
+        } else {
+            response = await fetch(`${API_NET}/api/personal/${dni}`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(personal)
+            });
+        }
+
+        if (response.ok) {
+            alert(currentModalMode === 'create' ? 'Colaborador creado correctamente' : 'Colaborador actualizado correctamente');
+            cerrarModalColaborador();
+            cargarEmpleados();
+        } else {
+            const errorText = await response.text();
+            alert('Error al guardar: ' + errorText);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Error de conexión: ' + error.message);
+    }
+}
+
+function toggleCrearUsuario() {
+    const section = document.getElementById('section-crear-usuario');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+
+        // Populate DNI
+        const dni = document.getElementById('colab-num-doc').value || document.getElementById('colab-codigo').value;
+        document.getElementById('crear-usuario-dni').value = dni;
+
+        // Suggest Role based on Puesto/Tipo
+        // Mapping:
+        // ADMIN: GERENTE, SUB GERENTE
+        // MANAGER: JEFE, COORDINADOR
+        // SUPERVISOR: SUPERVISOR
+        // FIELD: OPERARIO, CHOFER
+        // USER: Others (ANALISTA, ASISTENTE, AUXILIAR, PRACTICANTE)
+
+        const puestoSelect = document.getElementById('colab-puesto');
+        // Try to get the text of the selected option, or the value
+        let puesto = '';
+        if (puestoSelect.selectedIndex >= 0) {
+            puesto = puestoSelect.options[puestoSelect.selectedIndex].text.toUpperCase();
+        } else {
+            puesto = puestoSelect.value.toUpperCase();
+        }
+
+        // Also check the display text if select is generic
+        const puestoDisplay = document.getElementById('colab-puesto-display').textContent.toUpperCase();
+        if (puestoDisplay && puestoDisplay !== 'COLABORADOR') puesto = puestoDisplay;
+
+        let role = 'USER';
+        if (puesto.includes('GERENTE') || puesto.includes('SUB GERENTE')) role = 'ADMIN';
+        else if (puesto.includes('JEFE') || puesto.includes('COORDINADOR')) role = 'MANAGER';
+        else if (puesto.includes('SUPERVISOR')) role = 'SUPERVISOR';
+        else if (puesto.includes('OPERARIO') || puesto.includes('CHOFER')) role = 'FIELD';
+
+        document.getElementById('crear-usuario-rol').value = role;
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+async function confirmarCrearUsuario() {
+    const dni = document.getElementById('crear-usuario-dni').value;
+    // Password is auto-generated, no input field exists
+    const rol = document.getElementById('crear-usuario-rol').value;
+
+    if (!dni) {
+        alert("Error: No hay DNI seleccionado.");
+        return;
+    }
+
+    // Call API
+    fetch('http://localhost:5132/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt')
+        },
+        body: JSON.stringify({
+            dni: dni,
+            password: "", // Empty password triggers auto-generation in backend
+            role: rol
+        })
+    })
+        .then(response => {
+            if (response.ok) {
+                response.json().then(data => {
+                    let msg = "Usuario creado exitosamente.";
+                    if (data.tempPassword) {
+                        msg += "\n\nCONTRASEÑA TEMPORAL: " + data.tempPassword + "\n\n(Se ha enviado un correo con las credenciales. Si no lo recibe, use esta contraseña temporal)";
+                    } else {
+                        msg += " Las credenciales han sido enviadas al correo.";
+                    }
+                    alert(msg);
+                    toggleCrearUsuario(); // Hide form
+                });
+            } else {
+                response.text().then(text => alert("Error al crear usuario: " + text));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Error de conexión al crear usuario.");
+        });
+}
+
 // Funciones para empleados
-function verEmpleado(id) {
+async function verEmpleado(id) {
     console.log('[EMPLEADOS] Viendo empleado:', id);
-    alert(`Viendo detalles del empleado: ${id}`);
+    try {
+        const jwt = localStorage.getItem('jwt') || '';
+        const response = await fetch(`${API_NET}/api/personal/${id}`, { headers: { 'Accept': 'application/json', 'Authorization': jwt ? `Bearer ${jwt}` : '' } });
+        if (response.ok) {
+            const data = await response.json();
+            popularModalColaborador(data);
+            abrirModalColaborador('view');
+        } else {
+            alert('Error al cargar los datos del empleado');
+        }
+    } catch (error) {
+        console.error('[EMPLEADOS] Error al cargar empleado:', error);
+        alert('Error al cargar los datos del empleado');
+    }
 }
 
 async function editarEmpleado(id) {
     console.log('[EMPLEADOS] Editando empleado:', id);
     try {
         const jwt = localStorage.getItem('jwt') || '';
-        const response = await fetch(`${API_NET}/api/empleados/${id}`, { headers: { 'Accept': 'application/json', 'Authorization': jwt ? `Bearer ${jwt}` : '' } });
+        const response = await fetch(`${API_NET}/api/personal/${id}`, { headers: { 'Accept': 'application/json', 'Authorization': jwt ? `Bearer ${jwt}` : '' } });
         if (response.ok) {
-            const empleado = await response.json();
-            console.log('[EMPLEADOS] Datos del empleado:', empleado);
-            alert(`Editando empleado: ${empleado.nombreCompleto || id}`);
+            const data = await response.json();
+            popularModalColaborador(data);
+            abrirModalColaborador('edit');
         } else {
             alert('Error al cargar los datos del empleado');
         }
@@ -3978,11 +4674,11 @@ async function eliminarEmpleado(id) {
     if (confirm(`¿Estás seguro de que quieres eliminar el empleado ${id}?`)) {
         try {
             const jwt = localStorage.getItem('jwt') || '';
-            const response = await fetch(`${API_NET}/api/empleados/${id}`, {
+            const response = await fetch(`${API_NET}/api/personal/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': jwt ? `Bearer ${jwt}` : '' }
+                headers: { 'Authorization': jwt ? `Bearer ${jwt} ` : '' }
             });
-            
+
             if (response.ok) {
                 alert(`Empleado ${id} eliminado correctamente`);
                 // Recargar la tabla
@@ -4007,17 +4703,17 @@ function limpiarFiltrosVehiculos() {
     filterInputs.forEach(input => {
         input.value = '';
     });
-    
+
     const buscarInput = document.getElementById('buscarVehiculos');
     if (buscarInput) {
         buscarInput.value = '';
     }
-    
+
     const filas = document.querySelectorAll('#tablaVehiculosMinimalista tbody tr');
     filas.forEach(fila => {
         fila.style.display = 'table-row';
     });
-    
+
     filtrosActualesVehiculos = {};
     console.log('🧹 Filtros de vehículos limpiados');
 }
@@ -4029,32 +4725,32 @@ function ordenarTablaVehiculos(columna) {
         console.log('❌ Tabla de vehículos no encontrada');
         return;
     }
-    
+
     const tbody = tabla.querySelector('tbody');
     const filas = Array.from(tbody.querySelectorAll('tr'));
-    
+
     const direccion = ordenActualVehiculos[columna] === 'asc' ? 'desc' : 'asc';
-    
+
     Object.keys(ordenActualVehiculos).forEach(col => {
         ordenActualVehiculos[col] = '';
     });
     ordenActualVehiculos[columna] = direccion;
-    
+
     filas.sort((a, b) => {
         const valorA = a.cells[columna].textContent.trim();
         const valorB = b.cells[columna].textContent.trim();
-        
+
         if (direccion === 'asc') {
             return valorA.localeCompare(valorB);
         } else {
             return valorB.localeCompare(valorA);
         }
     });
-    
+
     filas.forEach(fila => {
         tbody.appendChild(fila);
     });
-    
+
     actualizarIconosOrdenamientoVehiculos();
     console.log('📊 Tabla de vehículos ordenada por columna:', columna, 'dirección:', direccion);
 }
@@ -4064,7 +4760,7 @@ function actualizarIconosOrdenamientoVehiculos() {
     const headers = document.querySelectorAll('.vehiculos-sortable');
     headers.forEach((header, index) => {
         const columna = header.getAttribute('data-sort');
-        
+
         if (ordenActualVehiculos[columna] === 'asc') {
             header.classList.add('asc');
             header.classList.remove('desc');
@@ -4087,12 +4783,12 @@ function filtrarPorColumnaVehiculos(columna, valor) {
 function aplicarFiltrosVehiculos() {
     const tabla = document.getElementById('tablaVehiculosMinimalista');
     if (!tabla) return;
-    
+
     const filas = tabla.querySelectorAll('tbody tr');
-    
+
     filas.forEach(fila => {
         let mostrar = true;
-        
+
         Object.keys(filtrosActualesVehiculos).forEach(columna => {
             const valorFiltro = filtrosActualesVehiculos[columna];
             if (valorFiltro) {
@@ -4105,10 +4801,10 @@ function aplicarFiltrosVehiculos() {
                 }
             }
         });
-        
+
         fila.style.display = mostrar ? 'table-row' : 'none';
     });
-    
+
     console.log('🔍 Filtros de vehículos aplicados');
 }
 
@@ -4126,7 +4822,7 @@ function getColumnaIndexVehiculos(columna) {
 // Función para inicializar funcionalidad de vehículos
 function inicializarVehiculos() {
     console.log('🚗 Inicializando funcionalidad de vehículos...');
-    
+
     // Configurar ordenamiento
     const sortableHeaders = document.querySelectorAll('.vehiculos-sortable');
     sortableHeaders.forEach((header, index) => {
@@ -4135,7 +4831,7 @@ function inicializarVehiculos() {
             ordenarTablaVehiculos(index);
         });
     });
-    
+
     // Configurar filtros por columna
     const filterInputs = document.querySelectorAll('.vehiculos-filter-input');
     filterInputs.forEach(input => {
@@ -4145,21 +4841,21 @@ function inicializarVehiculos() {
             filtrarPorColumnaVehiculos(columna, valor);
         });
     });
-    
+
     // Configurar búsqueda global
     const buscarInput = document.getElementById('buscarVehiculos');
     if (buscarInput) {
         buscarInput.addEventListener('input', (e) => {
             const termino = e.target.value.toLowerCase();
             const filas = document.querySelectorAll('#tablaVehiculosMinimalista tbody tr');
-            
+
             filas.forEach(fila => {
                 const texto = fila.textContent.toLowerCase();
                 fila.style.display = texto.includes(termino) ? 'table-row' : 'none';
             });
         });
     }
-    
+
     console.log('✅ Funcionalidad de vehículos inicializada');
 }
 
@@ -4174,142 +4870,238 @@ function guardarPlantillaVehiculos() {
     console.log('📤 Carga de archivo de vehículos');
 }
 
+// Funciones para Configuración de Sistema
+function cerrarModalConfiguracion() {
+    document.getElementById('modal-configuracion-sistema').style.display = 'none';
+}
+
+async function cargarConfiguracion() {
+    try {
+        const jwt = localStorage.getItem('jwt');
+        const response = await fetch(`${API_NET}/api/systemsettings`, {
+            headers: { 'Authorization': `Bearer ${jwt} ` }
+        });
+
+        if (response.ok) {
+            const settings = await response.json();
+            // Map settings to inputs
+            const getVal = (key) => {
+                const s = settings.find(x => x.key === key);
+                return s ? s.value : '';
+            };
+
+            document.getElementById('smtp-host').value = getVal('SmtpHost');
+            document.getElementById('smtp-port').value = getVal('SmtpPort');
+            document.getElementById('smtp-user').value = getVal('SmtpUser');
+            document.getElementById('smtp-from').value = getVal('FromEmail');
+            // Password is not shown for security
+            document.getElementById('smtp-password').value = '';
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+async function guardarConfiguracion() {
+    const updates = [
+        { key: 'SmtpHost', value: document.getElementById('smtp-host').value },
+        { key: 'SmtpPort', value: document.getElementById('smtp-port').value },
+        { key: 'SmtpUser', value: document.getElementById('smtp-user').value },
+        { key: 'FromEmail', value: document.getElementById('smtp-from').value }
+    ];
+
+    const pass = document.getElementById('smtp-password').value;
+    if (pass) {
+        updates.push({ key: 'SmtpPassword', value: pass });
+    }
+
+    try {
+        const jwt = localStorage.getItem('jwt');
+        const response = await fetch(`${API_NET}/api/systemsettings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwt} `
+            },
+            body: JSON.stringify(updates)
+        });
+
+        if (response.ok) {
+            alert('Configuración guardada correctamente');
+            alert('Configuración guardada correctamente');
+        } else {
+            alert('Error al guardar configuración');
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('Error de conexión');
+    }
+}
+
+async function probarEmail() {
+    const email = prompt("Ingrese un correo para recibir la prueba:", "arbildo.cuellar@OcaPeru.onmicrosoft.com");
+    if (!email) return;
+
+    try {
+        const jwt = localStorage.getItem('jwt');
+        const response = await fetch(`${API_NET}/api/systemsettings/test`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwt}`
+            },
+            body: JSON.stringify({ toEmail: email })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(result.message);
+        } else {
+            console.error(result);
+            alert('Error al probar correo: ' + result.message);
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Error de conexión al probar correo');
+    }
+}
+
 function mostrarModalNuevoVehiculo() {
     const modalHTML = `
-        <div class="modal-overlay" id="modalNuevoVehiculo" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;">
-            <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative;">
-                <!-- Header del Modal -->
-                <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                    <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">NUEVO VEHÍCULO</h2>
-                    <button class="modal-close" onclick="cerrarModalNuevoVehiculo()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
-                </div>
-                
-                <!-- Contenido del Modal -->
-                <div class="modal-content" style="padding: 24px 32px; display: flex; gap: 32px;">
-                    <!-- Sección Izquierda - Imagen -->
-                    <div class="modal-left-section" style="flex: 0 0 200px;">
-                        <div class="image-placeholder" style="width: 200px; height: 200px; border: 2px dashed #d1d5db; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f9fafb; margin-bottom: 16px;">
-                            <div class="image-circle" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; margin-bottom: 12px;">
-                                <i class="fas fa-truck" style="font-size: 32px; color: white;"></i>
-                            </div>
-                            <div class="image-text" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; color: #6b7280; text-align: center;">Imagen del Vehículo</div>
+    < div class="modal-overlay" id = "modalNuevoVehiculo" style = "position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;" >
+        <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative;">
+            <!-- Header del Modal -->
+            <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">NUEVO VEHÍCULO</h2>
+                <button class="modal-close" onclick="cerrarModalNuevoVehiculo()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
+            </div>
+
+            <!-- Contenido del Modal -->
+            <div class="modal-content" style="padding: 24px 32px; display: flex; gap: 32px;">
+                <!-- Sección Izquierda - Imagen -->
+                <div class="modal-left-section" style="flex: 0 0 200px;">
+                    <div class="image-placeholder" style="width: 200px; height: 200px; border: 2px dashed #d1d5db; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f9fafb; margin-bottom: 16px;">
+                        <div class="image-circle" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; margin-bottom: 12px;">
+                            <i class="fas fa-truck" style="font-size: 32px; color: white;"></i>
                         </div>
-                        <div class="info-box" style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                            <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #6b7280; line-height: 1.4;">La imagen se habilitará después de guardar</p>
-                        </div>
+                        <div class="image-text" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; color: #6b7280; text-align: center;">Imagen del Vehículo</div>
                     </div>
-                    
-                    <!-- Sección Derecha - Formulario -->
-                    <div class="modal-right-section" style="flex: 1;">
-                        <!-- Información del Vehículo -->
-                        <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Información del Vehículo</div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Placa</label>
-                                <input type="text" class="form-input" placeholder="Ingrese la placa del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">ID Vehículo</label>
-                                <input type="text" class="form-input" placeholder="Ingrese el ID del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Marca</label>
-                                <input type="text" class="form-input" placeholder="Ingrese la marca del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Modelo</label>
-                                <input type="text" class="form-input" placeholder="Ingrese el modelo del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Año</label>
-                                <input type="number" class="form-input" placeholder="Ingrese el año del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Tipo de Vehículo</label>
-                                <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
-                                    <option value="">Seleccione</option>
-                                    <option value="camion">Camión</option>
-                                    <option value="camioneta">Camioneta</option>
-                                    <option value="automovil">Automóvil</option>
-                                    <option value="moto">Motocicleta</option>
-                                    <option value="maquinaria">Maquinaria Pesada</option>
-                                    <option value="trailer">Trailer</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- Detalles Adicionales -->
-                        <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Detalles Adicionales</div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Estado</label>
-                                <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
-                                    <option value="">Seleccione</option>
-                                    <option value="disponible">Disponible</option>
-                                    <option value="en-mantenimiento">En Mantenimiento</option>
-                                    <option value="en-uso">En Uso</option>
-                                    <option value="fuera-de-servicio">Fuera de Servicio</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Color</label>
-                                <input type="text" class="form-input" placeholder="Ingrese el color del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Capacidad (kg)</label>
-                                <input type="number" class="form-input" placeholder="Ingrese la capacidad en kg" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Combustible</label>
-                                <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
-                                    <option value="">Seleccione</option>
-                                    <option value="gasolina">Gasolina</option>
-                                    <option value="diesel">Diesel</option>
-                                    <option value="electrico">Eléctrico</option>
-                                    <option value="hibrido">Híbrido</option>
-                                    <option value="gnv">GNV</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Descripción</label>
-                            <textarea class="form-textarea" placeholder="Ingrese una descripción detallada del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; min-height: 80px; resize: vertical; transition: border-color 0.3s ease; box-sizing: border-box;"></textarea>
-                        </div>
+                    <div class="info-box" style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                        <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #6b7280; line-height: 1.4;">La imagen se habilitará después de guardar</p>
                     </div>
                 </div>
-                
-                <!-- Footer del Modal -->
-                <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                    <button class="btn-secondary" onclick="cerrarModalNuevoVehiculo()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
-                    <button class="btn-primary" onclick="guardarNuevoVehiculo()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Guardar Nuevo Vehículo</button>
+
+                <!-- Sección Derecha - Formulario -->
+                <div class="modal-right-section" style="flex: 1;">
+                    <!-- Información del Vehículo -->
+                    <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Información del Vehículo</div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Placa</label>
+                            <input type="text" class="form-input" placeholder="Ingrese la placa del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">ID Vehículo</label>
+                            <input type="text" class="form-input" placeholder="Ingrese el ID del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Marca</label>
+                            <input type="text" class="form-input" placeholder="Ingrese la marca del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Modelo</label>
+                            <input type="text" class="form-input" placeholder="Ingrese el modelo del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Año</label>
+                            <input type="number" class="form-input" placeholder="Ingrese el año del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Tipo de Vehículo</label>
+                            <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
+                                <option value="">Seleccione</option>
+                                <option value="camion">Camión</option>
+                                <option value="camioneta">Camioneta</option>
+                                <option value="automovil">Automóvil</option>
+                                <option value="moto">Motocicleta</option>
+                                <option value="maquinaria">Maquinaria Pesada</option>
+                                <option value="trailer">Trailer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Detalles Adicionales -->
+                    <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Detalles Adicionales</div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Estado</label>
+                            <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
+                                <option value="">Seleccione</option>
+                                <option value="disponible">Disponible</option>
+                                <option value="en-mantenimiento">En Mantenimiento</option>
+                                <option value="en-uso">En Uso</option>
+                                <option value="fuera-de-servicio">Fuera de Servicio</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Color</label>
+                            <input type="text" class="form-input" placeholder="Ingrese el color del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Capacidad (kg)</label>
+                            <input type="number" class="form-input" placeholder="Ingrese la capacidad en kg" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Combustible</label>
+                            <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
+                                <option value="">Seleccione</option>
+                                <option value="gasolina">Gasolina</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="electrico">Eléctrico</option>
+                                <option value="hibrido">Híbrido</option>
+                                <option value="gnv">GNV</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Descripción</label>
+                        <textarea class="form-textarea" placeholder="Ingrese una descripción detallada del vehículo" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; min-height: 80px; resize: vertical; transition: border-color 0.3s ease; box-sizing: border-box;"></textarea>
+                    </div>
                 </div>
             </div>
+
+            <!-- Footer del Modal -->
+            <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn-secondary" onclick="cerrarModalNuevoVehiculo()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
+                <button class="btn-primary" onclick="guardarNuevoVehiculo()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Guardar Nuevo Vehículo</button>
+            </div>
         </div>
+        </div >
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     console.log('Modal de nuevo vehículo creado');
 }
 
 function verVehiculo(id) {
-    alert(`👁️ Viendo vehículo: ${id}`);
+    alert(`👁️ Viendo vehículo: ${id} `);
     console.log('👁️ Ver vehículo:', id);
 }
 
 function editarVehiculo(id) {
-    alert(`✏️ Editando vehículo: ${id}`);
+    alert(`✏️ Editando vehículo: ${id} `);
     console.log('✏️ Editar vehículo:', id);
 }
 
@@ -4330,17 +5122,17 @@ function limpiarFiltrosProyectos() {
     filterInputs.forEach(input => {
         input.value = '';
     });
-    
+
     const buscarInput = document.getElementById('buscarProyectos');
     if (buscarInput) {
         buscarInput.value = '';
     }
-    
+
     const filas = document.querySelectorAll('#tablaProyectosMinimalista tbody tr');
     filas.forEach(fila => {
         fila.style.display = 'table-row';
     });
-    
+
     filtrosActualesProyectos = {};
     console.log('🧹 Filtros de proyectos limpiados');
 }
@@ -4352,32 +5144,32 @@ function ordenarTablaProyectos(columna) {
         console.log('❌ Tabla de proyectos no encontrada');
         return;
     }
-    
+
     const tbody = tabla.querySelector('tbody');
     const filas = Array.from(tbody.querySelectorAll('tr'));
-    
+
     const direccion = ordenActualProyectos[columna] === 'asc' ? 'desc' : 'asc';
-    
+
     Object.keys(ordenActualProyectos).forEach(col => {
         ordenActualProyectos[col] = '';
     });
     ordenActualProyectos[columna] = direccion;
-    
+
     filas.sort((a, b) => {
         const valorA = a.cells[columna].textContent.trim();
         const valorB = b.cells[columna].textContent.trim();
-        
+
         if (direccion === 'asc') {
             return valorA.localeCompare(valorB);
         } else {
             return valorB.localeCompare(valorA);
         }
     });
-    
+
     filas.forEach(fila => {
         tbody.appendChild(fila);
     });
-    
+
     actualizarIconosOrdenamientoProyectos();
     console.log('📊 Tabla de proyectos ordenada por columna:', columna, 'dirección:', direccion);
 }
@@ -4387,7 +5179,7 @@ function actualizarIconosOrdenamientoProyectos() {
     const headers = document.querySelectorAll('.proyectos-sortable');
     headers.forEach((header, index) => {
         const columna = header.getAttribute('data-sort');
-        
+
         if (ordenActualProyectos[columna] === 'asc') {
             header.classList.add('asc');
             header.classList.remove('desc');
@@ -4409,10 +5201,10 @@ function filtrarPorColumnaProyectos(columna, valor) {
 // Función para aplicar filtros de proyectos
 function aplicarFiltrosProyectos() {
     const filas = document.querySelectorAll('#tablaProyectosMinimalista tbody tr');
-    
+
     filas.forEach(fila => {
         let mostrar = true;
-        
+
         Object.keys(filtrosActualesProyectos).forEach(columna => {
             const valorFiltro = filtrosActualesProyectos[columna];
             if (valorFiltro) {
@@ -4425,10 +5217,10 @@ function aplicarFiltrosProyectos() {
                 }
             }
         });
-        
+
         fila.style.display = mostrar ? 'table-row' : 'none';
     });
-    
+
     console.log('🔍 Filtros de proyectos aplicados');
 }
 
@@ -4446,7 +5238,7 @@ function getColumnaIndexProyectos(columna) {
 // Función para inicializar funcionalidad de proyectos
 function inicializarProyectos() {
     console.log('📋 Inicializando funcionalidad de proyectos...');
-    
+
     // Configurar ordenamiento
     const sortableHeaders = document.querySelectorAll('.proyectos-sortable');
     sortableHeaders.forEach((header, index) => {
@@ -4455,7 +5247,7 @@ function inicializarProyectos() {
             ordenarTablaProyectos(index);
         });
     });
-    
+
     // Configurar filtros por columna
     const filterInputs = document.querySelectorAll('.proyectos-filter-input');
     filterInputs.forEach(input => {
@@ -4465,21 +5257,21 @@ function inicializarProyectos() {
             filtrarPorColumnaProyectos(columna, valor);
         });
     });
-    
+
     // Configurar búsqueda global
     const buscarInput = document.getElementById('buscarProyectos');
     if (buscarInput) {
         buscarInput.addEventListener('input', (e) => {
             const termino = e.target.value.toLowerCase();
             const filas = document.querySelectorAll('#tablaProyectosMinimalista tbody tr');
-            
+
             filas.forEach(fila => {
                 const texto = fila.textContent.toLowerCase();
                 fila.style.display = texto.includes(termino) ? 'table-row' : 'none';
             });
         });
     }
-    
+
     console.log('✅ Funcionalidad de proyectos inicializada');
 }
 
@@ -4496,104 +5288,104 @@ function guardarPlantillaProyectos() {
 
 function mostrarModalNuevoProyecto() {
     const modalHTML = `
-        <div class="modal-overlay" id="modalNuevoProyecto" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;">
-            <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative;">
-                <!-- Header del Modal -->
-                <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                    <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">NUEVO PROYECTO</h2>
-                    <button class="modal-close" onclick="cerrarModalNuevoProyecto()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
-                </div>
-                
-                <!-- Contenido del Modal -->
-                <div class="modal-content" style="padding: 24px 32px; display: flex; gap: 32px;">
-                    <!-- Sección Izquierda - Imagen -->
-                    <div class="modal-left-section" style="flex: 0 0 200px;">
-                        <div class="image-placeholder" style="width: 200px; height: 200px; border: 2px dashed #d1d5db; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f9fafb; margin-bottom: 16px;">
-                            <div class="image-circle" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; margin-bottom: 12px;">
-                                <i class="fas fa-project-diagram" style="font-size: 32px; color: white;"></i>
-                            </div>
-                            <div class="image-text" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; color: #6b7280; text-align: center;">Logo del Proyecto</div>
+    < div class="modal-overlay" id = "modalNuevoProyecto" style = "position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;" >
+        <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative;">
+            <!-- Header del Modal -->
+            <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">NUEVO PROYECTO</h2>
+                <button class="modal-close" onclick="cerrarModalNuevoProyecto()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
+            </div>
+
+            <!-- Contenido del Modal -->
+            <div class="modal-content" style="padding: 24px 32px; display: flex; gap: 32px;">
+                <!-- Sección Izquierda - Imagen -->
+                <div class="modal-left-section" style="flex: 0 0 200px;">
+                    <div class="image-placeholder" style="width: 200px; height: 200px; border: 2px dashed #d1d5db; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f9fafb; margin-bottom: 16px;">
+                        <div class="image-circle" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; margin-bottom: 12px;">
+                            <i class="fas fa-project-diagram" style="font-size: 32px; color: white;"></i>
                         </div>
-                        <div class="info-box" style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                            <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #6b7280; line-height: 1.4;">El logo se habilitará después de guardar</p>
-                        </div>
+                        <div class="image-text" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; color: #6b7280; text-align: center;">Logo del Proyecto</div>
                     </div>
-                    
-                    <!-- Sección Derecha - Formulario -->
-                    <div class="modal-right-section" style="flex: 1;">
-                        <!-- Información del Proyecto -->
-                        <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Información del Proyecto</div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Nombre del Proyecto</label>
-                                <input type="text" class="form-input" placeholder="Ingrese el nombre del proyecto" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Cliente</label>
-                                <input type="text" class="form-input" placeholder="Ingrese el nombre del cliente" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Descripción</label>
-                            <textarea class="form-textarea" placeholder="Ingrese una descripción detallada del proyecto" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; min-height: 80px; resize: vertical; transition: border-color 0.3s ease; box-sizing: border-box;"></textarea>
-                        </div>
-                        
-                        <!-- Fechas y Estado -->
-                        <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Fechas y Estado</div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Fecha de Inicio</label>
-                                <input type="date" class="form-input" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Fecha de Fin</label>
-                                <input type="date" class="form-input" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Estado</label>
-                                <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
-                                    <option value="">Seleccione</option>
-                                    <option value="planificado">Planificado</option>
-                                    <option value="en-progreso">En Progreso</option>
-                                    <option value="completado">Completado</option>
-                                    <option value="suspendido">Suspendido</option>
-                                    <option value="cancelado">Cancelado</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Presupuesto</label>
-                                <input type="number" class="form-input" placeholder="Ingrese el presupuesto" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
-                            </div>
-                        </div>
+                    <div class="info-box" style="background: #f3f4f6; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                        <p style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #6b7280; line-height: 1.4;">El logo se habilitará después de guardar</p>
                     </div>
                 </div>
-                
-                <!-- Footer del Modal -->
-                <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                    <button class="btn-secondary" onclick="cerrarModalNuevoProyecto()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
-                    <button class="btn-primary" onclick="guardarNuevoProyecto()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Guardar Nuevo Proyecto</button>
+
+                <!-- Sección Derecha - Formulario -->
+                <div class="modal-right-section" style="flex: 1;">
+                    <!-- Información del Proyecto -->
+                    <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Información del Proyecto</div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Nombre del Proyecto</label>
+                            <input type="text" class="form-input" placeholder="Ingrese el nombre del proyecto" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Cliente</label>
+                            <input type="text" class="form-input" placeholder="Ingrese el nombre del cliente" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Descripción</label>
+                        <textarea class="form-textarea" placeholder="Ingrese una descripción detallada del proyecto" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; min-height: 80px; resize: vertical; transition: border-color 0.3s ease; box-sizing: border-box;"></textarea>
+                    </div>
+
+                    <!-- Fechas y Estado -->
+                    <div class="section-title" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Fechas y Estado</div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Fecha de Inicio</label>
+                            <input type="date" class="form-input" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Fecha de Fin</label>
+                            <input type="date" class="form-input" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Estado</label>
+                            <select class="form-select" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; background: white; transition: border-color 0.3s ease; box-sizing: border-box;">
+                                <option value="">Seleccione</option>
+                                <option value="planificado">Planificado</option>
+                                <option value="en-progreso">En Progreso</option>
+                                <option value="completado">Completado</option>
+                                <option value="suspendido">Suspendido</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Presupuesto</label>
+                            <input type="number" class="form-input" placeholder="Ingrese el presupuesto" style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; transition: border-color 0.3s ease; box-sizing: border-box;">
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Footer del Modal -->
+            <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn-secondary" onclick="cerrarModalNuevoProyecto()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
+                <button class="btn-primary" onclick="guardarNuevoProyecto()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Guardar Nuevo Proyecto</button>
+            </div>
         </div>
+        </div >
     `;
-    
+
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     console.log('Modal de nuevo proyecto creado');
 }
 
 function verProyecto(id) {
-    alert(`👁️ Viendo proyecto: ${id}`);
+    alert(`👁️ Viendo proyecto: ${id} `);
     console.log('👁️ Ver proyecto:', id);
 }
 
 function editarProyecto(id) {
-    alert(`✏️ Editando proyecto: ${id}`);
+    alert(`✏️ Editando proyecto: ${id} `);
     console.log('✏️ Editar proyecto:', id);
 }
 
@@ -4614,17 +5406,17 @@ function limpiarFiltrosCuadrillas() {
     filterInputs.forEach(input => {
         input.value = '';
     });
-    
+
     const buscarInput = document.getElementById('buscarCuadrillas');
     if (buscarInput) {
         buscarInput.value = '';
     }
-    
+
     const filas = document.querySelectorAll('#tablaCuadrillasMinimalista tbody tr');
     filas.forEach(fila => {
         fila.style.display = 'table-row';
     });
-    
+
     filtrosActualesCuadrillas = {};
     console.log('🧹 Filtros de cuadrillas limpiados');
 }
@@ -4636,32 +5428,32 @@ function ordenarTablaCuadrillas(columna) {
         console.log('❌ Tabla de cuadrillas no encontrada');
         return;
     }
-    
+
     const tbody = tabla.querySelector('tbody');
     const filas = Array.from(tbody.querySelectorAll('tr'));
-    
+
     const direccion = ordenActualCuadrillas[columna] === 'asc' ? 'desc' : 'asc';
-    
+
     Object.keys(ordenActualCuadrillas).forEach(col => {
         ordenActualCuadrillas[col] = '';
     });
     ordenActualCuadrillas[columna] = direccion;
-    
+
     filas.sort((a, b) => {
         const valorA = a.cells[columna].textContent.trim();
         const valorB = b.cells[columna].textContent.trim();
-        
+
         if (direccion === 'asc') {
             return valorA.localeCompare(valorB);
         } else {
             return valorB.localeCompare(valorA);
         }
     });
-    
+
     filas.forEach(fila => {
         tbody.appendChild(fila);
     });
-    
+
     actualizarIconosOrdenamientoCuadrillas();
     console.log('📊 Tabla de cuadrillas ordenada por columna:', columna, 'dirección:', direccion);
 }
@@ -4671,7 +5463,7 @@ function actualizarIconosOrdenamientoCuadrillas() {
     const headers = document.querySelectorAll('.cuadrillas-sortable');
     headers.forEach((header, index) => {
         const columna = header.getAttribute('data-sort');
-        
+
         if (ordenActualCuadrillas[columna] === 'asc') {
             header.classList.add('asc');
             header.classList.remove('desc');
@@ -4693,14 +5485,14 @@ function filtrarPorColumnaCuadrillas(columna, valor) {
 // Función para aplicar filtros de cuadrillas
 function aplicarFiltrosCuadrillas() {
     const filas = document.querySelectorAll('#tablaCuadrillasMinimalista tbody tr');
-    
+
     filas.forEach(fila => {
         if (fila.classList.contains('cuadrillas-filter-row')) {
             return; // Saltar la fila de filtros
         }
-        
+
         let mostrar = true;
-        
+
         Object.keys(filtrosActualesCuadrillas).forEach(columna => {
             const valor = filtrosActualesCuadrillas[columna];
             if (valor && valor.trim() !== '') {
@@ -4713,10 +5505,10 @@ function aplicarFiltrosCuadrillas() {
                 }
             }
         });
-        
+
         fila.style.display = mostrar ? 'table-row' : 'none';
     });
-    
+
     console.log('🔍 Filtros de cuadrillas aplicados');
 }
 
@@ -4734,35 +5526,35 @@ function getColumnaIndexCuadrillas(columna) {
 // Función para inicializar cuadrillas
 function inicializarCuadrillas() {
     console.log('🚀 Inicializando cuadrillas...');
-    
+
     // Configurar búsqueda global
     const buscarInput = document.getElementById('buscarCuadrillas');
     if (buscarInput) {
-        buscarInput.addEventListener('input', function() {
+        buscarInput.addEventListener('input', function () {
             const valor = this.value.toLowerCase();
             const filas = document.querySelectorAll('#tablaCuadrillasMinimalista tbody tr');
-            
+
             filas.forEach(fila => {
                 if (fila.classList.contains('cuadrillas-filter-row')) {
                     return; // Saltar la fila de filtros
                 }
-                
+
                 const celdas = fila.querySelectorAll('td');
                 let mostrar = false;
-                
+
                 celdas.forEach(celda => {
                     if (celda.textContent.toLowerCase().includes(valor)) {
                         mostrar = true;
                     }
                 });
-                
+
                 fila.style.display = mostrar ? 'table-row' : 'none';
             });
-            
+
             console.log('🔍 Búsqueda global de cuadrillas:', valor);
         });
     }
-    
+
     console.log('✅ Cuadrillas inicializadas correctamente');
 }
 
@@ -4787,13 +5579,13 @@ function mostrarModalNuevaCuadrilla() {
 // Función para ver cuadrilla
 function verCuadrilla(id) {
     console.log('[CUADRILLAS] Viendo cuadrilla:', id);
-    alert(`Viendo cuadrilla: ${id}`);
+    alert(`Viendo cuadrilla: ${id} `);
 }
 
 // Función para editar cuadrilla
 function editarCuadrilla(id) {
     console.log('[CUADRILLAS] Editando cuadrilla:', id);
-    alert(`Editando cuadrilla: ${id}`);
+    alert(`Editando cuadrilla: ${id} `);
 }
 
 // Función para eliminar cuadrilla
@@ -4820,7 +5612,7 @@ function guardarNuevoMaterial() {
         alert('Error: No se puede encontrar el modal. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener elementos del formulario con validación
     const nombreInput = modal.querySelector('input[placeholder="Ingrese el nombre del material"]');
     const codigoInput = modal.querySelector('input[placeholder="Ingrese el código del material"]');
@@ -4830,13 +5622,13 @@ function guardarNuevoMaterial() {
     const fechaInput = modal.querySelector('input[type="date"]');
     const proveedorInput = modal.querySelector('input[placeholder="Nombre del proveedor"]');
     const loteInput = modal.querySelector('input[placeholder="Número de lote del material"]');
-    
+
     // Verificar que los elementos existen
     if (!nombreInput || !codigoInput) {
         alert('Error: No se pueden encontrar los campos del formulario. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener valores
     const nombre = nombreInput.value;
     const codigo = codigoInput.value;
@@ -4846,25 +5638,25 @@ function guardarNuevoMaterial() {
     const fecha = fechaInput ? fechaInput.value : '';
     const proveedor = proveedorInput ? proveedorInput.value : '';
     const lote = loteInput ? loteInput.value : '';
-    
+
     // Validar campos obligatorios
     if (!nombre || !codigo) {
         alert('Por favor complete los campos obligatorios: Nombre del Material y Código del Material');
         return;
     }
-    
+
     // Generar ID único
     const nuevoId = 'M' + (Math.floor(Math.random() * 900) + 100);
-    
+
     // Generar precio aleatorio para demostración
     const precio = '$' + (Math.random() * 50 + 5).toFixed(2);
-    
+
     // Generar stock aleatorio para demostración
     const stock = Math.floor(Math.random() * 200) + 10;
-    
+
     // Crear nueva fila para la tabla (coincide con las columnas de la tabla)
     const nuevaFila = `
-        <tr>
+    < tr >
             <td>${nuevoId}</td>
             <td>${nombre}</td>
             <td>${categoria || 'Sin especificar'}</td>
@@ -4885,21 +5677,21 @@ function guardarNuevoMaterial() {
                     </button>
                 </div>
             </td>
-        </tr>
+        </tr >
     `;
-    
+
     // Agregar la nueva fila a la tabla
     const tabla = document.getElementById('tablaMaterialesMinimalista');
     const tbody = tabla.querySelector('tbody');
     const filaFiltros = tbody.querySelector('.materiales-filter-row');
-    
+
     // Insertar después de la fila de filtros
     if (filaFiltros) {
         filaFiltros.insertAdjacentHTML('afterend', nuevaFila);
     } else {
         tbody.insertAdjacentHTML('beforeend', nuevaFila);
     }
-    
+
     // Limpiar formulario con validación
     if (nombreInput) nombreInput.value = '';
     if (codigoInput) codigoInput.value = '';
@@ -4909,7 +5701,7 @@ function guardarNuevoMaterial() {
     if (fechaInput) fechaInput.value = '';
     if (proveedorInput) proveedorInput.value = '';
     if (loteInput) loteInput.value = '';
-    
+
     alert('Nuevo material guardado exitosamente');
     cerrarModalNuevoMaterial();
 }
@@ -4930,7 +5722,7 @@ function guardarNuevoVehiculo() {
         alert('Error: No se puede encontrar el modal. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener elementos del formulario con validación
     const placaInput = modal.querySelector('input[placeholder="Ingrese la placa del vehículo"]');
     const idInput = modal.querySelector('input[placeholder="Ingrese el ID del vehículo"]');
@@ -4943,13 +5735,13 @@ function guardarNuevoVehiculo() {
     const capacidadInput = modal.querySelector('input[placeholder="Ingrese la capacidad en kg"]');
     const combustibleSelect = modal.querySelector('select:nth-of-type(3)');
     const descripcionInput = modal.querySelector('textarea');
-    
+
     // Verificar que los elementos existen
     if (!placaInput || !marcaInput || !modeloInput) {
         alert('Error: No se pueden encontrar los campos del formulario. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener valores
     const placa = placaInput.value;
     const id = idInput ? idInput.value : '';
@@ -4962,19 +5754,19 @@ function guardarNuevoVehiculo() {
     const capacidad = capacidadInput ? capacidadInput.value : '';
     const combustible = combustibleSelect ? combustibleSelect.value : '';
     const descripcion = descripcionInput ? descripcionInput.value : '';
-    
+
     // Validar campos obligatorios
     if (!placa || !marca || !modelo) {
         alert('Por favor complete los campos obligatorios: Placa, Marca y Modelo');
         return;
     }
-    
+
     // Generar ID único si no se proporcionó
     const nuevoId = id || 'V' + (Math.floor(Math.random() * 900) + 100);
-    
+
     // Crear nueva fila para la tabla (coincide con las columnas de la tabla)
     const nuevaFila = `
-        <tr>
+    < tr >
             <td>${nuevoId}</td>
             <td>${placa}</td>
             <td>${marca}</td>
@@ -4995,21 +5787,21 @@ function guardarNuevoVehiculo() {
                     </button>
                 </div>
             </td>
-        </tr>
+        </tr >
     `;
-    
+
     // Agregar la nueva fila a la tabla
     const tabla = document.getElementById('tablaVehiculosMinimalista');
     const tbody = tabla.querySelector('tbody');
     const filaFiltros = tbody.querySelector('.vehiculos-filter-row');
-    
+
     // Insertar después de la fila de filtros
     if (filaFiltros) {
         filaFiltros.insertAdjacentHTML('afterend', nuevaFila);
     } else {
         tbody.insertAdjacentHTML('beforeend', nuevaFila);
     }
-    
+
     // Limpiar formulario con validación
     if (placaInput) placaInput.value = '';
     if (idInput) idInput.value = '';
@@ -5022,7 +5814,7 @@ function guardarNuevoVehiculo() {
     if (capacidadInput) capacidadInput.value = '';
     if (combustibleSelect) combustibleSelect.value = '';
     if (descripcionInput) descripcionInput.value = '';
-    
+
     alert('Nuevo vehículo guardado exitosamente');
     cerrarModalNuevoVehiculo();
 }
@@ -5043,7 +5835,7 @@ function guardarNuevoColaborador() {
         alert('Error: No se puede encontrar el modal. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener elementos del formulario con validación
     const nombreInput = modal.querySelector('input[placeholder="Ingrese el nombre"]');
     const apellidoPaternoInput = modal.querySelector('input[placeholder="Ingrese el apellido paterno"]');
@@ -5053,13 +5845,13 @@ function guardarNuevoColaborador() {
     const departamentoSelect = modal.querySelector('select:nth-of-type(1)');
     const telefonoInput = modal.querySelector('input[placeholder="Ingrese el teléfono"]');
     const estadoSelect = modal.querySelector('select:nth-of-type(2)');
-    
+
     // Verificar que los elementos existen
     if (!nombreInput || !apellidoPaternoInput || !emailInput) {
         alert('Error: No se pueden encontrar los campos del formulario. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener valores
     const nombre = nombreInput.value;
     const apellidoPaterno = apellidoPaternoInput.value;
@@ -5069,22 +5861,22 @@ function guardarNuevoColaborador() {
     const departamento = departamentoSelect ? departamentoSelect.value : '';
     const telefono = telefonoInput ? telefonoInput.value : '';
     const estado = estadoSelect ? estadoSelect.value : '';
-    
+
     // Validar campos obligatorios
     if (!nombre || !apellidoPaterno || !email) {
         alert('Por favor complete los campos obligatorios: Nombre, Apellido Paterno y Email');
         return;
     }
-    
+
     // Generar ID único
     const nuevoId = 'C' + (Math.floor(Math.random() * 900) + 100);
-    
+
     // Crear nombre completo
-    const nombreCompleto = `${nombre} ${apellidoPaterno} ${apellidoMaterno}`.trim();
-    
+    const nombreCompleto = `${nombre} ${apellidoPaterno} ${apellidoMaterno} `.trim();
+
     // Crear nueva fila para la tabla (coincide con las columnas de la tabla)
     const nuevaFila = `
-        <tr>
+    < tr >
             <td>${nuevoId}</td>
             <td>${nombreCompleto}</td>
             <td>${cargo || 'Sin especificar'}</td>
@@ -5105,21 +5897,21 @@ function guardarNuevoColaborador() {
                     </button>
                 </div>
             </td>
-        </tr>
+        </tr >
     `;
-    
+
     // Agregar la nueva fila a la tabla
     const tabla = document.getElementById('tablaColaboradoresMinimalista');
     const tbody = tabla.querySelector('tbody');
     const filaFiltros = tbody.querySelector('.colaboradores-filter-row');
-    
+
     // Insertar después de la fila de filtros
     if (filaFiltros) {
         filaFiltros.insertAdjacentHTML('afterend', nuevaFila);
     } else {
         tbody.insertAdjacentHTML('beforeend', nuevaFila);
     }
-    
+
     // Limpiar formulario con validación
     if (nombreInput) nombreInput.value = '';
     if (apellidoPaternoInput) apellidoPaternoInput.value = '';
@@ -5129,92 +5921,14 @@ function guardarNuevoColaborador() {
     if (departamentoSelect) departamentoSelect.value = '';
     if (telefonoInput) telefonoInput.value = '';
     if (estadoSelect) estadoSelect.value = '';
-    
+
     alert('Nuevo colaborador guardado exitosamente');
     cerrarModalNuevoColaborador();
 }
 
-// Función para cerrar modal de nuevo empleado
-function cerrarModalNuevoEmpleado() {
-    const modal = document.getElementById('modalNuevoEmpleado');
-    if (modal) {
-        modal.remove();
-        console.log('Modal de nuevo empleado cerrado');
-    }
-}
 
-// Función para guardar nuevo empleado
-async function guardarNuevoEmpleado() {
-    const modal = document.getElementById('modalNuevoEmpleado');
-    if (!modal) {
-        alert('Error: No se puede encontrar el modal. Por favor, recargue la página e intente nuevamente.');
-        return;
-    }
-    
-    // Obtener valores de los campos
-    const codigo = document.getElementById('codigo').value.trim();
-    const numeroDocumento = document.getElementById('numeroDocumento').value.trim();
-    const nombreCompleto = document.getElementById('nombreCompleto').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const telefono = document.getElementById('telefono').value.trim();
-    const empresaId = parseInt(document.getElementById('empresaId').value);
-    const activo = document.getElementById('activo').value === 'true';
-    
-    // Validar campos obligatorios
-    if (!codigo || !numeroDocumento || !nombreCompleto || !email) {
-        alert('Por favor complete los campos obligatorios: Código, Número de Documento, Nombre Completo y Email');
-        return;
-    }
-    
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert('Por favor ingrese un email válido');
-        return;
-    }
-    
-    // Crear objeto empleado
-    const empleado = {
-        codigo: codigo,
-        numeroDocumento: numeroDocumento,
-        nombreCompleto: nombreCompleto,
-        email: email,
-        telefono: telefono || null,
-        empresaId: empresaId,
-        activo: activo
-    };
-    
-    try {
-        // Enviar datos a la API
-        const jwt = localStorage.getItem('jwt') || '';
-        const response = await fetch(`${API_NET}/api/empleados`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': jwt ? `Bearer ${jwt}` : ''
-            },
-            body: JSON.stringify(empleado)
-        });
-        
-        if (response.ok) {
-            const nuevoEmpleado = await response.json();
-            alert('Empleado creado exitosamente');
-            cerrarModalNuevoEmpleado();
-            // Recargar la tabla de empleados
-            cargarEmpleados();
-        } else {
-            const errorData = await response.json();
-            alert(`Error al crear empleado: ${errorData.message || 'Error desconocido'}`);
-        }
-    } catch (error) {
-        console.error('Error al crear empleado:', error);
-        // Simular guardado exitoso para demostración
-        alert('Empleado creado exitosamente (modo demostración - sin conexión a BD)');
-        cerrarModalNuevoEmpleado();
-        // Recargar la tabla con datos de prueba
-        mostrarDatosPrueba();
-    }
-}
+
+
 
 // Función para cerrar modal de nuevo proyecto
 function cerrarModalNuevoProyecto() {
@@ -5232,7 +5946,7 @@ function guardarNuevoProyecto() {
         alert('Error: No se puede encontrar el modal. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener elementos del formulario con validación
     const nombreInput = modal.querySelector('input[placeholder="Ingrese el nombre del proyecto"]');
     const clienteInput = modal.querySelector('input[placeholder="Ingrese el nombre del cliente"]');
@@ -5241,13 +5955,13 @@ function guardarNuevoProyecto() {
     const fechaFinInput = modal.querySelector('input[type="date"]:nth-of-type(2)');
     const estadoSelect = modal.querySelector('select');
     const presupuestoInput = modal.querySelector('input[type="number"]');
-    
+
     // Verificar que los elementos existen
     if (!nombreInput || !clienteInput) {
         alert('Error: No se pueden encontrar los campos del formulario. Por favor, recargue la página e intente nuevamente.');
         return;
     }
-    
+
     // Obtener valores
     const nombre = nombreInput.value;
     const cliente = clienteInput.value;
@@ -5256,22 +5970,22 @@ function guardarNuevoProyecto() {
     const fechaFin = fechaFinInput ? fechaFinInput.value : '';
     const estado = estadoSelect ? estadoSelect.value : '';
     const presupuesto = presupuestoInput ? presupuestoInput.value : '';
-    
+
     // Validar campos obligatorios
     if (!nombre || !cliente) {
         alert('Por favor complete los campos obligatorios: Nombre del Proyecto y Cliente');
         return;
     }
-    
+
     // Generar ID único
     const nuevoId = 'P' + (Math.floor(Math.random() * 900) + 100);
-    
+
     // Formatear presupuesto
-    const presupuestoFormateado = presupuesto ? `$${parseInt(presupuesto).toLocaleString()}` : 'N/A';
-    
+    const presupuestoFormateado = presupuesto ? `$${parseInt(presupuesto).toLocaleString()} ` : 'N/A';
+
     // Crear nueva fila para la tabla (coincide con las columnas de la tabla)
     const nuevaFila = `
-        <tr>
+    < tr >
             <td>${nuevoId}</td>
             <td>${nombre}</td>
             <td>${cliente}</td>
@@ -5292,21 +6006,21 @@ function guardarNuevoProyecto() {
                     </button>
                 </div>
             </td>
-        </tr>
+        </tr >
     `;
-    
+
     // Agregar la nueva fila a la tabla
     const tabla = document.getElementById('tablaProyectosMinimalista');
     const tbody = tabla.querySelector('tbody');
     const filaFiltros = tbody.querySelector('.proyectos-filter-row');
-    
+
     // Insertar después de la fila de filtros
     if (filaFiltros) {
         filaFiltros.insertAdjacentHTML('afterend', nuevaFila);
     } else {
         tbody.insertAdjacentHTML('beforeend', nuevaFila);
     }
-    
+
     // Limpiar formulario con validación
     if (nombreInput) nombreInput.value = '';
     if (clienteInput) clienteInput.value = '';
@@ -5315,7 +6029,7 @@ function guardarNuevoProyecto() {
     if (fechaFinInput) fechaFinInput.value = '';
     if (estadoSelect) estadoSelect.value = '';
     if (presupuestoInput) presupuestoInput.value = '';
-    
+
     alert('Nuevo proyecto guardado exitosamente');
     cerrarModalNuevoProyecto();
 }
@@ -5337,41 +6051,41 @@ function handleFileUpload(input) {
     const fileNameSpan = document.getElementById('gestionFileName');
     const errorDiv = document.getElementById('gestionError');
     const successDiv = document.getElementById('gestionSuccess');
-    
+
     // Ocultar mensajes previos
     hideMessage(errorDiv);
     hideMessage(successDiv);
-    
+
     if (!file) {
         fileNameSpan.textContent = 'Ningún archivo seleccionado';
         return;
     }
-    
+
     // Validar tipo de archivo
     const validTypes = ['.xlsx', '.xls', '.csv'];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    
+
     if (!validTypes.includes(fileExtension)) {
         showMessage(errorDiv, 'Tipo de archivo no válido. Por favor seleccione un archivo Excel (.xlsx, .xls) o CSV (.csv)');
         fileNameSpan.textContent = 'Ningún archivo seleccionado';
         input.value = '';
         return;
     }
-    
+
     fileNameSpan.textContent = file.name;
     currentFile = file;
-    
+
     // Mostrar estado de carga
     showLoadingState();
-    
+
     // Procesar archivo
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         try {
             if (fileExtension === '.csv') {
                 processCSVData(e.target.result);
                 hideSheetSelector(); // CSV no tiene múltiples hojas
-                showMessage(successDiv, `Archivo "${file.name}" cargado exitosamente. ${gestionData.length} registros encontrados.`);
+                showMessage(successDiv, `Archivo "${file.name}" cargado exitosamente.${gestionData.length} registros encontrados.`);
             } else {
                 // Para Excel, primero detectamos las hojas disponibles
                 detectExcelSheets(e.target.result);
@@ -5386,12 +6100,12 @@ function handleFileUpload(input) {
             showEmptyState();
         }
     };
-    
-    reader.onerror = function() {
+
+    reader.onerror = function () {
         showMessage(errorDiv, 'Error al leer el archivo. Intente nuevamente.');
         showEmptyState();
     };
-    
+
     if (fileExtension === '.csv') {
         reader.readAsText(file);
     } else {
@@ -5405,10 +6119,10 @@ function processCSVData(csvText) {
     if (lines.length === 0) {
         throw new Error('Archivo CSV vacío');
     }
-    
+
     // Primera línea como headers
     gestionHeaders = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
-    
+
     // Procesar datos
     gestionData = [];
     for (let i = 1; i < lines.length; i++) {
@@ -5421,7 +6135,7 @@ function processCSVData(csvText) {
             gestionData.push(row);
         }
     }
-    
+
     renderDataTable();
 }
 
@@ -5429,10 +6143,10 @@ function processCSVData(csvText) {
 function processExcelData(arrayBuffer) {
     // Para esta demo, simularemos datos de Excel con datos de ejemplo
     // En producción, usarías una librería como SheetJS para leer archivos Excel reales
-    
+
     gestionHeaders = [
         'Tipo de Documento',
-        'Número de Documento', 
+        'Número de Documento',
         'Nombre de Documento',
         'Apellido Paterno',
         'Apellido Materno',
@@ -5441,7 +6155,7 @@ function processExcelData(arrayBuffer) {
         'Teléfono',
         'Distrito'
     ];
-    
+
     gestionData = [
         {
             'Tipo de Documento': 'DNI',
@@ -5543,47 +6257,47 @@ function processExcelData(arrayBuffer) {
             'Distrito': 'Santa Anita'
         }
     ];
-    
+
     renderDataTable();
 }
 
 // Función para renderizar la tabla de datos
 function renderDataTable() {
     const container = document.getElementById('gestionTableContainer');
-    
+
     if (!gestionData || gestionData.length === 0) {
         showEmptyState();
         return;
     }
-    
+
     // Usar columnas seleccionadas o todas las columnas si no hay selección
-    const columnsToShow = selectedColumns && selectedColumns.length > 0 ? 
-        gestionHeaders.filter(header => selectedColumns.includes(header)) : 
+    const columnsToShow = selectedColumns && selectedColumns.length > 0 ?
+        gestionHeaders.filter(header => selectedColumns.includes(header)) :
         gestionHeaders;
-    
+
     let tableHTML = `
-        <table class="gestion-table">
+    < table class="gestion-table" >
             <thead>
                 <tr>
     `;
-    
+
     // Agregar headers de columnas seleccionadas
     columnsToShow.forEach(header => {
         tableHTML += `<th>${header}</th>`;
     });
-    
+
     tableHTML += `
                 </tr>
             </thead>
             <tbody>
     `;
-    
+
     // Agregar filas de datos solo para columnas seleccionadas
     gestionData.forEach((row, index) => {
         tableHTML += `<tr>`;
         columnsToShow.forEach(header => {
             let cellValue = row[header] || '';
-            
+
             // Aplicar estilos especiales según el contenido
             if (header.toLowerCase().includes('email') && cellValue.includes('@')) {
                 cellValue = `<span style="color: #3b82f6;">${cellValue}</span>`;
@@ -5592,22 +6306,22 @@ function renderDataTable() {
             } else if (header.toLowerCase().includes('documento') && cellValue.includes('C.E.')) {
                 cellValue = `<span style="color: #dc2626; font-weight: 500;">${cellValue}</span>`;
             }
-            
+
             tableHTML += `<td>${cellValue}</td>`;
         });
         tableHTML += `</tr>`;
     });
-    
+
     tableHTML += `
-            </tbody>
-        </table>
+            </tbody >
+        </table >
     `;
-    
+
     container.innerHTML = tableHTML;
-    
+
     // Actualizar contadores
     updateDataCounters(columnsToShow);
-    
+
     // Mostrar mensaje de scroll si hay muchas columnas
     const scrollInfo = document.getElementById('scrollInfo');
     if (scrollInfo && columnsToShow && columnsToShow.length > 6) {
@@ -5615,7 +6329,7 @@ function renderDataTable() {
     } else if (scrollInfo) {
         scrollInfo.style.display = 'none';
     }
-    
+
     // Mostrar u ocultar botón de mapa automáticamente
     mostrarOcultarBotonMapa();
 }
@@ -5624,13 +6338,13 @@ function renderDataTable() {
 function updateDataCounters(columnsToShow = null) {
     const columnCountElement = document.getElementById('columnCount');
     const rowCountElement = document.getElementById('rowCount');
-    
+
     if (columnCountElement && rowCountElement) {
         const columnCount = columnsToShow ? columnsToShow.length : (gestionHeaders ? gestionHeaders.length : 0);
         const rowCount = gestionData ? gestionData.length : 0;
-        
-        columnCountElement.innerHTML = `<i class="fas fa-columns"></i> Columnas: ${columnCount}`;
-        rowCountElement.innerHTML = `<i class="fas fa-list"></i> Filas: ${rowCount}`;
+
+        columnCountElement.innerHTML = `< i class="fas fa-columns" ></i > Columnas: ${columnCount} `;
+        rowCountElement.innerHTML = `< i class="fas fa-list" ></i > Filas: ${rowCount} `;
     }
 }
 
@@ -5638,24 +6352,24 @@ function updateDataCounters(columnsToShow = null) {
 function showEmptyState() {
     const container = document.getElementById('gestionTableContainer');
     container.innerHTML = `
-        <div class="gestion-empty-state">
+    < div class="gestion-empty-state" >
             <div class="gestion-empty-icon">
                 <i class="fas fa-file-excel"></i>
             </div>
             <div class="gestion-empty-text">No hay datos cargados</div>
             <div class="gestion-empty-subtext">Selecciona un archivo Excel para comenzar</div>
-        </div>
+        </div >
     `;
-    
+
     // Resetear contadores
     const columnCountElement = document.getElementById('columnCount');
     const rowCountElement = document.getElementById('rowCount');
-    
+
     if (columnCountElement && rowCountElement) {
-        columnCountElement.innerHTML = `<i class="fas fa-columns"></i> Columnas: 0`;
-        rowCountElement.innerHTML = `<i class="fas fa-list"></i> Filas: 0`;
+        columnCountElement.innerHTML = `< i class="fas fa-columns" ></i > Columnas: 0`;
+        rowCountElement.innerHTML = `< i class="fas fa-list" ></i > Filas: 0`;
     }
-    
+
     // Ocultar mensaje de scroll
     const scrollInfo = document.getElementById('scrollInfo');
     if (scrollInfo) {
@@ -5667,10 +6381,10 @@ function showEmptyState() {
 function showLoadingState() {
     const container = document.getElementById('gestionTableContainer');
     container.innerHTML = `
-        <div class="gestion-loading">
-            <div class="gestion-spinner"></div>
+    < div class="gestion-loading" >
+        <div class="gestion-spinner"></div>
             Procesando archivo...
-        </div>
+        </div >
     `;
 }
 
@@ -5691,16 +6405,16 @@ function hideMessage(element) {
 async function compartirConBD() {
     const successDiv = document.getElementById('gestionSuccess');
     const errorDiv = document.getElementById('gestionError');
-    
+
     if (!gestionData || gestionData.length === 0) {
         showMessage(errorDiv, 'No hay datos para compartir. Cargue un archivo primero.');
         return;
     }
-    
+
     try {
         // Mostrar estado de carga
         showMessage(successDiv, 'Enviando datos a la base de datos...');
-        
+
         // Preparar datos para enviar al backend
         const requestData = {
             headers: gestionHeaders,
@@ -5708,7 +6422,7 @@ async function compartirConBD() {
             fileName: currentFile,
             sheetName: currentSheetData ? currentSheetData.name : 'Sheet1'
         };
-        
+
         // Realizar llamada al backend
         const response = await fetch('http://localhost:5132/api/OperacionesDiarias/compartir-excel', {
             method: 'POST',
@@ -5717,32 +6431,32 @@ async function compartirConBD() {
             },
             body: JSON.stringify(requestData)
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok && result.success) {
-            showMessage(successDiv, `✅ ${result.message}`);
+            showMessage(successDiv, `✅ ${result.message} `);
             console.log('✅ Datos compartidos exitosamente con BD:', result);
         } else {
             throw new Error(result.message || 'Error desconocido del servidor');
         }
-        
+
     } catch (error) {
         console.error('❌ Error al compartir con BD:', error);
-        showMessage(errorDiv, `❌ Error al conectar con la base de datos: ${error.message}`);
+        showMessage(errorDiv, `❌ Error al conectar con la base de datos: ${error.message} `);
     }
 }
 
 function seleccionarColumnas() {
     console.log('🔍 [COLUMNAS] Función seleccionarColumnas() ejecutada');
     console.log('📊 [COLUMNAS] Datos disponibles:', gestionData ? gestionData.length : 0, 'filas');
-    
+
     if (!gestionData || gestionData.length === 0) {
         alert('⚠️ No hay datos cargados. Por favor, carga un archivo primero.');
         console.log('❌ [COLUMNAS] No hay datos disponibles');
         return;
     }
-    
+
     console.log('✅ [COLUMNAS] Datos encontrados, mostrando selector de columnas...');
     mostrarSelectorColumnas();
 }
@@ -5753,14 +6467,14 @@ function exportarDatos() {
         showMessage(errorDiv, 'No hay datos para exportar. Cargue un archivo primero.');
         return;
     }
-    
+
     // Crear CSV para exportar
     let csvContent = gestionHeaders.join(',') + '\n';
     gestionData.forEach(row => {
         const values = gestionHeaders.map(header => `"${row[header] || ''}"`);
         csvContent += values.join(',') + '\n';
     });
-    
+
     // Crear y descargar archivo
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -5771,7 +6485,7 @@ function exportarDatos() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     const successDiv = document.getElementById('gestionSuccess');
     showMessage(successDiv, 'Datos exportados exitosamente.');
 }
@@ -5782,25 +6496,25 @@ function filtrarDatos() {
         showMessage(errorDiv, 'No hay datos para filtrar. Cargue un archivo primero.');
         return;
     }
-    
+
     const filtro = prompt('Ingrese el texto a buscar en todos los campos:');
     if (!filtro) return;
-    
+
     const datosFiltrados = gestionData.filter(row => {
         return gestionHeaders.some(header => {
             const valor = row[header] || '';
             return valor.toLowerCase().includes(filtro.toLowerCase());
         });
     });
-    
+
     // Temporalmente mostrar datos filtrados
     const datosOriginales = [...gestionData];
     gestionData = datosFiltrados;
     renderDataTable();
-    
+
     const successDiv = document.getElementById('gestionSuccess');
-    showMessage(successDiv, `Filtro aplicado. Mostrando ${datosFiltrados.length} de ${datosOriginales.length} registros.`);
-    
+    showMessage(successDiv, `Filtro aplicado.Mostrando ${datosFiltrados.length} de ${datosOriginales.length} registros.`);
+
     // Restaurar datos originales después de 10 segundos
     setTimeout(() => {
         gestionData = datosOriginales;
@@ -5819,10 +6533,10 @@ function detectExcelSheets(arrayBuffer) {
     try {
         // Leer el archivo Excel usando SheetJS
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        
+
         // Obtener nombres de todas las hojas
         const sheetNames = workbook.SheetNames;
-        
+
         if (sheetNames.length === 0) {
             hideSheetSelector();
             showEmptyState();
@@ -5830,44 +6544,44 @@ function detectExcelSheets(arrayBuffer) {
             showMessage(errorDiv, 'No se encontraron hojas válidas en el archivo.');
             return;
         }
-        
+
         // Procesar cada hoja y extraer sus datos
         availableSheets = [];
         currentSheetData = {};
-        
+
         sheetNames.forEach(sheetName => {
             const worksheet = workbook.Sheets[sheetName];
-            
+
             // Obtener el rango de la hoja para asegurar que capturemos todas las columnas
             const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-            
+
             // Usar sheet_to_json con defval para mantener celdas vacías
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                header: 1, 
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                header: 1,
                 defval: '', // Valor por defecto para celdas vacías
                 range: range // Usar el rango completo de la hoja
             });
-            
+
             if (jsonData.length > 0) {
                 // La primera fila contiene los headers
                 let headers = jsonData[0] || [];
-                
+
                 // Asegurar que tenemos todos los headers hasta la última columna con datos
                 const maxColumns = Math.max(...jsonData.map(row => row.length));
                 while (headers.length < maxColumns) {
-                    headers.push(`Columna ${headers.length + 1}`);
+                    headers.push(`Columna ${headers.length + 1} `);
                 }
-                
+
                 // Filtrar headers vacíos al final y reemplazar con nombres por defecto
                 headers = headers.map((header, index) => {
                     if (!header || header.toString().trim() === '') {
-                        return `Columna ${index + 1}`;
+                        return `Columna ${index + 1} `;
                     }
                     return header.toString().trim();
                 });
-                
+
                 const dataRows = jsonData.slice(1);
-                
+
                 // Convertir filas a objetos usando los headers
                 const data = dataRows.map(row => {
                     const obj = {};
@@ -5879,20 +6593,20 @@ function detectExcelSheets(arrayBuffer) {
                     // Filtrar filas completamente vacías
                     return Object.values(row).some(value => value !== '');
                 });
-                
-                console.log(`Hoja "${sheetName}": ${headers.length} columnas detectadas:`, headers);
-                
+
+                console.log(`Hoja "${sheetName}": ${headers.length} columnas detectadas: `, headers);
+
                 availableSheets.push({ name: sheetName, data: { headers, data } });
                 currentSheetData[sheetName] = { headers, data };
             }
         });
-        
+
         if (availableSheets.length > 1) {
             showSheetSelector();
             populateSheetSelector();
-            
+
             const successDiv = document.getElementById('gestionSuccess');
-            showMessage(successDiv, `Archivo cargado exitosamente. ${availableSheets.length} hojas detectadas. Selecciona una hoja para continuar.`);
+            showMessage(successDiv, `Archivo cargado exitosamente.${availableSheets.length} hojas detectadas.Selecciona una hoja para continuar.`);
         } else if (availableSheets.length === 1) {
             // Solo una hoja, cargar automáticamente
             hideSheetSelector();
@@ -5903,7 +6617,7 @@ function detectExcelSheets(arrayBuffer) {
             const errorDiv = document.getElementById('gestionError');
             showMessage(errorDiv, 'No se encontraron hojas con datos válidos en el archivo.');
         }
-        
+
     } catch (error) {
         console.error('Error al procesar archivo Excel:', error);
         hideSheetSelector();
@@ -5915,7 +6629,7 @@ function detectExcelSheets(arrayBuffer) {
 
 // Función para generar datos de ejemplo para diferentes hojas
 function generateSampleData(sheetName) {
-    switch(sheetName) {
+    switch (sheetName) {
         case 'Hoja1':
             return {
                 headers: ['Tipo de Documento', 'Número de Documento', 'Nombres', 'Apellidos', 'Email', 'Teléfono', 'Distrito'],
@@ -6054,11 +6768,11 @@ function hideSheetSelector() {
 function populateSheetSelector() {
     const sheetSelect = document.getElementById('sheetSelect');
     const sheetCount = document.getElementById('sheetCount');
-    
+
     if (sheetSelect && sheetCount) {
         // Limpiar opciones existentes
         sheetSelect.innerHTML = '<option value="">Selecciona una hoja...</option>';
-        
+
         // Agregar opciones para cada hoja
         availableSheets.forEach(sheet => {
             const option = document.createElement('option');
@@ -6066,9 +6780,9 @@ function populateSheetSelector() {
             option.textContent = sheet.name;
             sheetSelect.appendChild(option);
         });
-        
+
         // Actualizar contador
-        sheetCount.innerHTML = `<i class="fas fa-file-alt"></i> Hojas disponibles: ${availableSheets.length}`;
+        sheetCount.innerHTML = `< i class="fas fa-file-alt" ></i > Hojas disponibles: ${availableSheets.length} `;
     }
 }
 
@@ -6076,7 +6790,7 @@ function populateSheetSelector() {
 function handleSheetChange() {
     const sheetSelect = document.getElementById('sheetSelect');
     const selectedSheet = sheetSelect.value;
-    
+
     if (selectedSheet) {
         loadSheetData(selectedSheet);
     } else {
@@ -6087,15 +6801,15 @@ function handleSheetChange() {
 // Función para cargar datos de una hoja específica
 function loadSheetData(sheetName) {
     const sheetData = currentSheetData[sheetName];
-    
+
     if (sheetData) {
         gestionHeaders = sheetData.headers;
         gestionData = sheetData.data;
-        
+
         renderDataTable();
-        
+
         const successDiv = document.getElementById('gestionSuccess');
-        showMessage(successDiv, `Hoja "${sheetName}" cargada exitosamente. ${gestionData.length} registros encontrados.`);
+        showMessage(successDiv, `Hoja "${sheetName}" cargada exitosamente.${gestionData.length} registros encontrados.`);
     } else {
         const errorDiv = document.getElementById('gestionError');
         showMessage(errorDiv, `Error al cargar la hoja "${sheetName}".`);
@@ -6121,42 +6835,42 @@ function mostrarSelectorColumnas() {
     }
 
     const modalHTML = `
-        <div class="modal-overlay" id="modalSelectorColumnas" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;">
-            <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative;">
-                <!-- Header del Modal -->
-                <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                    <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">SELECCIONAR COLUMNAS</h2>
-                    <button class="modal-close" onclick="cerrarSelectorColumnas()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
-                </div>
-                
-                <!-- Contenido del Modal -->
-                <div class="modal-content" style="padding: 24px 32px;">
-                    <div style="margin-bottom: 20px;">
-                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                            <button onclick="seleccionarTodasColumnas()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;">Seleccionar Todas</button>
-                            <button onclick="deseleccionarTodasColumnas()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;">Deseleccionar Todas</button>
-                        </div>
-                        <div style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">
-                            Selecciona las columnas que deseas mostrar en la tabla:
-                        </div>
+    < div class="modal-overlay" id = "modalSelectorColumnas" style = "position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 99999 !important;" >
+        <div class="modal-container" style="background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative;">
+            <!-- Header del Modal -->
+            <div class="modal-header" style="padding: 24px 32px 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="modal-title" style="margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 24px; font-weight: 600; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">SELECCIONAR COLUMNAS</h2>
+                <button class="modal-close" onclick="cerrarSelectorColumnas()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 8px; border-radius: 6px; transition: all 0.3s ease;">&times;</button>
+            </div>
+
+            <!-- Contenido del Modal -->
+            <div class="modal-content" style="padding: 24px 32px;">
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <button onclick="seleccionarTodasColumnas()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;">Seleccionar Todas</button>
+                        <button onclick="deseleccionarTodasColumnas()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;">Deseleccionar Todas</button>
                     </div>
-                    
-                    <div id="columnasContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
-                        ${generateColumnCheckboxes()}
-                    </div>
-                    
-                    <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 6px; font-size: 14px; color: #374151;">
-                        <strong>Columnas seleccionadas:</strong> <span id="contadorColumnas">${selectedColumns.length}</span> de ${allColumns.length}
+                    <div style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">
+                        Selecciona las columnas que deseas mostrar en la tabla:
                     </div>
                 </div>
-                
-                <!-- Footer del Modal -->
-                <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                    <button class="btn-secondary" onclick="cerrarSelectorColumnas()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
-                    <button class="btn-primary" onclick="aplicarSeleccionColumnas()" style="padding: 12px 24px; background: #1e3a8a; color: white; border: none; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Aplicar</button>
+
+                <div id="columnasContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;">
+                    ${generateColumnCheckboxes()}
+                </div>
+
+                <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 6px; font-size: 14px; color: #374151;">
+                    <strong>Columnas seleccionadas:</strong> <span id="contadorColumnas">${selectedColumns.length}</span> de ${allColumns.length}
                 </div>
             </div>
+
+            <!-- Footer del Modal -->
+            <div class="modal-footer" style="padding: 16px 32px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn-secondary" onclick="cerrarSelectorColumnas()" style="padding: 12px 24px; background: white; border: 2px solid #6b7280; color: #6b7280; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Cancelar</button>
+                <button class="btn-primary" onclick="aplicarSeleccionColumnas()" style="padding: 12px 24px; background: #1e3a8a; color: white; border: none; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">Aplicar</button>
+            </div>
         </div>
+        </div >
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
@@ -6168,11 +6882,11 @@ function generateColumnCheckboxes() {
     return allColumns.map(column => {
         const isChecked = selectedColumns.includes(column);
         return `
-            <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
-                <input type="checkbox" id="col_${column}" ${isChecked ? 'checked' : ''} onchange="toggleColumn('${column}')" style="margin-right: 12px; transform: scale(1.2);">
-                <label for="col_${column}" style="flex: 1; cursor: pointer; font-size: 14px; color: #374151;">${column}</label>
-            </div>
-        `;
+    < div style = "display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6;" >
+        <input type="checkbox" id="col_${column}" ${isChecked ? 'checked' : ''} onchange="toggleColumn('${column}')" style="margin-right: 12px; transform: scale(1.2);">
+            <label for="col_${column}" style="flex: 1; cursor: pointer; font-size: 14px; color: #374151;">${column}</label>
+        </div>
+`;
     }).join('');
 }
 
@@ -6204,7 +6918,7 @@ function deseleccionarTodasColumnas() {
 // Función para actualizar checkboxes
 function updateColumnCheckboxes() {
     allColumns.forEach(column => {
-        const checkbox = document.getElementById(`col_${column}`);
+        const checkbox = document.getElementById(`col_${column} `);
         if (checkbox) {
             checkbox.checked = selectedColumns.includes(column);
         }
@@ -6228,16 +6942,16 @@ function aplicarSeleccionColumnas() {
 
     // Actualizar headers globales
     gestionHeaders = [...selectedColumns];
-    
+
     // Re-renderizar tabla con columnas seleccionadas
     renderDataTable();
-    
+
     // Detectar columnas geográficas y mostrar/ocultar botón de mapa
     detectarColumnasGeograficas();
-    
+
     // Cerrar modal
     cerrarSelectorColumnas();
-    
+
     console.log('Columnas aplicadas:', selectedColumns);
 }
 
@@ -6249,14 +6963,14 @@ let tieneUbicacionesGeograficas = false;
 function detectarColumnasGeograficas() {
     columnasGeograficas = [];
     tieneUbicacionesGeograficas = false;
-    
+
     // Función para normalizar texto (quitar acentos y convertir a minúsculas)
     function normalizeText(text) {
         return text.toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, ''); // Quitar acentos
     }
-    
+
     // Palabras clave para identificar columnas geográficas
     const palabrasClaveGeo = [
         'latitud', 'latitude', 'lat',
@@ -6269,22 +6983,22 @@ function detectarColumnasGeograficas() {
         'zona', 'sector', 'barrio', 'neighborhood',
         'gps', 'geolocation', 'geolocalizacion'
     ];
-    
+
     // Revisar cada columna seleccionada
     selectedColumns.forEach(columna => {
         const nombreColumnaNormalizado = normalizeText(columna);
-        
+
         // Verificar si el nombre de la columna contiene palabras clave geográficas
-        const esGeografica = palabrasClaveGeo.some(palabra => 
+        const esGeografica = palabrasClaveGeo.some(palabra =>
             nombreColumnaNormalizado.includes(palabra)
         );
-        
+
         if (esGeografica) {
             columnasGeograficas.push(columna);
             tieneUbicacionesGeograficas = true;
         }
     });
-    
+
     // Si hay datos geográficos, verificar también el contenido de las columnas
     if (!tieneUbicacionesGeograficas && gestionData.length > 0) {
         selectedColumns.forEach(columna => {
@@ -6295,10 +7009,10 @@ function detectarColumnasGeograficas() {
             }
         });
     }
-    
+
     // Mostrar u ocultar botón de mapa
     mostrarOcultarBotonMapa();
-    
+
     console.log('🗺️ Columnas seleccionadas:', selectedColumns);
     console.log('🗺️ Columnas geográficas detectadas:', columnasGeograficas);
     console.log('🗺️ Tiene ubicaciones geográficas:', tieneUbicacionesGeograficas);
@@ -6307,32 +7021,32 @@ function detectarColumnasGeograficas() {
 // Función para verificar si el contenido de una columna es geográfico
 function verificarContenidoGeografico(nombreColumna, indiceColumna) {
     if (gestionData.length === 0) return false;
-    
+
     // Tomar una muestra de los primeros 10 registros para análisis
     const muestra = gestionData.slice(0, Math.min(10, gestionData.length));
     let contadorCoincidencias = 0;
-    
+
     muestra.forEach(fila => {
         const valor = fila[indiceColumna];
         if (valor && typeof valor === 'string') {
             const valorLimpio = valor.trim();
-            
+
             // Verificar patrón de coordenadas separadas por coma (ej: -12.1353,-76.9408)
             const patronCoordenadasComa = /^-?\d+\.?\d*,-?\d+\.?\d*$/;
-            
+
             // Verificar patrón de coordenadas individuales (ej: -74.123456)
             const patronCoordenadas = /^-?\d+\.?\d*$/;
-            
+
             // Verificar patrones de direcciones (contiene números y letras)
             const patronDireccion = /\d+.*[a-zA-Z]|[a-zA-Z].*\d+/;
-            
+
             // Verificar si es un par de coordenadas separadas por coma
             if (patronCoordenadasComa.test(valorLimpio)) {
                 const coordenadas = valorLimpio.split(',');
                 if (coordenadas.length === 2) {
                     const lat = parseFloat(coordenadas[0]);
                     const lng = parseFloat(coordenadas[1]);
-                    
+
                     // Verificar rangos válidos de latitud y longitud
                     if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
                         contadorCoincidencias++;
@@ -6353,18 +7067,18 @@ function verificarContenidoGeografico(nombreColumna, indiceColumna) {
             }
         }
     });
-    
+
     // Si al menos el 50% de la muestra parece geográfica, considerarla como tal
     const porcentajeCoincidencias = contadorCoincidencias / muestra.length;
     console.log(`🔍 Verificando contenido de "${nombreColumna}": ${contadorCoincidencias}/${muestra.length} coincidencias (${(porcentajeCoincidencias * 100).toFixed(1)}%)`);
-    
+
     return porcentajeCoincidencias >= 0.5;
 }
 
 // Función para mostrar u ocultar el botón de mapa
 function mostrarOcultarBotonMapa() {
     let botonMapa = document.getElementById('btn-ver-mapa');
-    
+
     // Siempre mostrar el botón si hay datos cargados
     if (gestionData.length > 0 && gestionHeaders.length > 0) {
         // Si no existe el botón, crearlo
@@ -6386,13 +7100,13 @@ function mostrarOcultarBotonMapa() {
 function crearBotonMapa() {
     const contenedorBotones = document.querySelector('.gestion-buttons');
     if (!contenedorBotones) return;
-    
+
     const botonMapa = document.createElement('button');
     botonMapa.id = 'btn-ver-mapa';
     botonMapa.className = 'gestion-btn gestion-btn-success';
     botonMapa.innerHTML = '<i class="fas fa-map-marked-alt"></i> Ver en Mapa';
     botonMapa.onclick = abrirModalMapa;
-    
+
     contenedorBotones.appendChild(botonMapa);
     console.log('🗺️ Botón "Ver en Mapa" creado');
 }
@@ -6414,22 +7128,22 @@ function abrirModalMapa() {
         alert('No hay datos cargados para mostrar en el mapa.');
         return;
     }
-    
+
     const modal = document.getElementById('modal-mapa');
     if (!modal) {
         alert('Error: No se encontró el modal de mapa.');
         return;
     }
-    
+
     // Crear selector de columnas para ubicación con detección automática
     crearSelectorColumnasUbicacionMejorado();
-    
+
     // Mostrar modal
     modal.style.display = 'flex';
-    
+
     // Auto-detectar y cargar mapa si hay columnas geográficas
     autoDetectarYCargarMapa();
-    
+
     console.log('🗺️ Modal de mapa abierto con', gestionData.length, 'registros');
 }
 
@@ -6437,10 +7151,10 @@ function abrirModalMapa() {
 function crearSelectorColumnasUbicacion() {
     const selector = document.getElementById('selector-columna-geo');
     if (!selector) return;
-    
+
     // Limpiar opciones existentes
     selector.innerHTML = '<option value="">-- Selecciona una columna --</option>';
-    
+
     // Agregar todas las columnas disponibles
     gestionHeaders.forEach(columna => {
         const option = document.createElement('option');
@@ -6448,7 +7162,7 @@ function crearSelectorColumnasUbicacion() {
         option.textContent = columna;
         selector.appendChild(option);
     });
-    
+
     console.log('🗺️ Selector de columnas creado con', gestionHeaders.length, 'columnas');
 }
 
@@ -6456,19 +7170,19 @@ function crearSelectorColumnasUbicacion() {
 function cargarMapaConColumna() {
     const selector = document.getElementById('selector-columna-geo');
     const columnaSeleccionada = selector.value;
-    
+
     if (!columnaSeleccionada) {
         alert('Por favor selecciona una columna que contenga información de ubicación.');
         return;
     }
-    
+
     // Inicializar mapa directamente con la columna seleccionada
-    
+
     // Inicializar mapa con la columna seleccionada
     setTimeout(() => {
         inicializarMapaConColumna(columnaSeleccionada);
     }, 100);
-    
+
     console.log('🗺️ Cargando mapa con columna:', columnaSeleccionada);
 }
 
@@ -6478,20 +7192,20 @@ function cerrarModalMapa() {
     if (modal) {
         modal.style.display = 'none';
     }
-    
+
     // Ocultar estadísticas del mapa
     const stats = document.querySelector('.mapa-stats');
     if (stats) {
         stats.style.display = 'none';
     }
-    
+
     // Limpiar instancia del mapa
     if (mapaInstancia) {
         mapaInstancia.remove();
         mapaInstancia = null;
         marcadoresGrupo = null;
     }
-    
+
     console.log('🗺️ Modal de mapa cerrado');
 }
 
@@ -6499,27 +7213,27 @@ function cerrarModalMapa() {
 function inicializarMapa() {
     const contenedorMapa = document.getElementById('mapa-leaflet');
     if (!contenedorMapa) return;
-    
+
     // Limpiar mapa anterior si existe
     if (mapaInstancia) {
         mapaInstancia.remove();
     }
-    
+
     // Crear nueva instancia del mapa centrado en Colombia
     mapaInstancia = L.map('mapa-leaflet').setView([4.5709, -74.2973], 6);
-    
+
     // Agregar capa de tiles (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 18
     }).addTo(mapaInstancia);
-    
+
     // Crear grupo de marcadores
     marcadoresGrupo = L.layerGroup().addTo(mapaInstancia);
-    
+
     // Procesar y agregar marcadores
     procesarDatosGeograficos();
-    
+
     console.log('🗺️ Mapa inicializado');
 }
 
@@ -6527,27 +7241,27 @@ function inicializarMapa() {
 function inicializarMapaConColumna(columnaSeleccionada) {
     const contenedorMapa = document.getElementById('mapa-leaflet');
     if (!contenedorMapa) return;
-    
+
     // Limpiar mapa anterior si existe
     if (mapaInstancia) {
         mapaInstancia.remove();
     }
-    
+
     // Crear nueva instancia del mapa centrado en Colombia
     mapaInstancia = L.map('mapa-leaflet').setView([4.5709, -74.2973], 6);
-    
+
     // Agregar capa de tiles (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 18
     }).addTo(mapaInstancia);
-    
+
     // Crear grupo de marcadores
     marcadoresGrupo = L.layerGroup().addTo(mapaInstancia);
-    
+
     // Procesar y agregar marcadores con la columna seleccionada
     procesarDatosGeograficosConColumna(columnaSeleccionada);
-    
+
     console.log('🗺️ Mapa inicializado con columna:', columnaSeleccionada);
 }
 
@@ -6556,10 +7270,10 @@ function procesarDatosGeograficos() {
     if (!gestionData || gestionData.length === 0) {
         return;
     }
-    
+
     let puntosValidos = 0;
     const bounds = L.latLngBounds();
-    
+
     // Identificar índices de columnas geográficas
     const indicesColumnas = {};
     columnasGeograficas.forEach(columna => {
@@ -6568,29 +7282,29 @@ function procesarDatosGeograficos() {
             indicesColumnas[columna] = indice;
         }
     });
-    
+
     // Set para evitar marcadores duplicados
     const posicionesExistentes = new Set();
-    
+
     // Procesar cada fila de datos
     gestionData.forEach((fila, indiceFila) => {
         const coordenadas = extraerCoordenadas(fila, indicesColumnas);
-        
+
         if (coordenadas.lat !== null && coordenadas.lng !== null) {
             const posKey = `${coordenadas.lat},${coordenadas.lng}`;
-            
+
             // Solo crear marcador si la posición no existe
             if (!posicionesExistentes.has(posKey)) {
                 posicionesExistentes.add(posKey);
-                
+
                 // Crear marcador
                 const marcador = L.marker([coordenadas.lat, coordenadas.lng])
                     .addTo(marcadoresGrupo);
-                
+
                 // Crear contenido del popup
                 const contenidoPopup = crearContenidoPopup(fila, indiceFila + 1);
                 marcador.bindPopup(contenidoPopup);
-                
+
                 // Agregar a bounds para centrar el mapa
                 bounds.extend([coordenadas.lat, coordenadas.lng]);
                 puntosValidos++;
@@ -6599,12 +7313,12 @@ function procesarDatosGeograficos() {
             }
         }
     });
-    
+
     // Centrar mapa en todos los marcadores si hay puntos válidos
     if (puntosValidos > 0) {
         mapaInstancia.fitBounds(bounds, { padding: [20, 20] });
     }
-    
+
     console.log(`🗺️ ${puntosValidos} puntos procesados y agregados al mapa`);
 }
 
@@ -6613,39 +7327,39 @@ function procesarDatosGeograficosConColumna(columnaSeleccionada) {
     if (!gestionData || gestionData.length === 0) {
         return;
     }
-    
+
     let puntosValidos = 0;
     const bounds = L.latLngBounds();
     const indiceColumna = gestionHeaders.indexOf(columnaSeleccionada);
-    
+
     if (indiceColumna === -1) {
         alert('Error: No se encontró la columna seleccionada.');
         return;
     }
-    
+
     // Set para evitar marcadores duplicados
     const posicionesExistentes = new Set();
-    
+
     // Procesar cada fila de datos
     gestionData.forEach((fila, indiceFila) => {
         const valorUbicacion = fila[columnaSeleccionada];
         const coordenadas = extraerCoordenadasDeTexto(valorUbicacion);
-        
+
         if (coordenadas.lat !== null && coordenadas.lng !== null) {
             const posKey = `${coordenadas.lat},${coordenadas.lng}`;
-            
+
             // Solo crear marcador si la posición no existe
             if (!posicionesExistentes.has(posKey)) {
                 posicionesExistentes.add(posKey);
-                
+
                 // Crear marcador
                 const marcador = L.marker([coordenadas.lat, coordenadas.lng])
                     .addTo(marcadoresGrupo);
-                
+
                 // Crear contenido del popup
                 const contenidoPopup = crearContenidoPopupConUbicacion(fila, indiceFila + 1, columnaSeleccionada, valorUbicacion);
                 marcador.bindPopup(contenidoPopup);
-                
+
                 // Agregar a bounds para centrar el mapa
                 bounds.extend([coordenadas.lat, coordenadas.lng]);
                 puntosValidos++;
@@ -6654,7 +7368,7 @@ function procesarDatosGeograficosConColumna(columnaSeleccionada) {
             }
         }
     });
-    
+
     // Centrar mapa en todos los marcadores si hay puntos válidos
     if (puntosValidos > 0) {
         mapaInstancia.fitBounds(bounds, { padding: [20, 20] });
@@ -6666,7 +7380,7 @@ Formatos soportados:
 • Latitud,Longitud (ej: 4.5709,-74.2973)
 • Coordenadas separadas por espacios (ej: 4.5709 -74.2973)`);
     }
-    
+
     console.log(`🗺️ ${puntosValidos} puntos procesados de la columna "${columnaSeleccionada}"`);
 }
 
@@ -6674,33 +7388,33 @@ Formatos soportados:
 function extraerCoordenadas(fila, indicesColumnas) {
     let lat = null;
     let lng = null;
-    
+
     // Buscar latitud y longitud en las columnas detectadas
     Object.keys(indicesColumnas).forEach(nombreColumna => {
         const indice = indicesColumnas[nombreColumna];
         const valor = fila[indice];
-        
+
         if (valor && typeof valor === 'string') {
             const valorLimpio = valor.trim();
             const numero = parseFloat(valorLimpio);
-            
+
             if (!isNaN(numero)) {
                 const nombreLower = nombreColumna.toLowerCase();
-                
+
                 // Detectar latitud
                 if (nombreLower.includes('lat') && numero >= -90 && numero <= 90) {
                     lat = numero;
                 }
-                
+
                 // Detectar longitud
-                if ((nombreLower.includes('lng') || nombreLower.includes('lon') || nombreLower.includes('longitud')) 
+                if ((nombreLower.includes('lng') || nombreLower.includes('lon') || nombreLower.includes('longitud'))
                     && numero >= -180 && numero <= 180) {
                     lng = numero;
                 }
             }
         }
     });
-    
+
     return { lat, lng };
 }
 
@@ -6709,9 +7423,9 @@ function extraerCoordenadasDeTexto(texto) {
     if (!texto || typeof texto !== 'string') {
         return { lat: null, lng: null };
     }
-    
+
     const textoLimpio = texto.trim();
-    
+
     // Patrones para diferentes formatos de coordenadas
     const patrones = [
         // Formato: "latitud, longitud" o "latitud,longitud"
@@ -6723,22 +7437,22 @@ function extraerCoordenadasDeTexto(texto) {
         // Formato: "latitud;longitud"
         /^(-?\d+\.?\d*)\s*;\s*(-?\d+\.?\d*)$/
     ];
-    
+
     for (const patron of patrones) {
         const coincidencia = textoLimpio.match(patron);
         if (coincidencia) {
             const lat = parseFloat(coincidencia[1]);
             const lng = parseFloat(coincidencia[2]);
-            
+
             // Validar rangos de coordenadas
-            if (!isNaN(lat) && !isNaN(lng) && 
-                lat >= -90 && lat <= 90 && 
+            if (!isNaN(lat) && !isNaN(lng) &&
+                lat >= -90 && lat <= 90 &&
                 lng >= -180 && lng <= 180) {
                 return { lat, lng };
             }
         }
     }
-    
+
     return { lat: null, lng: null };
 }
 
@@ -6749,31 +7463,31 @@ function crearContenidoPopupConUbicacion(fila, numeroFila, columnaUbicacion, val
         <p style="margin: 5px 0; font-size: 12px; background: #f0f9ff; padding: 5px; border-radius: 4px;">
             <strong>📍 ${columnaUbicacion}:</strong><br>${valorUbicacion}
         </p>`;
-    
+
     // Mostrar información de las primeras 4 columnas (excluyendo la de ubicación si está entre ellas)
     let columnasAMostrar = 0;
     const maxColumnas = 4;
-    
+
     for (let i = 0; i < gestionHeaders.length && columnasAMostrar < maxColumnas; i++) {
         const nombreColumna = gestionHeaders[i];
-        
+
         // Saltar la columna de ubicación si ya la mostramos arriba
         if (nombreColumna === columnaUbicacion) continue;
-        
+
         const valor = fila[i] || 'N/A';
         contenido += `<p style="margin: 5px 0; font-size: 12px;">
             <strong>${nombreColumna}:</strong> ${valor}
         </p>`;
         columnasAMostrar++;
     }
-    
+
     const columnasRestantes = gestionHeaders.length - columnasAMostrar - 1; // -1 por la columna de ubicación
     if (columnasRestantes > 0) {
         contenido += `<p style="margin: 5px 0; font-size: 11px; color: #666; font-style: italic;">
             ... y ${columnasRestantes} columnas más
         </p>`;
     }
-    
+
     contenido += '</div>';
     return contenido;
 }
@@ -6781,25 +7495,25 @@ function crearContenidoPopupConUbicacion(fila, numeroFila, columnaUbicacion, val
 // Función para crear contenido del popup
 function crearContenidoPopup(fila, numeroFila) {
     let contenido = `<div style="max-width: 250px;"><h4 style="margin: 0 0 10px 0; color: #059669;">Registro #${numeroFila}</h4>`;
-    
+
     // Mostrar información de las primeras 5 columnas o todas si son menos
     const columnasAMostrar = Math.min(5, gestionHeaders.length);
-    
+
     for (let i = 0; i < columnasAMostrar; i++) {
         const nombreColumna = gestionHeaders[i];
         const valor = fila[i] || 'N/A';
-        
+
         contenido += `<p style="margin: 5px 0; font-size: 12px;">
             <strong>${nombreColumna}:</strong> ${valor}
         </p>`;
     }
-    
+
     if (gestionHeaders.length > 5) {
         contenido += `<p style="margin: 5px 0; font-size: 11px; color: #666; font-style: italic;">
             ... y ${gestionHeaders.length - 5} columnas más
         </p>`;
     }
-    
+
     contenido += '</div>';
     return contenido;
 }
@@ -6807,15 +7521,15 @@ function crearContenidoPopup(fila, numeroFila) {
 // Función para centrar el mapa
 function centrarMapa() {
     if (!mapaInstancia || !marcadoresGrupo) return;
-    
+
     const marcadores = marcadoresGrupo.getLayers();
     if (marcadores.length === 0) return;
-    
+
     const bounds = L.latLngBounds();
     marcadores.forEach(marcador => {
         bounds.extend(marcador.getLatLng());
     });
-    
+
     mapaInstancia.fitBounds(bounds, { padding: [20, 20] });
     console.log('🗺️ Mapa centrado en todos los marcadores');
 }
@@ -6826,29 +7540,29 @@ function exportarUbicaciones() {
         alert('No hay datos para exportar.');
         return;
     }
-    
+
     // Crear datos para exportar solo con columnas geográficas
     const datosExportar = [];
     const encabezados = ['Registro', ...columnasGeograficas];
     datosExportar.push(encabezados);
-    
+
     gestionData.forEach((fila, indice) => {
         const filaExportar = [indice + 1];
-        
+
         columnasGeograficas.forEach(columna => {
             const indiceColumna = gestionHeaders.indexOf(columna);
             const valor = indiceColumna !== -1 ? fila[indiceColumna] : 'N/A';
             filaExportar.push(valor);
         });
-        
+
         datosExportar.push(filaExportar);
     });
-    
+
     // Convertir a CSV
-    const csvContent = datosExportar.map(fila => 
+    const csvContent = datosExportar.map(fila =>
         fila.map(campo => `"${campo}"`).join(',')
     ).join('\n');
-    
+
     // Descargar archivo
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -6859,7 +7573,7 @@ function exportarUbicaciones() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     console.log('🗺️ Ubicaciones exportadas a CSV');
 }
 
@@ -6884,10 +7598,10 @@ function toggleModoDibujo() {
         alert('Primero debes cargar el mapa.');
         return;
     }
-    
+
     const botonModo = document.getElementById('btn-modo-dibujo');
     const botonLimpiar = document.getElementById('btn-limpiar-seleccion');
-    
+
     if (modoDibujoActivo) {
         // Desactivar modo de dibujo
         desactivarModoDibujo();
@@ -6910,15 +7624,15 @@ function toggleModoDibujo() {
 // Función para activar el modo de dibujo
 function activarModoDibujo() {
     modoDibujoActivo = true;
-    
+
     // Cambiar cursor del mapa
     mapaInstancia.getContainer().style.cursor = 'crosshair';
-    
+
     // Agregar eventos de dibujo
     mapaInstancia.on('mousedown', iniciarDibujo);
     mapaInstancia.on('mousemove', continuarDibujo);
     mapaInstancia.on('mouseup', finalizarDibujo);
-    
+
     // Deshabilitar interacciones del mapa durante el dibujo
     mapaInstancia.dragging.disable();
     mapaInstancia.touchZoom.disable();
@@ -6926,22 +7640,22 @@ function activarModoDibujo() {
     mapaInstancia.scrollWheelZoom.disable();
     mapaInstancia.boxZoom.disable();
     mapaInstancia.keyboard.disable();
-    
+
     console.log('🎨 Eventos de dibujo configurados');
 }
 
 // Función para desactivar el modo de dibujo
 function desactivarModoDibujo() {
     modoDibujoActivo = false;
-    
+
     // Restaurar cursor del mapa
     mapaInstancia.getContainer().style.cursor = '';
-    
+
     // Remover eventos de dibujo
     mapaInstancia.off('mousedown', iniciarDibujo);
     mapaInstancia.off('mousemove', continuarDibujo);
     mapaInstancia.off('mouseup', finalizarDibujo);
-    
+
     // Rehabilitar interacciones del mapa
     mapaInstancia.dragging.enable();
     mapaInstancia.touchZoom.enable();
@@ -6949,7 +7663,7 @@ function desactivarModoDibujo() {
     mapaInstancia.scrollWheelZoom.enable();
     mapaInstancia.boxZoom.enable();
     mapaInstancia.keyboard.enable();
-    
+
     console.log('🎨 Eventos de dibujo removidos');
 }
 
@@ -6960,24 +7674,24 @@ let puntosTrazo = [];
 // Función para iniciar el dibujo
 function iniciarDibujo(e) {
     if (!modoDibujoActivo) return;
-    
+
     dibujando = true;
     puntosTrazo = [e.latlng];
-    
+
     // Crear polyline inicial
     trazoDibujo = L.polyline(puntosTrazo, {
         color: '#ff0000',
         weight: 3,
         opacity: 0.8
     }).addTo(mapaInstancia);
-    
+
     console.log('🎨 Iniciando dibujo en:', e.latlng);
 }
 
 // Función para continuar el dibujo
 function continuarDibujo(e) {
     if (!modoDibujoActivo || !dibujando || !trazoDibujo) return;
-    
+
     puntosTrazo.push(e.latlng);
     trazoDibujo.setLatLngs(puntosTrazo);
 }
@@ -6985,14 +7699,14 @@ function continuarDibujo(e) {
 // Función para finalizar el dibujo
 function finalizarDibujo(e) {
     if (!modoDibujoActivo || !dibujando) return;
-    
+
     dibujando = false;
-    
+
     if (puntosTrazo.length > 2) {
         // Crear una copia del trazo para cerrar el polígono sin modificar el original
         const puntosPoligono = [...puntosTrazo, puntosTrazo[0]];
         trazoDibujo.setLatLngs(puntosPoligono);
-        
+
         // Seleccionar puntos dentro del área dibujada (usar el trazo original sin duplicar)
         seleccionarPuntosEnArea();
     } else {
@@ -7002,23 +7716,23 @@ function finalizarDibujo(e) {
             trazoDibujo = null;
         }
     }
-    
+
     console.log('🎨 Dibujo finalizado con', puntosTrazo.length, 'puntos');
 }
 
 // Función para seleccionar puntos dentro del área dibujada
 function seleccionarPuntosEnArea() {
     if (!trazoDibujo || !marcadoresGrupo) return;
-    
+
     // Limpiar selección anterior
     limpiarSeleccionAnterior();
-    
+
     const marcadores = marcadoresGrupo.getLayers();
     let puntosSeleccionadosCount = 0;
-    
+
     console.log(`🔍 DEBUG: Iniciando selección con ${marcadores.length} marcadores totales`);
     console.log(`🔍 DEBUG: Polígono tiene ${puntosTrazo.length} puntos:`, puntosTrazo);
-    
+
     // Verificar si hay marcadores duplicados
     const posicionesUnicas = new Set();
     const marcadoresDuplicados = [];
@@ -7026,27 +7740,27 @@ function seleccionarPuntosEnArea() {
         const pos = marcador.getLatLng();
         const posKey = `${pos.lat},${pos.lng}`;
         if (posicionesUnicas.has(posKey)) {
-            marcadoresDuplicados.push({index, posicion: posKey});
+            marcadoresDuplicados.push({ index, posicion: posKey });
         } else {
             posicionesUnicas.add(posKey);
         }
     });
-    
+
     if (marcadoresDuplicados.length > 0) {
         console.log(`⚠️ DEBUG: Se encontraron ${marcadoresDuplicados.length} marcadores duplicados:`, marcadoresDuplicados);
     }
     console.log(`🔍 DEBUG: Posiciones únicas: ${posicionesUnicas.size}`);
-    
+
     // Usar Set para contar solo posiciones únicas seleccionadas
     const posicionesSeleccionadas = new Set();
-    
+
     marcadores.forEach((marcador, index) => {
         const posicion = marcador.getLatLng();
         const posKey = `${posicion.lat},${posicion.lng}`;
         const dentroDelPoligono = puntoEnPoligono(posicion, puntosTrazo);
-        
+
         console.log(`🔍 DEBUG: Marcador ${index + 1} en posición [${posicion.lat}, ${posicion.lng}] - Dentro: ${dentroDelPoligono}`);
-        
+
         // Verificar si el punto está dentro del polígono dibujado
         if (dentroDelPoligono) {
             // Guardar el icono original si no está guardado
@@ -7061,7 +7775,7 @@ function seleccionarPuntosEnArea() {
                 }
                 console.log(`💾 DEBUG: Icono original guardado para marcador ${index + 1}`);
             }
-            
+
             // Crear icono rojo para marcador seleccionado usando divIcon con CSS
             const iconoSeleccionado = L.divIcon({
                 className: 'custom-marker-selected',
@@ -7070,10 +7784,10 @@ function seleccionarPuntosEnArea() {
                 iconAnchor: [12, 24],
                 popupAnchor: [0, -24]
             });
-            
+
             marcador.setIcon(iconoSeleccionado);
             marcadoresSeleccionados.push(marcador);
-            
+
             // Solo contar posiciones únicas
             if (!posicionesSeleccionadas.has(posKey)) {
                 posicionesSeleccionadas.add(posKey);
@@ -7084,10 +7798,10 @@ function seleccionarPuntosEnArea() {
             }
         }
     });
-    
+
     console.log(`🎯 RESULTADO: ${puntosSeleccionadosCount} puntos seleccionados dentro del área dibujada`);
     console.log(`🎯 DEBUG: Marcadores seleccionados:`, marcadoresSeleccionados.length);
-    
+
     // Mostrar menú desplegable con el resultado
     if (puntosSeleccionadosCount > 0) {
         mostrarMenuPuntosSeleccionados(puntosSeleccionadosCount);
@@ -7101,25 +7815,25 @@ function puntoEnPoligono(punto, poligono) {
     const x = punto.lat;
     const y = punto.lng;
     let dentro = false;
-    
+
     for (let i = 0, j = poligono.length - 1; i < poligono.length; j = i++) {
         const xi = poligono[i].lat;
         const yi = poligono[i].lng;
         const xj = poligono[j].lat;
         const yj = poligono[j].lng;
-        
+
         if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
             dentro = !dentro;
         }
     }
-    
+
     return dentro;
 }
 
 // Función para limpiar la selección anterior
 function limpiarSeleccionAnterior() {
     console.log(`🔄 DEBUG: Restaurando ${marcadoresSeleccionados.length} marcadores seleccionados`);
-    
+
     // Restaurar el icono original de los marcadores seleccionados
     marcadoresSeleccionados.forEach((marcador, index) => {
         if (marcador._iconoOriginal) {
@@ -7131,7 +7845,7 @@ function limpiarSeleccionAnterior() {
             console.log(`⚠️ DEBUG: Usando icono por defecto para marcador ${index + 1} (no había original)`);
         }
     });
-    
+
     marcadoresSeleccionados = [];
     console.log(`🔄 DEBUG: Selección anterior limpiada completamente`);
 }
@@ -7140,7 +7854,7 @@ function limpiarSeleccionAnterior() {
 function limpiarSeleccion() {
     // Limpiar selección de marcadores
     limpiarSeleccionAnterior();
-    
+
     // Remover el trazo del mapa de forma más robusta
     if (trazoDibujo) {
         try {
@@ -7150,17 +7864,17 @@ function limpiarSeleccion() {
         }
         trazoDibujo = null;
     }
-    
+
     // Limpiar variables de dibujo
     puntosTrazo = [];
     puntosSeleccionados = [];
     dibujando = false;
-    
+
     // Forzar redibujado del mapa para asegurar limpieza visual
     if (mapaInstancia) {
         mapaInstancia.invalidateSize();
     }
-    
+
     console.log('🧹 Selección y trazo limpiados completamente');
     alert('✅ Selección limpiada correctamente.');
 }
@@ -7174,7 +7888,7 @@ function mostrarMenuPuntosSeleccionados() {
     const menu = document.getElementById('menu-lateral-puntos');
     const contador = document.getElementById('contador-puntos');
     const cantidadPuntos = marcadoresSeleccionados.length;
-    
+
     if (menu && contador) {
         contador.textContent = cantidadPuntos;
         menu.style.display = 'flex'; // Cambiar a flex para el diseño lateral
@@ -7198,12 +7912,12 @@ function cerrarMenuPuntos() {
 // Función para asignar cuadrilla a los puntos seleccionados
 function asignarCuadrilla() {
     console.log('🔧 asignarCuadrilla() llamada - Marcadores:', marcadoresSeleccionados.length);
-    
+
     if (marcadoresSeleccionados.length === 0) {
         alert('❌ No hay puntos seleccionados.\n\nPara usar esta función:\n1. Dibuja un área en el mapa\n2. Selecciona puntos dentro del área\n3. Usa este botón para asignar cuadrillas');
         return;
     }
-    
+
     try {
         mostrarListaCuadrillas();
         console.log('✅ Lista de cuadrillas mostrada correctamente');
@@ -7216,12 +7930,12 @@ function asignarCuadrilla() {
 // Función para programar tarea en los puntos seleccionados
 function programarTarea() {
     console.log('📅 programarTarea() llamada - Marcadores:', marcadoresSeleccionados.length);
-    
+
     if (marcadoresSeleccionados.length === 0) {
         alert('❌ No hay puntos seleccionados.\n\nPara usar esta función:\n1. Dibuja un área en el mapa\n2. Selecciona puntos dentro del área\n3. Usa este botón para programar tareas');
         return;
     }
-    
+
     // Por ahora, mostrar un mensaje simple
     alert(`📅 Función "Programar Tarea" en desarrollo.\nPuntos seleccionados: ${marcadoresSeleccionados.length}`);
     console.log('📅 Programar tarea - Puntos seleccionados:', marcadoresSeleccionados.length);
@@ -7230,7 +7944,7 @@ function programarTarea() {
 // Función para mostrar lista de cuadrillas
 function mostrarListaCuadrillas() {
     const listaCuadrillas = document.querySelector('.lista-cuadrillas');
-    
+
     if (listaCuadrillas) {
         listaCuadrillas.style.display = 'flex';
         console.log('✅ Lista de cuadrillas mostrada - Menú principal permanece visible');
@@ -7240,12 +7954,12 @@ function mostrarListaCuadrillas() {
 // Función para mostrar lista de efectivos policiales
 function mostrarListaEfectivos() {
     const listaEfectivos = document.querySelector('#lista-efectivos');
-    
+
     if (!listaEfectivos) {
         console.error('❌ No se encontró el elemento #lista-efectivos');
         return;
     }
-    
+
     // Mostrar lista de efectivos sin ocultar el menú principal
     listaEfectivos.style.display = 'flex';
     console.log('✅ Lista de efectivos mostrada - Menú principal permanece visible');
@@ -7254,7 +7968,7 @@ function mostrarListaEfectivos() {
 // Función para cerrar lista de cuadrillas
 function cerrarListaCuadrillas() {
     const listaCuadrillas = document.querySelector('.lista-cuadrillas');
-    
+
     if (listaCuadrillas) {
         listaCuadrillas.style.display = 'none';
         console.log('✅ Lista de cuadrillas cerrada - Menú principal permanece visible');
@@ -7264,7 +7978,7 @@ function cerrarListaCuadrillas() {
 // Función para cerrar lista de efectivos
 function cerrarListaEfectivos() {
     const listaEfectivos = document.querySelector('#lista-efectivos');
-    
+
     if (listaEfectivos) {
         listaEfectivos.style.display = 'none';
         console.log('✅ Lista de efectivos cerrada - Menú principal permanece visible');
@@ -7276,11 +7990,11 @@ function seleccionarCuadrilla(nombre, detalle) {
     if (marcadoresSeleccionados.length === 0) {
         return;
     }
-    
+
     // Aquí se implementaría la lógica para asignar la cuadrilla específica
     console.log(`Cuadrilla asignada: ${nombre} - ${detalle} - Puntos: ${marcadoresSeleccionados.length}`);
     alert(`✅ Cuadrilla "${nombre}" asignada a ${marcadoresSeleccionados.length} puntos seleccionados.`);
-    
+
     // Volver al menú principal en lugar de cerrar todo
     cerrarListaCuadrillas();
 }
@@ -7288,15 +8002,15 @@ function seleccionarCuadrilla(nombre, detalle) {
 // Función de retry logic para asignación de efectivos
 async function seleccionarEfectivoConReintento(nombre, detalle, maxIntentos = 3) {
     console.log(`🔄 Iniciando asignación con retry logic - Máximo ${maxIntentos} intentos`);
-    
+
     for (let intento = 1; intento <= maxIntentos; intento++) {
         console.log(`🔄 Intento ${intento} de ${maxIntentos} para asignar efectivo: ${nombre}`);
-        
+
         try {
             // Verificar estado antes del intento
             if (!marcadoresSeleccionados || marcadoresSeleccionados.length === 0) {
                 console.log(`⚠️ Intento ${intento}: No hay marcadores seleccionados`);
-                
+
                 if (intento < maxIntentos) {
                     console.log(`⏳ Esperando 500ms antes del siguiente intento...`);
                     await new Promise(resolve => setTimeout(resolve, 500));
@@ -7307,10 +8021,10 @@ async function seleccionarEfectivoConReintento(nombre, detalle, maxIntentos = 3)
                     return false;
                 }
             }
-            
+
             // Intentar la asignación
             const resultado = seleccionarEfectivo(nombre, detalle);
-            
+
             if (resultado !== false) {
                 console.log(`✅ Asignación exitosa en intento ${intento}`);
                 return true;
@@ -7321,7 +8035,7 @@ async function seleccionarEfectivoConReintento(nombre, detalle, maxIntentos = 3)
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
-            
+
         } catch (error) {
             console.error(`❌ Error en intento ${intento}:`, error);
             if (intento < maxIntentos) {
@@ -7330,7 +8044,7 @@ async function seleccionarEfectivoConReintento(nombre, detalle, maxIntentos = 3)
             }
         }
     }
-    
+
     console.log(`❌ Todos los ${maxIntentos} intentos fallaron`);
     alert(`Error: No se pudo completar la asignación después de ${maxIntentos} intentos.\n\nPor favor, recarga la página e intenta nuevamente.`);
     return false;
@@ -7340,7 +8054,7 @@ async function seleccionarEfectivoConReintento(nombre, detalle, maxIntentos = 3)
 function seleccionarEfectivo(nombre, detalle) {
     console.log('🔍 DEBUG - seleccionarEfectivo() iniciada');
     console.log('🔍 DEBUG - Parámetros recibidos:', { nombre, detalle });
-    
+
     // VALIDACIÓN ROBUSTA - Verificar que marcadoresSeleccionados esté inicializado y tenga elementos
     if (!marcadoresSeleccionados) {
         console.error('❌ CRÍTICO - marcadoresSeleccionados no está inicializado');
@@ -7348,42 +8062,42 @@ function seleccionarEfectivo(nombre, detalle) {
         alert('Error del sistema: Array de marcadores no inicializado. Por favor, recarga la página e intenta nuevamente.');
         return false;
     }
-    
+
     console.log('🔍 DEBUG - marcadoresSeleccionados.length:', marcadoresSeleccionados.length);
     console.log('🔍 DEBUG - marcadoresSeleccionados:', marcadoresSeleccionados);
     console.log('🔍 DEBUG - asignaciones.length antes:', asignaciones.length);
-    
+
     if (marcadoresSeleccionados.length === 0) {
         console.log('❌ DEBUG - No hay marcadores seleccionados, saliendo de la función');
         alert('Por favor, selecciona al menos un punto en el mapa antes de asignar efectivos.\n\nPasos:\n1. Haz clic en un punto del mapa\n2. Verifica que aparezca el menú de puntos seleccionados\n3. Luego selecciona el efectivo');
         return false;
     }
-    
+
     // Verificar que asignaciones esté inicializado
     if (!asignaciones) {
         console.error('❌ CRÍTICO - asignaciones no está inicializado');
         asignaciones = [];
         console.log('✅ asignaciones inicializado como array vacío');
     }
-    
+
     console.log(`🚔 Asignando efectivo: ${nombre} - ${detalle} a ${marcadoresSeleccionados.length} puntos`);
-    
+
     let asignacionesCreadas = 0;
     let asignacionesActualizadas = 0;
-    
+
     // Implementar la lógica real de asignación de efectivos
     marcadoresSeleccionados.forEach((marcador, index) => {
         console.log(`🔍 DEBUG - Procesando marcador ${index + 1}:`, marcador);
         console.log(`🔍 DEBUG - marcador._leaflet_id:`, marcador._leaflet_id);
         console.log(`🔍 DEBUG - marcador.puntoData:`, marcador.puntoData);
-        
+
         // Buscar si ya existe una asignación para este punto
-        const asignacionExistente = asignaciones.find(asig => 
+        const asignacionExistente = asignaciones.find(asig =>
             asig.puntoId === marcador._leaflet_id
         );
-        
+
         console.log(`🔍 DEBUG - Asignación existente encontrada:`, asignacionExistente);
-        
+
         if (asignacionExistente) {
             // Si ya existe, agregar o actualizar el efectivo individual
             asignacionExistente.efectivo = {
@@ -7410,31 +8124,31 @@ function seleccionarEfectivo(nombre, detalle) {
                 },
                 fechaAsignacion: new Date().toISOString()
             };
-            
+
             console.log(`🔍 DEBUG - Nueva asignación creada:`, nuevaAsignacion);
             asignaciones.push(nuevaAsignacion);
             asignacionesCreadas++;
             console.log(`✅ Nueva asignación creada para punto: ${nuevaAsignacion.puntoNombre}`);
         }
     });
-    
+
     console.log('🔍 DEBUG - asignaciones.length después:', asignaciones.length);
     console.log('🔍 DEBUG - Asignaciones creadas:', asignacionesCreadas);
     console.log('🔍 DEBUG - Asignaciones actualizadas:', asignacionesActualizadas);
     console.log('📋 Estado actual de asignaciones después de agregar efectivo:', asignaciones);
-    
+
     // Verificar que las asignaciones se guardaron correctamente
-    const asignacionesDelEfectivo = asignaciones.filter(asig => 
+    const asignacionesDelEfectivo = asignaciones.filter(asig =>
         asig.efectivo && asig.efectivo.nombre === nombre
     );
     console.log(`🔍 DEBUG - Asignaciones encontradas para ${nombre}:`, asignacionesDelEfectivo.length);
-    
+
     // Mostrar confirmación
     mostrarNotificacion(`Efectivo "${nombre}" asignado a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
-    
+
     // Volver al menú principal en lugar de cerrar todo
     cerrarListaEfectivos();
-    
+
     console.log('🔍 DEBUG - seleccionarEfectivo() completada');
 }
 
@@ -7443,7 +8157,7 @@ function asignarEfectivoPolicial() {
     if (marcadoresSeleccionados.length === 0) {
         return;
     }
-    
+
     mostrarListaEfectivos();
 }
 
@@ -7453,21 +8167,21 @@ function asignarEfectivoPolicial() {
 function crearSelectorColumnasUbicacionMejorado() {
     console.log('🔍 Iniciando crearSelectorColumnasUbicacionMejorado...');
     console.log('📊 Headers disponibles:', gestionHeaders);
-    
+
     const selector = document.getElementById('selector-columna-geo');
     console.log('🎯 Selector encontrado:', selector);
-    
+
     if (!selector) {
         console.error('❌ No se encontró el selector con ID selector-columna-geo');
         return;
     }
-    
+
     // Limpiar opciones existentes
     selector.innerHTML = '<option value="">-- Selecciona una columna --</option>';
     console.log('🧹 Selector limpiado');
-    
+
     // Buscar columnas que puedan contener información geográfica
-    const columnasGeo = gestionHeaders.filter(header => 
+    const columnasGeo = gestionHeaders.filter(header =>
         header.toLowerCase().includes('distrito') ||
         header.toLowerCase().includes('ubicacion') ||
         header.toLowerCase().includes('ubicación') ||
@@ -7478,7 +8192,7 @@ function crearSelectorColumnasUbicacionMejorado() {
         header.toLowerCase().includes('lugar') ||
         header.toLowerCase().includes('localidad')
     );
-    
+
     // Agregar todas las columnas disponibles, marcando las geográficas
     console.log('📝 Agregando columnas al selector...');
     gestionHeaders.forEach((columna, index) => {
@@ -7493,11 +8207,11 @@ function crearSelectorColumnasUbicacionMejorado() {
         selector.appendChild(option);
         console.log(`✅ Columna ${index + 1} agregada: ${columna} (Geo: ${esGeo})`);
     });
-    
+
     console.log('🗺️ Selector mejorado creado. Total columnas:', gestionHeaders.length);
     console.log('🎯 Columnas geográficas detectadas:', columnasGeo.length, columnasGeo);
     console.log('📋 Opciones en selector:', selector.children.length);
-    
+
     // Si hay columnas geográficas, seleccionar la primera automáticamente
     if (columnasGeo.length > 0) {
         selector.value = columnasGeo[0];
@@ -7508,9 +8222,9 @@ function crearSelectorColumnasUbicacionMejorado() {
 // Función para auto-detectar y cargar mapa
 function autoDetectarYCargarMapa() {
     console.log('🔍 Iniciando auto-detección de columnas geográficas...');
-    
+
     // Buscar columnas geográficas directamente
-    const columnasGeo = gestionHeaders.filter(header => 
+    const columnasGeo = gestionHeaders.filter(header =>
         header.toLowerCase().includes('distrito') ||
         header.toLowerCase().includes('ubicacion') ||
         header.toLowerCase().includes('ubicación') ||
@@ -7521,13 +8235,13 @@ function autoDetectarYCargarMapa() {
         header.toLowerCase().includes('lugar') ||
         header.toLowerCase().includes('localidad')
     );
-    
+
     console.log('🗺️ Columnas geográficas encontradas:', columnasGeo);
-    
+
     if (columnasGeo.length > 0) {
         const columnaSeleccionada = columnasGeo[0];
         console.log('✅ Cargando mapa automáticamente con columna:', columnaSeleccionada);
-        
+
         // Cargar el mapa automáticamente con un pequeño delay
         setTimeout(() => {
             inicializarMapaConDatosMejorado(columnaSeleccionada);
@@ -7543,26 +8257,26 @@ function inicializarMapaConDatosMejorado(columnaSeleccionada) {
     console.log('🗺️ Iniciando inicializarMapaConDatosMejorado con columna:', columnaSeleccionada);
     console.log('📊 Datos disponibles:', gestionData.length, 'registros');
     console.log('📋 Headers disponibles:', gestionHeaders);
-    
+
     if (!columnaSeleccionada) {
         console.error('❌ No se proporcionó columna seleccionada');
         mostrarNotificacion('Por favor selecciona una columna geográfica', 'warning');
         return;
     }
-    
+
     const contenedorMapa = document.getElementById('mapa-container');
     const contenedorLeaflet = document.getElementById('mapa-leaflet');
-    
+
     console.log('🎯 Contenedor mapa-container:', contenedorMapa);
     console.log('🎯 Contenedor mapa-leaflet:', contenedorLeaflet);
-    
+
     if (!contenedorMapa || !contenedorLeaflet) {
         console.error('❌ No se encontró el contenedor del mapa');
         console.error('❌ mapa-container:', !!contenedorMapa);
         console.error('❌ mapa-leaflet:', !!contenedorLeaflet);
         return;
     }
-    
+
     // Limpiar mapa anterior si existe
     if (mapaInstancia) {
         console.log('🧹 Limpiando mapa anterior');
@@ -7572,7 +8286,7 @@ function inicializarMapaConDatosMejorado(columnaSeleccionada) {
             console.log('⚠️ Error al limpiar mapa anterior:', error);
         }
     }
-    
+
     // Crear nueva instancia del mapa centrado en Perú
     console.log('🗺️ Creando nueva instancia del mapa en mapa-leaflet');
     try {
@@ -7582,19 +8296,19 @@ function inicializarMapaConDatosMejorado(columnaSeleccionada) {
         console.error('❌ Error al crear mapa:', error);
         return;
     }
-    
+
     // Agregar capa de tiles (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 18
     }).addTo(mapaInstancia);
-    
+
     // Crear grupo de marcadores
     marcadoresGrupo = L.layerGroup().addTo(mapaInstancia);
-    
+
     // Procesar y agregar marcadores usando la función original que funciona
     procesarDatosGeograficosConColumna(columnaSeleccionada);
-    
+
     console.log('✅ Mapa mejorado inicializado con columna:', columnaSeleccionada);
 }
 
@@ -7603,19 +8317,19 @@ function procesarDatosOperacionesMejorado(datos, headers, columnaGeo) {
     console.log('📊 Procesando datos de operaciones...');
     console.log('📋 Columna geográfica:', columnaGeo);
     console.log('📋 Headers:', headers);
-    
+
     const indiceColumna = headers.indexOf(columnaGeo);
     console.log('📍 Índice de columna geográfica:', indiceColumna);
-    
+
     if (indiceColumna === -1) {
         console.error('❌ Columna geográfica no encontrada en headers');
         mostrarNotificacion('Error: Columna geográfica no encontrada', 'error');
         return;
     }
-    
+
     // Crear puntos basados en los datos
     crearPuntosDesdeOperacionesMejorado(datos, headers, indiceColumna, columnaGeo);
-    
+
     mostrarNotificacion(`Mapa cargado con ${datos.length} registros de operaciones`, 'success');
 }
 
@@ -7624,22 +8338,22 @@ function crearPuntosDesdeOperacionesMejorado(datos, headers, indiceColumna, colu
     console.log('📍 Creando puntos desde operaciones...');
     console.log('📊 Total de datos:', datos.length);
     console.log('📍 Índice de columna:', indiceColumna);
-    
+
     let puntosCreados = 0;
-    
+
     datos.forEach((fila, index) => {
         const ubicacion = fila[indiceColumna];
         console.log(`📍 Fila ${index + 1}: ubicación = "${ubicacion}"`);
-        
+
         if (!ubicacion || ubicacion.trim() === '') {
             console.log(`⚠️ Fila ${index + 1}: ubicación vacía, saltando...`);
             return;
         }
-        
+
         // Generar coordenadas basadas en la ubicación
         const coordenadas = generarCoordenadasPorUbicacionMejorado(ubicacion);
         console.log(`📍 Fila ${index + 1}: coordenadas generadas:`, coordenadas);
-        
+
         // Crear información del punto con todos los datos originales
         const punto = {
             lat: coordenadas.lat,
@@ -7650,15 +8364,15 @@ function crearPuntosDesdeOperacionesMejorado(datos, headers, indiceColumna, colu
             indiceOriginal: index,
             headers: headers
         };
-        
+
         // Agregar punto al mapa
         agregarPuntoAlMapaMejorado(punto);
         puntosCreados++;
         console.log(`✅ Punto ${puntosCreados} agregado al mapa`);
     });
-    
+
     console.log(`📍 ${puntosCreados} puntos creados en el mapa`);
-    
+
     // Si no se crearon puntos, crear puntos de ejemplo
     if (puntosCreados === 0) {
         console.log('⚠️ No se crearon puntos, creando puntos de ejemplo...');
@@ -7677,10 +8391,10 @@ function generarCoordenadasPorUbicacionMejorado(ubicacion) {
             return { lat: lat, lng: lng };
         }
     }
-    
+
     // Si no son coordenadas reales, buscar por nombre de distrito
     const ubicacionLower = ubicacion.toLowerCase();
-    
+
     // Coordenadas base para diferentes distritos de Lima
     const coordenadasBase = {
         'miraflores': { lat: -12.1197, lng: -77.0282 },
@@ -7696,7 +8410,7 @@ function generarCoordenadasPorUbicacionMejorado(ubicacion) {
         'villa el salvador': { lat: -12.2039, lng: -76.9358 },
         'san juan de miraflores': { lat: -12.1562, lng: -76.9734 }
     };
-    
+
     // Buscar coincidencia en las coordenadas base
     for (const [distrito, coords] of Object.entries(coordenadasBase)) {
         if (ubicacionLower.includes(distrito)) {
@@ -7708,7 +8422,7 @@ function generarCoordenadasPorUbicacionMejorado(ubicacion) {
             };
         }
     }
-    
+
     // Si no se encuentra, usar coordenadas base de Lima con variación
     console.log('📍 Usando coordenadas por defecto para:', ubicacion);
     return {
@@ -7720,26 +8434,26 @@ function generarCoordenadasPorUbicacionMejorado(ubicacion) {
 // Función para agregar punto al mapa de forma mejorada
 function agregarPuntoAlMapaMejorado(punto) {
     console.log('🗺️ Agregando punto al mapa:', punto);
-    
+
     if (!mapaInstancia) {
         console.error('❌ mapaInstancia no está definida');
         return null;
     }
-    
+
     if (!punto.lat || !punto.lng) {
         console.error('❌ Coordenadas inválidas:', punto.lat, punto.lng);
         return null;
     }
-    
+
     try {
         console.log('🔧 Creando marcador en coordenadas:', [punto.lat, punto.lng]);
         const marcador = L.marker([punto.lat, punto.lng]);
         console.log('🔧 Marcador creado:', marcador);
-        
+
         console.log('🔧 Agregando marcador al mapa...');
         marcador.addTo(mapaInstancia);
         console.log('🔧 Marcador agregado al mapa');
-        
+
         console.log('🔧 Configurando popup...');
         marcador.bindPopup(`
                 <div style="max-width: 300px;">
@@ -7752,14 +8466,14 @@ function agregarPuntoAlMapaMejorado(punto) {
 
         marcador.puntoData = punto;
         marcador.indice = Date.now() + Math.random(); // Índice único
-        
-        marcador.on('click', function() {
+
+        marcador.on('click', function () {
             seleccionarMarcadorMejorado(this);
         });
-        
+
         console.log('✅ Punto mejorado agregado exitosamente:', punto.nombre, 'en', punto.ubicacion);
         console.log('✅ Marcador final:', marcador);
-        
+
         return marcador;
     } catch (error) {
         console.error('❌ Error al agregar marcador:', error);
@@ -7770,14 +8484,14 @@ function agregarPuntoAlMapaMejorado(punto) {
 // Función para seleccionar marcador de forma mejorada
 function seleccionarMarcadorMejorado(marcador) {
     console.log('🎯 Marcador clickeado:', marcador);
-    
+
     // Buscar si el marcador ya está seleccionado
     const index = marcadoresSeleccionados.findIndex(m => m.indice === marcador.indice);
-    
+
     if (index === -1) {
         // Agregar a seleccionados
         marcadoresSeleccionados.push(marcador);
-        
+
         // Cambiar icono a rojo (seleccionado)
         marcador.setIcon(L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -7787,12 +8501,12 @@ function seleccionarMarcadorMejorado(marcador) {
             popupAnchor: [1, -34],
             shadowSize: [41, 41]
         }));
-        
+
         console.log('✅ Marcador seleccionado');
     } else {
         // Quitar de seleccionados
         marcadoresSeleccionados.splice(index, 1);
-        
+
         // Cambiar icono a azul (no seleccionado)
         marcador.setIcon(L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
@@ -7802,19 +8516,19 @@ function seleccionarMarcadorMejorado(marcador) {
             popupAnchor: [1, -34],
             shadowSize: [41, 41]
         }));
-        
+
         console.log('❌ Marcador deseleccionado');
     }
-    
+
     // Actualizar contador y mostrar/ocultar menú
     actualizarContadorPuntos();
-    
+
     if (marcadoresSeleccionados.length > 0) {
         mostrarMenuPuntosSeleccionados();
     } else {
         cerrarMenuPuntos();
     }
-    
+
     console.log('🎯 Total seleccionados:', marcadoresSeleccionados.length);
 }
 
@@ -7836,7 +8550,7 @@ function crearPuntosEjemploOperacionesMejorado(datos) {
         { lat: -12.1404, lng: -77.0200, nombre: 'Operación Barranco', ubicacion: 'Barranco' },
         { lat: -12.1391, lng: -77.0056, nombre: 'Operación Surco', ubicacion: 'Santiago de Surco' }
     ];
-    
+
     puntosEjemplo.forEach((punto, index) => {
         if (index < datos.length) {
             punto.datosOriginales = datos[index].join(' | ');
@@ -7844,7 +8558,7 @@ function crearPuntosEjemploOperacionesMejorado(datos) {
         }
         agregarPuntoAlMapaMejorado(punto);
     });
-    
+
     mostrarNotificacion('Se crearon puntos de ejemplo basados en ubicaciones de Lima', 'info');
 }
 
@@ -7866,7 +8580,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         animation: slideInRight 0.3s ease-out;
     `;
-    
+
     // Colores según el tipo
     const colores = {
         'success': '#10b981',
@@ -7874,13 +8588,13 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         'info': '#3b82f6',
         'warning': '#f59e0b'
     };
-    
+
     notificacion.style.backgroundColor = colores[tipo] || colores.info;
     notificacion.textContent = mensaje;
-    
+
     // Agregar al DOM
     document.body.appendChild(notificacion);
-    
+
     // Remover después de 4 segundos
     setTimeout(() => {
         notificacion.style.animation = 'slideOutRight 0.3s ease-in';
@@ -7917,10 +8631,10 @@ if (!document.getElementById('notificacion-styles')) {
 function asignarCuadrillaSelect(select) {
     const valor = select.value;
     if (!valor) return;
-    
+
     const [nombre, detalle] = valor.split('|');
     asignarCuadrillaEspecifica(nombre, detalle);
-    
+
     // Resetear el selector
     select.value = '';
 }
@@ -7928,10 +8642,10 @@ function asignarCuadrillaSelect(select) {
 function asignarEfectivoSelect(select) {
     const valor = select.value;
     if (!valor) return;
-    
+
     const [nombre, detalle] = valor.split('|');
     asignarEfectivoEspecifico(nombre, detalle);
-    
+
     // Resetear el selector
     select.value = '';
 }
@@ -7939,29 +8653,29 @@ function asignarEfectivoSelect(select) {
 // Nuevas funciones para selección múltiple de efectivos
 function asignarEfectivosSeleccionados() {
     console.log('👮 Función asignarEfectivosSeleccionados llamada');
-    
+
     if (marcadoresSeleccionados.length === 0) {
         alert('Por favor, selecciona al menos un punto en el mapa primero.');
         return;
     }
 
     const checkboxes = document.querySelectorAll('#efectivos-checkboxes input[type="checkbox"]:checked');
-    
+
     if (checkboxes.length === 0) {
         alert('Por favor, selecciona al menos un efectivo policial.');
         return;
     }
 
     let efectivosAsignados = 0;
-    
+
     checkboxes.forEach(checkbox => {
         const valor = checkbox.value;
         const [nombre, detalle] = valor.split('|');
-        
+
         // Asignar este efectivo a todos los puntos seleccionados
         marcadoresSeleccionados.forEach(marcador => {
             // Verificar si ya existe una asignación para este punto
-            const asignacionExistente = asignaciones.find(asig => 
+            const asignacionExistente = asignaciones.find(asig =>
                 asig.puntoId === marcador._leaflet_id
             );
 
@@ -7970,7 +8684,7 @@ function asignarEfectivosSeleccionados() {
                 if (!asignacionExistente.efectivos) {
                     asignacionExistente.efectivos = [];
                 }
-                
+
                 // Verificar si este efectivo ya está asignado a este punto
                 const efectivoExistente = asignacionExistente.efectivos.find(ef => ef.nombre === nombre);
                 if (!efectivoExistente) {
@@ -7997,7 +8711,7 @@ function asignarEfectivosSeleccionados() {
                     }],
                     fechaAsignacion: new Date().toISOString()
                 };
-                
+
                 asignaciones.push(nuevaAsignacion);
                 efectivosAsignados++;
             }
@@ -8005,7 +8719,7 @@ function asignarEfectivosSeleccionados() {
     });
 
     console.log('📋 Asignaciones después de agregar efectivos múltiples:', asignaciones);
-    
+
     // Mostrar mensaje de confirmación
     mostrarNotificacion(`✅ Se han asignado ${checkboxes.length} efectivos a ${marcadoresSeleccionados.length} puntos. Total de asignaciones: ${efectivosAsignados}`, 'success');
 
@@ -8024,17 +8738,17 @@ function limpiarSeleccionEfectivos() {
 function asignarCuadrillaEspecifica(nombre, detalle) {
     console.log('🔧 Función asignarCuadrillaEspecifica llamada:', nombre, detalle);
     console.log('📍 Marcadores seleccionados:', marcadoresSeleccionados.length);
-    
+
     if (marcadoresSeleccionados.length === 0) {
         alert('Por favor, selecciona al menos un punto en el mapa primero.');
         console.log('❌ No hay marcadores seleccionados');
         return;
     }
-    
+
     // Crear asignación para cada punto seleccionado
     marcadoresSeleccionados.forEach(marcador => {
         const asignacionExistente = asignaciones.find(a => a.puntoId === marcador.indice);
-        
+
         if (asignacionExistente) {
             asignacionExistente.cuadrilla = { nombre, detalle };
             asignacionExistente.fechaAsignacion = new Date().toLocaleString();
@@ -8052,7 +8766,7 @@ function asignarCuadrillaEspecifica(nombre, detalle) {
             asignaciones.push(nuevaAsignacion);
         }
     });
-    
+
     console.log(`Cuadrilla ${nombre} asignada a ${marcadoresSeleccionados.length} puntos`);
     console.log('📋 Asignaciones después de agregar cuadrilla:', asignaciones);
     mostrarNotificacion(`Cuadrilla "${nombre}" asignada a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
@@ -8063,11 +8777,11 @@ function asignarEfectivoEspecifico(nombre, detalle) {
         alert('Por favor, selecciona al menos un punto en el mapa primero.');
         return;
     }
-    
+
     // Crear asignación para cada punto seleccionado
     marcadoresSeleccionados.forEach(marcador => {
         const asignacionExistente = asignaciones.find(a => a.puntoId === marcador.indice);
-        
+
         if (asignacionExistente) {
             asignacionExistente.efectivo = { nombre, detalle };
             asignacionExistente.fechaAsignacion = new Date().toLocaleString();
@@ -8085,7 +8799,7 @@ function asignarEfectivoEspecifico(nombre, detalle) {
             asignaciones.push(nuevaAsignacion);
         }
     });
-    
+
     console.log(`Efectivo ${nombre} asignado a ${marcadoresSeleccionados.length} puntos`);
     console.log('📋 Asignaciones después de agregar efectivo:', asignaciones);
     mostrarNotificacion(`Efectivo "${nombre}" asignado a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
@@ -8093,7 +8807,7 @@ function asignarEfectivoEspecifico(nombre, detalle) {
 
 function guardarAsignacion() {
     console.log('💾 Iniciando proceso de guardado de asignaciones...');
-    
+
     try {
         // Verificar si hay puntos seleccionados
         if (!marcadoresSeleccionados || marcadoresSeleccionados.length === 0) {
@@ -8102,7 +8816,7 @@ function guardarAsignacion() {
             alert('Por favor, selecciona al menos un punto en el mapa antes de guardar la asignación.');
             return;
         }
-        
+
         // Verificar que el array de asignaciones existe
         if (!asignaciones || !Array.isArray(asignaciones)) {
             console.log('❌ Array de asignaciones no válido');
@@ -8110,12 +8824,12 @@ function guardarAsignacion() {
             alert('Error en el sistema. Por favor, recarga la página e inténtalo de nuevo.');
             return;
         }
-        
+
         // Filtrar solo las asignaciones de los puntos actualmente seleccionados
-        const asignacionesActuales = asignaciones.filter(asig => 
+        const asignacionesActuales = asignaciones.filter(asig =>
             asig && marcadoresSeleccionados.some(marcador => marcador && marcador.id === asig.puntoId)
         );
-        
+
         // Verificar si hay asignaciones realizadas para los puntos seleccionados
         if (asignacionesActuales.length === 0) {
             console.log('❌ No hay asignaciones realizadas para los puntos seleccionados');
@@ -8123,11 +8837,11 @@ function guardarAsignacion() {
             alert('Por favor, asigna cuadrillas o efectivos a los puntos seleccionados antes de guardar.');
             return;
         }
-        
+
         console.log('✅ Validaciones pasadas, procediendo a guardar...');
         console.log(`📊 Puntos seleccionados: ${marcadoresSeleccionados.length}`);
         console.log(`📊 Asignaciones actuales: ${asignacionesActuales.length}`);
-        
+
         // Simular guardado de asignaciones
         const timestamp = new Date().toLocaleString();
         const datosGuardado = {
@@ -8146,33 +8860,33 @@ function guardarAsignacion() {
                 estado: asig.estado || 'activo'
             }))
         };
-        
+
         // Guardar en localStorage para persistencia
         localStorage.setItem('asignaciones_guardadas', JSON.stringify(datosGuardado));
         console.log('✅ Asignaciones guardadas en localStorage:', datosGuardado);
-        
+
         // Calcular estadísticas globales correctamente
         const todosLosCuadrillas = new Set();
         const todosLosEfectivos = new Set();
         const puntosConAsignaciones = new Set();
-        
+
         // Procesar todas las asignaciones para obtener estadísticas precisas
         asignacionesActuales.forEach(asig => {
             if (!asig) return;
-            
+
             // Contar puntos únicos
             puntosConAsignaciones.add(asig.puntoId);
-            
+
             // Contar cuadrillas únicas
             if (asig.cuadrilla && asig.cuadrilla.nombre) {
                 todosLosCuadrillas.add(asig.cuadrilla.nombre);
             }
-            
+
             // Contar efectivos individuales únicos
             if (asig.efectivo && asig.efectivo.nombre) {
                 todosLosEfectivos.add(asig.efectivo.nombre);
             }
-            
+
             // Contar múltiples efectivos únicos
             if (asig.efectivos && Array.isArray(asig.efectivos) && asig.efectivos.length > 0) {
                 asig.efectivos.forEach(ef => {
@@ -8182,7 +8896,7 @@ function guardarAsignacion() {
                 });
             }
         });
-        
+
         // Debug: Mostrar el estado de las asignaciones
         console.log('🔍 DEBUG - Asignaciones actuales:', asignacionesActuales);
         console.log('🔍 DEBUG - Puntos con asignaciones:', Array.from(puntosConAsignaciones));
@@ -8191,22 +8905,22 @@ function guardarAsignacion() {
 
         // Crear lista compacta de recursos asignados
         let listaRecursos = [];
-        
+
         if (todosLosCuadrillas.size > 0) {
             listaRecursos.push(`👥 <strong>Cuadrillas:</strong> ${Array.from(todosLosCuadrillas).join(', ')}`);
         }
-        
+
         if (todosLosEfectivos.size > 0) {
             listaRecursos.push(`🚔 <strong>Efectivos:</strong> ${Array.from(todosLosEfectivos).join(', ')}`);
         }
-        
+
         if (listaRecursos.length === 0) {
             listaRecursos.push(`⚠️ <em>No se encontraron recursos asignados</em>`);
         }
-        
+
         // Mostrar notificación de éxito
         mostrarNotificacion(`Asignaciones guardadas exitosamente: ${puntosConAsignaciones.size} puntos con recursos asignados`, 'success');
-        
+
         // Mostrar confirmación ejecutiva y compacta
         const contenidoModal = `
             <div style="text-align: center; margin-bottom: 20px;">
@@ -8247,7 +8961,7 @@ function guardarAsignacion() {
                 </div>
             </div>
         `;
-        
+
         // Llamar al modal con validación adicional
         if (typeof mostrarModalCentrado === 'function') {
             mostrarModalCentrado('Confirmación de Asignaciones', contenidoModal);
@@ -8255,7 +8969,7 @@ function guardarAsignacion() {
             console.error('❌ Función mostrarModalCentrado no disponible');
             alert('Asignaciones guardadas correctamente, pero no se puede mostrar el modal de confirmación.');
         }
-        
+
     } catch (error) {
         console.error('❌ Error al guardar asignaciones:', error);
         console.error('❌ Stack trace:', error.stack);
@@ -8269,7 +8983,7 @@ function mostrarModalCentrado(titulo, contenido) {
     // Crear overlay del modal
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    
+
     // Crear contenido del modal
     overlay.innerHTML = `
         <div class="modal-content">
@@ -8278,12 +8992,12 @@ function mostrarModalCentrado(titulo, contenido) {
             <button class="modal-close-btn" onclick="cerrarModal(this)">✅ Completar y Continuar</button>
         </div>
     `;
-    
+
     // Agregar al body
     document.body.appendChild(overlay);
-    
+
     // Cerrar modal al hacer click en el overlay
-    overlay.addEventListener('click', function(e) {
+    overlay.addEventListener('click', function (e) {
         if (e.target === overlay) {
             cerrarModal(overlay.querySelector('.modal-close-btn'));
         }
@@ -8295,12 +9009,12 @@ function cerrarModal(boton) {
     const overlay = boton.closest('.modal-overlay');
     if (overlay) {
         overlay.remove();
-        
+
         // Verificar si el modal era de confirmación de asignaciones
         const modalHeader = overlay.querySelector('.modal-header');
         if (modalHeader && modalHeader.textContent.includes('Confirmación de Asignaciones')) {
             console.log('🧹 Limpiando mapa después de guardar asignaciones...');
-            
+
             // Limpiar selecciones y regresar al mapa limpio
             limpiarMapaDespuesDeGuardar();
         }
@@ -8311,24 +9025,24 @@ function cerrarModal(boton) {
 function limpiarMapaDespuesDeGuardar() {
     try {
         console.log('🔄 Iniciando limpieza del mapa...');
-        
+
         // Limpiar arrays de selección
         if (typeof marcadoresSeleccionados !== 'undefined') {
             marcadoresSeleccionados.length = 0;
             console.log('✅ marcadoresSeleccionados limpiado');
         }
-        
+
         if (typeof puntosSeleccionados !== 'undefined') {
             puntosSeleccionados.length = 0;
             console.log('✅ puntosSeleccionados limpiado');
         }
-        
+
         // Limpiar selección visual en el mapa
         if (typeof limpiarSeleccion === 'function') {
             limpiarSeleccion();
             console.log('✅ Selección visual limpiada');
         }
-        
+
         // Desactivar modo de dibujo si está activo
         if (typeof modoDibujoActivo !== 'undefined' && modoDibujoActivo) {
             if (typeof desactivarModoDibujo === 'function') {
@@ -8336,40 +9050,40 @@ function limpiarMapaDespuesDeGuardar() {
                 console.log('✅ Modo de dibujo desactivado');
             }
         }
-        
+
         // Limpiar variables de dibujo adicionales
         if (typeof puntosTrazo !== 'undefined') {
             puntosTrazo.length = 0;
             console.log('✅ puntosTrazo limpiado');
         }
-        
+
         if (typeof dibujando !== 'undefined') {
             dibujando = false;
             console.log('✅ Estado de dibujo reiniciado');
         }
-        
+
         // Cerrar cualquier menú o panel abierto
         if (typeof cerrarMenuPuntos === 'function') {
             cerrarMenuPuntos();
             console.log('✅ Menús cerrados');
         }
-        
+
         // Cerrar listas de cuadrillas y efectivos si están abiertas
         if (typeof cerrarListaCuadrillas === 'function') {
             cerrarListaCuadrillas();
         }
-        
+
         if (typeof cerrarListaEfectivos === 'function') {
             cerrarListaEfectivos();
         }
-        
+
         // Mostrar notificación de que el mapa está listo para nuevas asignaciones
         if (typeof mostrarNotificacion === 'function') {
             mostrarNotificacion('Mapa limpio y listo para nuevas asignaciones', 'info');
         }
-        
+
         console.log('🎯 Limpieza del mapa completada - Listo para nuevas asignaciones');
-        
+
     } catch (error) {
         console.error('❌ Error al limpiar el mapa:', error);
         // Intentar limpieza básica como fallback
@@ -8386,13 +9100,13 @@ function limpiarMapaDespuesDeGuardar() {
 function cargarAsignacionesGuardadas() {
     try {
         console.log('📂 Cargando asignaciones guardadas desde localStorage...');
-        
+
         const asignacionesGuardadas = localStorage.getItem('asignaciones_guardadas');
-        
+
         if (asignacionesGuardadas) {
             const datos = JSON.parse(asignacionesGuardadas);
             console.log('✅ Asignaciones encontradas en localStorage:', datos);
-            
+
             // Verificar que los datos tienen la estructura esperada
             if (datos && datos.asignaciones && Array.isArray(datos.asignaciones)) {
                 // Cargar las asignaciones al array global
@@ -8405,10 +9119,10 @@ function cargarAsignacionesGuardadas() {
                             asignaciones.push(asignacion);
                         }
                     });
-                    
+
                     console.log(`✅ ${datos.asignaciones.length} asignaciones cargadas al sistema`);
                     console.log(`📊 Total de asignaciones en memoria: ${asignaciones.length}`);
-                    
+
                     // Mostrar notificación de carga exitosa
                     // if (typeof mostrarNotificacion === 'function') {
                     //     mostrarNotificacion(`${datos.asignaciones.length} asignaciones cargadas desde sesión anterior`, 'success');
@@ -8422,7 +9136,7 @@ function cargarAsignacionesGuardadas() {
         } else {
             console.log('ℹ️ No hay asignaciones guardadas en localStorage');
         }
-        
+
     } catch (error) {
         console.error('❌ Error al cargar asignaciones guardadas:', error);
         // Limpiar localStorage si hay datos corruptos
@@ -8456,10 +9170,10 @@ function verificarAsignacionesGuardadas() {
 // Inicializar dashboard cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DOM] DOM cargado, inicializando dashboard...');
-    
+
     // INICIALIZACIÓN GARANTIZADA DE ARRAYS CRÍTICOS
     console.log('🔧 Inicializando arrays críticos del sistema...');
-    
+
     // Verificar e inicializar marcadoresSeleccionados
     if (typeof marcadoresSeleccionados === 'undefined' || !Array.isArray(marcadoresSeleccionados)) {
         window.marcadoresSeleccionados = [];
@@ -8467,7 +9181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('✅ marcadoresSeleccionados ya está inicializado:', marcadoresSeleccionados.length, 'elementos');
     }
-    
+
     // Verificar e inicializar asignaciones
     if (typeof asignaciones === 'undefined' || !Array.isArray(asignaciones)) {
         window.asignaciones = [];
@@ -8475,7 +9189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('✅ asignaciones ya está inicializado:', asignaciones.length, 'elementos');
     }
-    
+
     // Verificar e inicializar puntosSeleccionados
     if (typeof puntosSeleccionados === 'undefined' || !Array.isArray(puntosSeleccionados)) {
         window.puntosSeleccionados = [];
@@ -8483,12 +9197,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('✅ puntosSeleccionados ya está inicializado:', puntosSeleccionados.length, 'elementos');
     }
-    
+
     console.log('🎯 Inicialización de arrays críticos completada');
-    
+
     // Cargar asignaciones guardadas desde localStorage
     cargarAsignacionesGuardadas();
-    
+
     new DashboardManager();
 });
 
@@ -8508,7 +9222,7 @@ class TestEfectivos {
         console.log('📅 Fecha y hora:', new Date().toLocaleString());
         console.log('🎯 Objetivo: Identificar por qué las asignaciones no funcionan en el primer intento');
         console.log('📊 Total de pruebas:', this.totalTests);
-        console.log('=' .repeat(80));
+        console.log('='.repeat(80));
 
         for (let i = 1; i <= this.totalTests; i++) {
             await this.realizarTest(i);
@@ -8570,7 +9284,7 @@ class TestEfectivos {
 
             // Capturar el estado antes de la ejecución
             const marcadoresAntes = window.marcadoresSeleccionados.length;
-            
+
             // Ejecutar la función
             if (typeof window.seleccionarEfectivo === 'function') {
                 await window.seleccionarEfectivo(efectivoNombre, efectivoDetalle);
@@ -8581,7 +9295,7 @@ class TestEfectivos {
 
             // Paso 4: Verificar resultado después de un breve delay
             await this.esperar(300);
-            
+
             testData.asignacionesDespues = window.asignaciones ? window.asignaciones.length : 0;
             const diferencia = testData.asignacionesDespues - testData.asignacionesAntes;
             testData.exito = diferencia > 0;
@@ -8595,7 +9309,7 @@ class TestEfectivos {
             } else {
                 console.log(`❌ TEST ${numeroTest}: Asignación falló (sin cambios)`);
                 testData.logs.push('💥 Asignación falló - no se detectaron cambios');
-                
+
                 // Intentar diagnosticar el problema
                 if (window.marcadoresSeleccionados.length === 0) {
                     testData.errores.push('❌ marcadoresSeleccionados está vacío');
@@ -8618,13 +9332,13 @@ class TestEfectivos {
     mostrarResultadoTest(testData) {
         const icon = testData.exito ? '✅' : '❌';
         const estado = testData.exito ? 'ÉXITO' : 'FALLO';
-        
+
         console.log(`\n${icon} RESULTADO TEST ${testData.numero}:`);
         console.log(`📊 Estado: ${estado}`);
         console.log(`👮 Efectivo: ${testData.efectivo}`);
         console.log(`📍 Puntos: ${testData.puntosSeleccionados.length}`);
         console.log(`📈 Asignaciones: ${testData.asignacionesAntes} → ${testData.asignacionesDespues}`);
-        
+
         if (testData.errores.length > 0) {
             console.log('🚨 Errores detectados:');
             testData.errores.forEach(error => console.log(`   ${error}`));
@@ -8646,10 +9360,10 @@ class TestEfectivos {
 
         // Análisis de patrones
         this.analizarPatrones();
-        
+
         // Recomendaciones
         this.generarRecomendaciones(tasaExito);
-        
+
         // Mostrar detalles de cada test
         console.log('\n📋 DETALLE DE TODOS LOS TESTS:');
         this.resultados.forEach((test, index) => {
@@ -8660,7 +9374,7 @@ class TestEfectivos {
 
     analizarPatrones() {
         console.log('\n🔍 ANÁLISIS DE PATRONES:');
-        
+
         // Analizar errores comunes
         const erroresComunes = {};
         this.resultados.forEach(test => {
@@ -8672,7 +9386,7 @@ class TestEfectivos {
         if (Object.keys(erroresComunes).length > 0) {
             console.log('🚨 Errores más frecuentes:');
             Object.entries(erroresComunes)
-                .sort(([,a], [,b]) => b - a)
+                .sort(([, a], [, b]) => b - a)
                 .forEach(([error, count]) => {
                     console.log(`   ${error} (${count} veces)`);
                 });
@@ -8681,10 +9395,10 @@ class TestEfectivos {
         // Analizar distribución temporal
         const fallosEnPrimerosTres = this.resultados.slice(0, 3).filter(t => !t.exito).length;
         const fallosEnUltimosTres = this.resultados.slice(-3).filter(t => !t.exito).length;
-        
+
         console.log(`📊 Fallos en primeros 3 tests: ${fallosEnPrimerosTres}/3`);
         console.log(`📊 Fallos en últimos 3 tests: ${fallosEnUltimosTres}/3`);
-        
+
         if (fallosEnPrimerosTres > fallosEnUltimosTres) {
             console.log('🔍 PATRÓN DETECTADO: Mayor tasa de fallo en tests iniciales');
             console.log('💡 Posible causa: Inicialización de estado o condiciones de carrera');
@@ -8693,7 +9407,7 @@ class TestEfectivos {
 
     generarRecomendaciones(tasaExito) {
         console.log('\n💡 RECOMENDACIONES BASADAS EN RESULTADOS:');
-        
+
         if (tasaExito < 50) {
             console.log('🔧 CRÍTICO: Tasa de éxito muy baja (<50%)');
             console.log('   - Revisar completamente la lógica de seleccionarEfectivo()');
@@ -8712,7 +9426,7 @@ class TestEfectivos {
             console.log('   - Considerar optimizaciones menores');
             console.log('   - Documentar comportamiento esperado');
         }
-        
+
         console.log('\n🔧 ACCIONES ESPECÍFICAS RECOMENDADAS:');
         console.log('   1. Verificar que marcadoresSeleccionados se inicialice correctamente');
         console.log('   2. Añadir validaciones antes de ejecutar asignaciones');
@@ -8727,7 +9441,7 @@ class TestEfectivos {
 }
 
 // Función global para ejecutar el test desde la consola
-window.ejecutarTestEfectivos = async function() {
+window.ejecutarTestEfectivos = async function () {
     console.log('🚀 Iniciando test sistemático de efectivos...');
     const test = new TestEfectivos();
     const resultados = await test.iniciarTestCompleto();
@@ -8736,7 +9450,7 @@ window.ejecutarTestEfectivos = async function() {
 };
 
 // Función para ejecutar un test rápido (3 pruebas)
-window.testRapidoEfectivos = async function() {
+window.testRapidoEfectivos = async function () {
     console.log('⚡ Iniciando test rápido (3 pruebas)...');
     const test = new TestEfectivos();
     test.totalTests = 3;
@@ -8745,34 +9459,34 @@ window.testRapidoEfectivos = async function() {
 };
 
 // Función de prueba simple para verificar las mejoras
-window.probarMejorasEfectivos = function() {
+window.probarMejorasEfectivos = function () {
     console.log('🧪 PROBANDO MEJORAS DE ASIGNACIÓN DE EFECTIVOS');
     console.log('='.repeat(50));
-    
+
     // Verificar inicialización de arrays
     console.log('1. Verificando inicialización de arrays:');
     console.log('   - marcadoresSeleccionados:', Array.isArray(marcadoresSeleccionados) ? '✅ Inicializado' : '❌ No inicializado');
     console.log('   - asignaciones:', Array.isArray(asignaciones) ? '✅ Inicializado' : '❌ No inicializado');
     console.log('   - puntosSeleccionados:', Array.isArray(puntosSeleccionados) ? '✅ Inicializado' : '❌ No inicializado');
-    
+
     // Verificar estado actual
     console.log('\n2. Estado actual:');
     console.log('   - marcadoresSeleccionados.length:', marcadoresSeleccionados.length);
     console.log('   - asignaciones.length:', asignaciones.length);
-    
+
     // Probar validación robusta
     console.log('\n3. Probando validación robusta:');
     const resultado = seleccionarEfectivo('Oficial Test', 'Prueba de validación');
     console.log('   - Resultado de prueba sin marcadores:', resultado === false ? '✅ Validación funcionando' : '❌ Validación falló');
-    
+
     console.log('\n4. Funciones disponibles:');
     console.log('   - seleccionarEfectivoConReintento() : Función con retry logic');
     console.log('   - ejecutarTestEfectivos() : Test completo (10 pruebas)');
     console.log('   - testRapidoEfectivos() : Test rápido (3 pruebas)');
-    
+
     console.log('\n✅ Verificación de mejoras completada');
     console.log('💡 Para probar asignación real: selecciona un punto en el mapa primero');
-    
+
     return {
         arraysInicializados: Array.isArray(marcadoresSeleccionados) && Array.isArray(asignaciones),
         validacionFunciona: resultado === false,
@@ -8789,3 +9503,63 @@ console.log('   - testRapidoEfectivos()       : Test rápido (3 pruebas)');
 console.log('   - verificarAsignacionesGuardadas() : Ver asignaciones en localStorage');
 console.log('   - cargarAsignacionesGuardadas()    : Recargar asignaciones desde localStorage');
 console.log('   - limpiarMapaDespuesDeGuardar()    : Limpiar mapa manualmente');
+
+// ==========================================
+// Funciones de Gestión de Estado de Colaboradores
+// ==========================================
+
+async function toggleUsuario(dni) {
+    if (!confirm('¿Estás seguro de cambiar el estado de acceso de este usuario?')) return;
+
+    try {
+        const url = `${API_NET}/api/users/${dni}/toggle-status`;
+        const jwt = localStorage.getItem('jwt') || '';
+
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': jwt ? `Bearer ${jwt}` : '',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Estado del usuario actualizado correctamente');
+            cargarEmpleados(); // Recargar tabla
+        } else {
+            const error = await response.text();
+            alert('Error al actualizar estado: ' + error);
+        }
+    } catch (e) {
+        console.error('Error en toggleUsuario:', e);
+        alert('Error de conexión al actualizar estado');
+    }
+}
+
+async function cesarColaborador(dni) {
+    if (!confirm('¿Estás seguro de CESAR a este colaborador? Esta acción registrará la fecha de cese y cambiará su estado a "Cesado".')) return;
+
+    try {
+        const url = `${API_NET}/api/personal/${dni}/terminate`;
+        const jwt = localStorage.getItem('jwt') || '';
+
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': jwt ? `Bearer ${jwt}` : '',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Colaborador cesado correctamente');
+            cargarEmpleados(); // Recargar tabla
+        } else {
+            const error = await response.text();
+            alert('Error al cesar colaborador: ' + error);
+        }
+    } catch (e) {
+        console.error('Error en cesarColaborador:', e);
+        alert('Error de conexión al cesar colaborador');
+    }
+}

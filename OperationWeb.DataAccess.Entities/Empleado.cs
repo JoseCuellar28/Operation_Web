@@ -16,8 +16,12 @@ namespace OperationWeb.DataAccess.Entities
 
         public int? TipoDocumento { get; set; }
 
-        [StringLength(20)]
-        public string? NumeroDocumento { get; set; }
+        [NotMapped]
+        public string? NumeroDocumento 
+        { 
+            get => DNI; 
+            set => DNI = value ?? string.Empty; 
+        }
 
         [Required]
         [StringLength(40)]

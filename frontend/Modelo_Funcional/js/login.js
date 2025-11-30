@@ -9,14 +9,14 @@ class LoginManager {
         this.passwordToggle = document.getElementById('passwordToggle');
         this.submitButton = document.querySelector('.btn-login');
         this.messageContainer = document.getElementById('messageContainer');
-        
+
         console.log('📝 Elementos del DOM encontrados:');
         console.log('  - Formulario:', this.form);
         console.log('  - Usuario:', this.usernameInput);
         console.log('  - Contraseña:', this.passwordInput);
         console.log('  - Botón:', this.submitButton);
         console.log('  - Contenedor mensajes:', this.messageContainer);
-        
+
         this.init();
     }
 
@@ -57,16 +57,16 @@ class LoginManager {
     handleSubmit(event) {
         event.preventDefault();
         console.log('🚀 Formulario enviado');
-        
+
         if (this.validateForm()) {
             console.log('✅ Formulario válido, procediendo con autenticación');
-        const username = this.usernameInput.value.trim();
+            const username = this.usernameInput.value.trim();
             const password = this.passwordInput.value.trim();
-            
+
             console.log('👤 Usuario:', username);
             console.log('🔑 Contraseña:', password);
-            
-        this.setLoadingState(true);
+
+            this.setLoadingState(true);
             this.authenticate(username, password);
         } else {
             console.log('❌ Formulario inválido');
@@ -104,13 +104,13 @@ class LoginManager {
     showFieldError(input, message) {
         const fieldContainer = input.closest('.form-group');
         let errorElement = fieldContainer.querySelector('.field-error');
-        
+
         if (!errorElement) {
             errorElement = document.createElement('div');
             errorElement.className = 'field-error text-danger mt-1';
             fieldContainer.appendChild(errorElement);
         }
-        
+
         errorElement.textContent = message;
         input.classList.add('is-invalid');
     }
@@ -118,11 +118,11 @@ class LoginManager {
     clearFieldError(input) {
         const fieldContainer = input.closest('.form-group');
         const errorElement = fieldContainer.querySelector('.field-error');
-        
+
         if (errorElement) {
             errorElement.remove();
         }
-        
+
         input.classList.remove('is-invalid');
     }
 
@@ -155,7 +155,7 @@ class LoginManager {
                     const token = data.token || '';
                     if (!token) break;
                     localStorage.setItem('jwt', token);
-                    localStorage.setItem('sesionActiva','1');
+                    localStorage.setItem('sesionActiva', '1');
                     localStorage.setItem('usuario', username);
                     try {
                         const meResp = await fetch(`${API_NET}/api/auth/me`, { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
@@ -165,7 +165,7 @@ class LoginManager {
                             if (me && me.company) localStorage.setItem('company', me.company);
                             if (me && me.role) localStorage.setItem('role', me.role);
                         }
-                    } catch {}
+                    } catch { }
                     if (!localStorage.getItem('fullName')) {
                         const map = {
                             'jose.arbildo': { fullName: 'Jose Arbildo Cuellar', company: 'Ferreyros', role: 'Admin' },
@@ -179,6 +179,12 @@ class LoginManager {
                             localStorage.setItem('role', m.role);
                         }
                     }
+                    if (data.mustChangePassword) {
+                        this.showMessage('Debes cambiar tu contraseña', 'warning');
+                        this.showChangePasswordModal(token);
+                        return;
+                    }
+
                     this.showMessage('¡Login exitoso!', 'success');
                     setTimeout(() => { window.location.href = 'menu1.html'; }, 500);
                     return;
@@ -190,7 +196,7 @@ class LoginManager {
                 this.showMessage('Credenciales incorrectas', 'error');
             } else if (errorType === 'captcha') {
                 this.showMessage('Captcha incorrecto', 'error');
-                try { refreshCaptcha(); } catch {}
+                try { refreshCaptcha(); } catch { }
             } else {
                 this.showMessage('Servicio no disponible', 'error');
             }
@@ -201,7 +207,7 @@ class LoginManager {
     togglePassword() {
         const type = this.passwordInput.type === 'password' ? 'text' : 'password';
         this.passwordInput.type = type;
-        
+
         const icon = this.passwordToggle.querySelector('i');
         if (type === 'text') {
             icon.classList.remove('fa-eye');
@@ -239,7 +245,7 @@ class LoginManager {
         const indicators = document.querySelectorAll('.indicator');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-        
+
         let currentSlide = 0;
         const totalSlides = slides.length;
 
@@ -247,7 +253,7 @@ class LoginManager {
             // Ocultar todas las slides
             slides.forEach(slide => slide.classList.remove('active'));
             indicators.forEach(indicator => indicator.classList.remove('active'));
-            
+
             // Mostrar la slide actual
             slides[index].classList.add('active');
             indicators[index].classList.add('active');
@@ -278,10 +284,54 @@ class LoginManager {
         // Auto-play cada 5 segundos
         setInterval(nextSlide, 5000);
     }
+
+    showChangePasswordModal(token) {
+        const modalEl = document.getElementById('changePasswordModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        const form = document.getElementById('changePasswordForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const oldPass = document.getElementById('oldPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmNewPassword').value;
+
+            if (newPass !== confirmPass) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_NET}/api/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ oldPassword: oldPass, newPassword: newPass })
+                });
+
+                if (res.ok) {
+                    alert('Contraseña actualizada. Por favor inicia sesión nuevamente.');
+                    modal.hide();
+                    // Clear fields
+                    this.passwordInput.value = '';
+                    // Optionally refresh page or just let them login again
+                } else {
+                    const txt = await res.text();
+                    alert('Error: ' + txt);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error de conexión');
+            }
+        };
+    }
 }
 
 // Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('📋 DOM cargado, iniciando login...');
     new LoginManager();
 });

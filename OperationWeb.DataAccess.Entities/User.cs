@@ -21,6 +21,10 @@ namespace OperationWeb.DataAccess.Entities
         [EmailAddress]
         public string? Email { get; set; }
 
+        [Required]
+        [StringLength(20)]
+        public string Role { get; set; } = "USER";
+        public bool MustChangePassword { get; set; } = true;
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
