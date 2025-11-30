@@ -131,7 +131,8 @@ def procesar_archivo(archivo, hoja='', header_row=-1, usecols=''):
         print(f"DEBUG: Columnas encontradas en Excel: {list(df.columns)}")
         print(f"DEBUG: Primeras filas:\n{df.head().to_string()}")
     except Exception as e:
-        raise Exception(f"Error al leer el archivo Excel: {str(e)}")
+        print(f"ERROR in procesar_personas: {e}")
+        raise Exception("Error interno al leer el archivo Excel")
 
     # Normalizar y limpiar
     df_norm = normalize_columns(df.copy())
