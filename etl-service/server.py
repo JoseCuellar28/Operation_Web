@@ -45,56 +45,80 @@ def health():
 
 @app.post('/api/analyze')
 def api_analyze():
-    data = request.get_json() or {}
-    archivo = data.get('archivo','')
-    hoja = data.get('hoja','')
-    header_row = int(data.get('header_row',-1))
-    usecols = data.get('usecols','')
-    res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
-    return jsonify(res["resumen"])
+    try:
+        data = request.get_json() or {}
+        archivo = data.get('archivo','')
+        hoja = data.get('hoja','')
+        header_row = int(data.get('header_row',-1))
+        usecols = data.get('usecols','')
+        res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
+        return jsonify(res["resumen"])
+    except Exception as e:
+        print(f"ERROR in api_analyze: {e}")
+        return jsonify({"success": False, "error": "Error interno al analizar archivo"}), 500
 
 @app.post('/api/load-staging')
 def api_load_staging():
-    data = request.get_json() or {}
-    archivo = data.get('archivo','')
-    hoja = data.get('hoja','')
-    header_row = int(data.get('header_row',-1))
-    usecols = data.get('usecols','')
-    res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
-    stg = load_staging(res, archivo, hoja)
-    return jsonify(stg)
+    try:
+        data = request.get_json() or {}
+        archivo = data.get('archivo','')
+        hoja = data.get('hoja','')
+        header_row = int(data.get('header_row',-1))
+        usecols = data.get('usecols','')
+        res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
+        stg = load_staging(res, archivo, hoja)
+        return jsonify(stg)
+    except Exception as e:
+        print(f"ERROR in api_load_staging: {e}")
+        return jsonify({"success": False, "error": "Error interno al cargar staging"}), 500
 
 @app.post('/api/merge-snapshot')
 def api_merge_snapshot():
-    data = request.get_json() or {}
-    archivo = data.get('archivo','')
-    hoja = data.get('hoja','')
-    header_row = int(data.get('header_row',-1))
-    usecols = data.get('usecols','')
-    res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
-    snap = merge_snapshot(res)
-    return jsonify(snap)
+    try:
+        data = request.get_json() or {}
+        archivo = data.get('archivo','')
+        hoja = data.get('hoja','')
+        header_row = int(data.get('header_row',-1))
+        usecols = data.get('usecols','')
+        res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
+        snap = merge_snapshot(res)
+        return jsonify(snap)
+    except Exception as e:
+        print(f"ERROR in api_merge_snapshot: {e}")
+        return jsonify({"success": False, "error": "Error interno al fusionar snapshot"}), 500
 
 @app.post('/api/audit')
 def api_audit():
-    data = request.get_json() or {}
-    archivo = data.get('archivo','')
-    hoja = data.get('hoja','')
-    header_row = int(data.get('header_row',-1))
-    usecols = data.get('usecols','')
-    res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
-    periodo = res["resumen"]["periodos_detectados"][0] if res["resumen"]["periodos_detectados"] else ""
-    out = audit(archivo, hoja, periodo, res, {"inserted":0,"updated":0}, {"inserted":0})
-    return jsonify(out)
+    try:
+        data = request.get_json() or {}
+        archivo = data.get('archivo','')
+        hoja = data.get('hoja','')
+        header_row = int(data.get('header_row',-1))
+        usecols = data.get('usecols','')
+        res = procesar_archivo(archivo, hoja=hoja, header_row=header_row, usecols=usecols)
+        periodo = res["resumen"]["periodos_detectados"][0] if res["resumen"]["periodos_detectados"] else ""
+        out = audit(archivo, hoja, periodo, res, {"inserted":0,"updated":0}, {"inserted":0})
+        return jsonify(out)
+    except Exception as e:
+        print(f"ERROR in api_audit: {e}")
+        return jsonify({"success": False, "error": "Error interno de auditoría"}), 500
 
 @app.post('/api/deploy-sql')
 def api_deploy_sql():
-    base = Path(__file__).resolve().parent
-    return jsonify(deploy_sql(str(base / 'sql')))
+    try:
+        base = Path(__file__).resolve().parent
+        return jsonify(deploy_sql(str(base / 'sql')))
+    except Exception as e:
+        print(f"ERROR in api_deploy_sql: {e}")
+        return jsonify({"success": False, "error": "Error interno al desplegar SQL"}), 500
 
 @app.get('/api/tables')
 def api_tables():
-    return jsonify(tables())
+    try:
+        return jsonify(tables())
+    except Exception as e:
+        print(f"ERROR in api_tables: {e}")
+        return jsonify({"success": False, "error": "Error interno al listar tablas"}), 500
 
 @app.get('/api/personal')
 def api_personal():
