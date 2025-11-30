@@ -33,12 +33,12 @@ namespace OperationWeb.API.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message); // 409 Conflict if user exists
+                return Conflict("El usuario ya existe."); // 409 Conflict if user exists
             }
             catch (Exception ex)
             {
                 // Log error
-                return StatusCode(500, "Error interno al crear usuario: " + ex.Message);
+                return StatusCode(500, "Error interno al crear usuario.");
             }
         }
 
@@ -53,7 +53,7 @@ namespace OperationWeb.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Error interno al actualizar estado: " + ex.Message);
+                return StatusCode(500, "Error interno al actualizar estado.");
             }
         }
     }

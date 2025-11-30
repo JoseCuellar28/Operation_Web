@@ -110,7 +110,7 @@ namespace OperationWeb.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest("Error al procesar la solicitud.");
             }
             catch (Exception ex)
             {
@@ -138,7 +138,7 @@ namespace OperationWeb.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest("Error al procesar la solicitud.");
             }
             catch (Exception ex)
             {
@@ -163,7 +163,7 @@ namespace OperationWeb.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest("Error al procesar la solicitud.");
             }
             catch (Exception ex)
             {

@@ -104,7 +104,7 @@ namespace OperationWeb.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error al enviar correo: " + ex.Message, details = ex.ToString() });
+                return StatusCode(500, new { message = "Error al enviar correo.", details = "Consulte los logs del servidor." });
             }
         }
 
