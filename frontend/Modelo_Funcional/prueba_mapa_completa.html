@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prueba Completa - Mapa y Menú Corregido</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <!-- DOMPurify for XSS protection -->
+    <script src="js/vendor/purify.min.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -133,6 +136,7 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -277,6 +281,7 @@
                 opacity: 0;
                 transform: scale(0.9) translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1) translateY(0);
@@ -433,16 +438,19 @@
         }
     </style>
 </head>
+
 <body>
     <div class="prueba-container">
         <div class="prueba-header">
             <h1><i class="fas fa-map-marked-alt"></i> Prueba Completa - Mapa y Menú Corregido</h1>
-            <p>Esta página replica el comportamiento completo del mapa con todas las correcciones aplicadas al menú lateral</p>
+            <p>Esta página replica el comportamiento completo del mapa con todas las correcciones aplicadas al menú
+                lateral</p>
         </div>
 
         <div class="mapa-section">
             <div class="selector-columna-ubicacion">
-                <label for="selector-columna-geo"><strong>Selecciona la columna que contiene la ubicación:</strong></label>
+                <label for="selector-columna-geo"><strong>Selecciona la columna que contiene la
+                        ubicación:</strong></label>
                 <select id="selector-columna-geo" class="form-select">
                     <option value="">-- Selecciona una columna --</option>
                     <option value="UBICACIÓN">UBICACIÓN</option>
@@ -454,11 +462,12 @@
 
             <div id="mapa-container">
                 <div id="mapa-leaflet"></div>
-                
+
                 <!-- Menú lateral para puntos seleccionados -->
                 <div id="menu-lateral-puntos" class="menu-lateral-puntos" style="display: none;">
                     <div class="menu-header">
-                        <h4><i class="fas fa-map-pin"></i> Puntos Seleccionados (<span id="contador-puntos">0</span>)</h4>
+                        <h4><i class="fas fa-map-pin"></i> Puntos Seleccionados (<span id="contador-puntos">0</span>)
+                        </h4>
                         <button type="button" class="btn-cerrar-menu" onclick="cerrarMenuPuntos()">
                             <i class="fas fa-times"></i>
                         </button>
@@ -467,46 +476,56 @@
                         <div class="menu-acciones">
                             <!-- Selector simple para Asignar Cuadrilla -->
                             <div class="dropdown-asignacion">
-                                <select class="form-select" onchange="asignarCuadrillaSelect(this)" style="margin-bottom: 10px;">
+                                <select class="form-select" onchange="asignarCuadrillaSelect(this)"
+                                    style="margin-bottom: 10px;">
                                     <option value="">🚛 Seleccionar Cuadrilla</option>
-                                    <option value="Cuadrilla Alpha|Zona Norte - Disponible">🛡️ Cuadrilla Alpha - Zona Norte</option>
-                                    <option value="Cuadrilla Beta|Zona Sur - En servicio">🌙 Cuadrilla Beta - Zona Sur</option>
-                                    <option value="Cuadrilla Gamma|Zona Este - Disponible">🚗 Cuadrilla Gamma - Zona Este</option>
-                                    <option value="Cuadrilla Delta|Base Central - Mantenimiento">🔧 Cuadrilla Delta - Base Central</option>
+                                    <option value="Cuadrilla Alpha|Zona Norte - Disponible">🛡️ Cuadrilla Alpha - Zona
+                                        Norte</option>
+                                    <option value="Cuadrilla Beta|Zona Sur - En servicio">🌙 Cuadrilla Beta - Zona Sur
+                                    </option>
+                                    <option value="Cuadrilla Gamma|Zona Este - Disponible">🚗 Cuadrilla Gamma - Zona
+                                        Este</option>
+                                    <option value="Cuadrilla Delta|Base Central - Mantenimiento">🔧 Cuadrilla Delta -
+                                        Base Central</option>
                                 </select>
                             </div>
 
                             <!-- Selector múltiple para Asignar Efectivos Policiales -->
                             <div class="dropdown-asignacion">
-                                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                                <div
+                                    style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
                                     <div style="font-weight: bold; margin-bottom: 8px; color: #495057;">
                                         👮 Seleccionar Efectivos Policiales
                                     </div>
                                     <div id="efectivos-checkboxes" style="max-height: 150px; overflow-y: auto;">
                                         <label style="display: block; margin-bottom: 6px; cursor: pointer;">
-                                            <input type="checkbox" value="Oficial García|Sargento - Disponible" style="margin-right: 8px;">
+                                            <input type="checkbox" value="Oficial García|Sargento - Disponible"
+                                                style="margin-right: 8px;">
                                             🛡️ Oficial García - Sargento
                                         </label>
                                         <label style="display: block; margin-bottom: 6px; cursor: pointer;">
-                                            <input type="checkbox" value="Oficial Rodríguez|Cabo - En patrulla" style="margin-right: 8px;">
+                                            <input type="checkbox" value="Oficial Rodríguez|Cabo - En patrulla"
+                                                style="margin-right: 8px;">
                                             🚔 Oficial Rodríguez - Cabo
                                         </label>
                                         <label style="display: block; margin-bottom: 6px; cursor: pointer;">
-                                            <input type="checkbox" value="Oficial López|Oficial - Disponible" style="margin-right: 8px;">
+                                            <input type="checkbox" value="Oficial López|Oficial - Disponible"
+                                                style="margin-right: 8px;">
                                             👮 Oficial López - Oficial
                                         </label>
                                         <label style="display: block; margin-bottom: 6px; cursor: pointer;">
-                                            <input type="checkbox" value="Oficial Martínez|Teniente - En descanso" style="margin-right: 8px;">
+                                            <input type="checkbox" value="Oficial Martínez|Teniente - En descanso"
+                                                style="margin-right: 8px;">
                                             ⭐ Oficial Martínez - Teniente
                                         </label>
                                     </div>
                                     <div style="margin-top: 10px; text-align: center;">
-                                        <button onclick="asignarEfectivosSeleccionados()" 
-                                                style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                        <button onclick="asignarEfectivosSeleccionados()"
+                                            style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
                                             ✅ Asignar Seleccionados
                                         </button>
-                                        <button onclick="limpiarSeleccionEfectivos()" 
-                                                style="background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 5px;">
+                                        <button onclick="limpiarSeleccionEfectivos()"
+                                            style="background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 5px;">
                                             🗑️ Limpiar
                                         </button>
                                     </div>
@@ -518,7 +537,7 @@
                                 <i class="fas fa-save"></i> Guardar Asignación
                             </button>
                         </div>
-                        
+
                         <!-- Lista desplegable de cuadrillas -->
                         <div id="lista-cuadrillas" class="lista-cuadrillas" style="display: none;">
                             <div class="lista-header">
@@ -528,21 +547,24 @@
                                 </button>
                             </div>
                             <div class="lista-opciones">
-                                <button type="button" class="opcion-cuadrilla" onclick="seleccionarCuadrilla('Cuadrilla Mantenimiento A', 'Reparación de infraestructura urbana')">
+                                <button type="button" class="opcion-cuadrilla"
+                                    onclick="seleccionarCuadrilla('Cuadrilla Mantenimiento A', 'Reparación de infraestructura urbana')">
                                     <i class="fas fa-tools"></i>
                                     <div class="info-cuadrilla">
                                         <div class="nombre-cuadrilla">Cuadrilla Mantenimiento A</div>
                                         <div class="detalle-cuadrilla">Reparación de infraestructura urbana</div>
                                     </div>
                                 </button>
-                                <button type="button" class="opcion-cuadrilla" onclick="seleccionarCuadrilla('Cuadrilla Eléctrica B', 'Instalación y mantenimiento eléctrico')">
+                                <button type="button" class="opcion-cuadrilla"
+                                    onclick="seleccionarCuadrilla('Cuadrilla Eléctrica B', 'Instalación y mantenimiento eléctrico')">
                                     <i class="fas fa-bolt"></i>
                                     <div class="info-cuadrilla">
                                         <div class="nombre-cuadrilla">Cuadrilla Eléctrica B</div>
                                         <div class="detalle-cuadrilla">Instalación y mantenimiento eléctrico</div>
                                     </div>
                                 </button>
-                                <button type="button" class="opcion-cuadrilla" onclick="seleccionarCuadrilla('Cuadrilla Limpieza C', 'Limpieza y mantenimiento general')">
+                                <button type="button" class="opcion-cuadrilla"
+                                    onclick="seleccionarCuadrilla('Cuadrilla Limpieza C', 'Limpieza y mantenimiento general')">
                                     <i class="fas fa-broom"></i>
                                     <div class="info-cuadrilla">
                                         <div class="nombre-cuadrilla">Cuadrilla Limpieza C</div>
@@ -561,21 +583,24 @@
                                 </button>
                             </div>
                             <div class="lista-opciones">
-                                <button type="button" class="opcion-cuadrilla" onclick="seleccionarEfectivo('Oficial García', 'Patrulla Sector Norte')">
+                                <button type="button" class="opcion-cuadrilla"
+                                    onclick="seleccionarEfectivo('Oficial García', 'Patrulla Sector Norte')">
                                     <i class="fas fa-shield-alt"></i>
                                     <div class="info-cuadrilla">
                                         <div class="nombre-cuadrilla">Oficial García</div>
                                         <div class="detalle-cuadrilla">Patrulla Sector Norte</div>
                                     </div>
                                 </button>
-                                <button type="button" class="opcion-cuadrilla" onclick="seleccionarEfectivo('Sargento López', 'Unidad Móvil 02')">
+                                <button type="button" class="opcion-cuadrilla"
+                                    onclick="seleccionarEfectivo('Sargento López', 'Unidad Móvil 02')">
                                     <i class="fas fa-shield-alt"></i>
                                     <div class="info-cuadrilla">
                                         <div class="nombre-cuadrilla">Sargento López</div>
                                         <div class="detalle-cuadrilla">Unidad Móvil 02</div>
                                     </div>
                                 </button>
-                                <button type="button" class="opcion-cuadrilla" onclick="seleccionarEfectivo('Cabo Martínez', 'Patrulla Sector Sur')">
+                                <button type="button" class="opcion-cuadrilla"
+                                    onclick="seleccionarEfectivo('Cabo Martínez', 'Patrulla Sector Sur')">
                                     <i class="fas fa-shield-alt"></i>
                                     <div class="info-cuadrilla">
                                         <div class="nombre-cuadrilla">Cabo Martínez</div>
@@ -649,7 +674,7 @@
         function cargarMapaConColumna() {
             const selector = document.getElementById('selector-columna-geo');
             const columnaSeleccionada = selector.value;
-            
+
             if (!columnaSeleccionada) {
                 alert('Por favor selecciona una columna primero');
                 return;
@@ -674,8 +699,8 @@
 
                 marcador.puntoData = punto;
                 marcador.indice = index;
-                
-                marcador.on('click', function() {
+
+                marcador.on('click', function () {
                     seleccionarMarcador(this);
                 });
 
@@ -687,7 +712,7 @@
 
         function seleccionarMarcador(marcador) {
             const index = marcadoresSeleccionados.findIndex(m => m.indice === marcador.indice);
-            
+
             if (index === -1) {
                 // Agregar a seleccionados
                 marcadoresSeleccionados.push(marcador);
@@ -764,21 +789,21 @@
         function asignarCuadrillaSelect(select) {
             const valor = select.value;
             if (!valor) return;
-            
+
             const [nombre, detalle] = valor.split('|');
             asignarCuadrillaEspecifica(nombre, detalle);
-            
+
             // Resetear el selector
             select.value = '';
         }
-        
+
         function asignarEfectivoSelect(select) {
             const valor = select.value;
             if (!valor) return;
-            
+
             const [nombre, detalle] = valor.split('|');
             asignarEfectivoEspecifico(nombre, detalle);
-            
+
             // Resetear el selector
             select.value = '';
         }
@@ -786,29 +811,29 @@
         // Nuevas funciones para selección múltiple de efectivos
         function asignarEfectivosSeleccionados() {
             console.log('👮 Función asignarEfectivosSeleccionados llamada');
-            
+
             if (marcadoresSeleccionados.length === 0) {
                 alert('Por favor, selecciona al menos un punto en el mapa primero.');
                 return;
             }
 
             const checkboxes = document.querySelectorAll('#efectivos-checkboxes input[type="checkbox"]:checked');
-            
+
             if (checkboxes.length === 0) {
                 alert('Por favor, selecciona al menos un efectivo policial.');
                 return;
             }
 
             let efectivosAsignados = 0;
-            
+
             checkboxes.forEach(checkbox => {
                 const valor = checkbox.value;
                 const [nombre, detalle] = valor.split('|');
-                
+
                 // Asignar este efectivo a todos los puntos seleccionados
                 marcadoresSeleccionados.forEach(marcador => {
                     // Verificar si ya existe una asignación para este punto
-                    const asignacionExistente = asignaciones.find(asig => 
+                    const asignacionExistente = asignaciones.find(asig =>
                         asig.puntoId === marcador._leaflet_id
                     );
 
@@ -817,7 +842,7 @@
                         if (!asignacionExistente.efectivos) {
                             asignacionExistente.efectivos = [];
                         }
-                        
+
                         // Verificar si este efectivo ya está asignado a este punto
                         const efectivoExistente = asignacionExistente.efectivos.find(ef => ef.nombre === nombre);
                         if (!efectivoExistente) {
@@ -844,7 +869,7 @@
                             }],
                             fechaAsignacion: new Date().toISOString()
                         };
-                        
+
                         asignaciones.push(nuevaAsignacion);
                         efectivosAsignados++;
                     }
@@ -852,7 +877,7 @@
             });
 
             console.log('📋 Asignaciones después de agregar efectivos múltiples:', asignaciones);
-            
+
             // Mostrar mensaje de confirmación
             mostrarModalCentrado('✅ Efectivos Asignados', `
                 <div style="text-align: center;">
@@ -880,17 +905,17 @@
         function asignarCuadrillaEspecifica(nombre, detalle) {
             console.log('🔧 Función asignarCuadrillaEspecifica llamada:', nombre, detalle);
             console.log('📍 Marcadores seleccionados:', marcadoresSeleccionados.length);
-            
+
             if (marcadoresSeleccionados.length === 0) {
                 alert('Por favor, selecciona al menos un punto en el mapa primero.');
                 console.log('❌ No hay marcadores seleccionados');
                 return;
             }
-            
+
             // Crear asignación para cada punto seleccionado
             marcadoresSeleccionados.forEach(marcador => {
                 const asignacionExistente = asignaciones.find(a => a.puntoId === marcador.indice);
-                
+
                 if (asignacionExistente) {
                     asignacionExistente.cuadrilla = { nombre, detalle };
                     asignacionExistente.fechaAsignacion = new Date().toLocaleString();
@@ -908,7 +933,7 @@
                     asignaciones.push(nuevaAsignacion);
                 }
             });
-            
+
             console.log(`Cuadrilla ${nombre} asignada a ${marcadoresSeleccionados.length} puntos`);
             console.log('📋 Asignaciones después de agregar cuadrilla:', asignaciones);
             mostrarResultado(`Cuadrilla "${nombre}" asignada a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
@@ -919,11 +944,11 @@
                 alert('Por favor, selecciona al menos un punto en el mapa primero.');
                 return;
             }
-            
+
             // Crear asignación para cada punto seleccionado
             marcadoresSeleccionados.forEach(marcador => {
                 const asignacionExistente = asignaciones.find(a => a.puntoId === marcador.indice);
-                
+
                 if (asignacionExistente) {
                     asignacionExistente.efectivo = { nombre, detalle };
                     asignacionExistente.fechaAsignacion = new Date().toLocaleString();
@@ -941,7 +966,7 @@
                     asignaciones.push(nuevaAsignacion);
                 }
             });
-            
+
             console.log(`Efectivo ${nombre} asignado a ${marcadoresSeleccionados.length} puntos`);
             console.log('📋 Asignaciones después de agregar efectivo:', asignaciones);
             mostrarResultado(`Efectivo "${nombre}" asignado a ${marcadoresSeleccionados.length} puntos seleccionados`, 'success');
@@ -952,7 +977,7 @@
                 alert('No hay asignaciones registradas.');
                 return;
             }
-            
+
             // Crear ventana con tabla de asignaciones
             const ventana = window.open('', 'Asignaciones', 'width=1000,height=600,scrollbars=yes');
             ventana.document.write(`
@@ -1044,7 +1069,7 @@
                 </body>
                 </html>
             `);
-            
+
             mostrarResultado('Tabla de asignaciones abierta en nueva ventana', 'info');
         }
 
@@ -1082,28 +1107,28 @@
         function seleccionarCuadrilla(nombre, detalle) {
             console.log('✅ Cuadrilla seleccionada:', nombre);
             cerrarListaCuadrillas();
-            
+
             // CORRECCIÓN: Mostrar el menú después de la selección
             const menu = document.getElementById('menu-lateral-puntos');
             if (menu) {
                 menu.style.display = 'flex';
                 console.log('✅ Menú mostrado después de seleccionar cuadrilla');
             }
-            
+
             mostrarResultado(`Cuadrilla "${nombre}" asignada correctamente - Menú permanece visible`, 'success');
         }
 
         function seleccionarEfectivo(nombre, detalle) {
             console.log('✅ Efectivo seleccionado:', nombre);
             cerrarListaEfectivos();
-            
+
             // CORRECCIÓN: Mostrar el menú después de la selección
             const menu = document.getElementById('menu-lateral-puntos');
             if (menu) {
                 menu.style.display = 'flex';
                 console.log('✅ Menú mostrado después de seleccionar efectivo');
             }
-            
+
             mostrarResultado(`Efectivo "${nombre}" asignado correctamente - Menú permanece visible`, 'success');
         }
 
@@ -1114,16 +1139,16 @@
 
         function mostrarResultado(mensaje, tipo) {
             const contenedor = document.getElementById('resultado-pruebas');
-            const alertClass = tipo === 'success' ? 'alert-success' : 
-                             tipo === 'danger' ? 'alert-danger' : 'alert-info';
-            
+            const alertClass = tipo === 'success' ? 'alert-success' :
+                tipo === 'danger' ? 'alert-danger' : 'alert-info';
+
             const timestamp = new Date().toLocaleTimeString();
-            
-            contenedor.innerHTML = `
+
+            contenedor.innerHTML = DOMPurify.sanitize(`
                 <div class="alert ${alertClass}">
                     <strong>[${timestamp}]</strong> ${mensaje}
                 </div>
-            ` + contenedor.innerHTML;
+            `) + contenedor.innerHTML;
         }
 
         // Función para mostrar modal centrado
@@ -1131,21 +1156,21 @@
             // Crear overlay del modal
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
-            
+
             // Crear contenido del modal
-            overlay.innerHTML = `
+            overlay.innerHTML = DOMPurify.sanitize(`
                 <div class="modal-content">
                     <div class="modal-header">${titulo}</div>
                     <div class="modal-body">${contenido}</div>
                     <button class="modal-close-btn" onclick="cerrarModal(this)">Cerrar</button>
                 </div>
-            `;
-            
+            `);
+
             // Agregar al body
             document.body.appendChild(overlay);
-            
+
             // Cerrar modal al hacer click en el overlay
-            overlay.addEventListener('click', function(e) {
+            overlay.addEventListener('click', function (e) {
                 if (e.target === overlay) {
                     cerrarModal(overlay.querySelector('.modal-close-btn'));
                 }
@@ -1164,15 +1189,15 @@
         function verAsignaciones() {
             console.log('📋 Mostrando tabla de asignaciones');
             console.log('📊 Total de asignaciones:', asignaciones.length);
-            
+
             if (asignaciones.length === 0) {
                 alert('No hay asignaciones para mostrar. Primero selecciona puntos en el mapa y asigna cuadrillas o efectivos.');
                 return;
             }
-            
+
             // Crear ventana nueva con la tabla
             const ventanaAsignaciones = window.open('', '_blank', 'width=1000,height=600,scrollbars=yes');
-            
+
             const htmlTabla = `
                 <!DOCTYPE html>
                 <html lang="es">
@@ -1210,10 +1235,10 @@
                                         ${asignaciones.map(asignacion => `
                                             <tr>
                                                 <td><span class="badge bg-primary">${asignacion.id}</span></td>
-                                                <td><strong>${asignacion.puntoNombre}</strong></td>
-                                                <td><small class="text-muted">${asignacion.coordenadas}</small></td>
-                                                <td>${asignacion.cuadrilla ? `<i class="fas fa-users text-success"></i> ${asignacion.cuadrilla.nombre}` : '<span class="text-muted">Sin asignar</span>'}</td>
-                                                <td>${asignacion.efectivo ? `<i class="fas fa-shield-alt text-primary"></i> ${asignacion.efectivo.nombre}` : '<span class="text-muted">Sin asignar</span>'}</td>
+                                                <td><strong>${DOMPurify.sanitize(asignacion.puntoNombre)}</strong></td>
+                                                <td><small class="text-muted">${DOMPurify.sanitize(asignacion.coordenadas)}</small></td>
+                                                <td>${asignacion.cuadrilla ? `<i class="fas fa-users text-success"></i> ${DOMPurify.sanitize(asignacion.cuadrilla.nombre)}` : '<span class="text-muted">Sin asignar</span>'}</td>
+                                                <td>${asignacion.efectivo ? `<i class="fas fa-shield-alt text-primary"></i> ${DOMPurify.sanitize(asignacion.efectivo.nombre)}` : '<span class="text-muted">Sin asignar</span>'}</td>
                                                 <td><small>${asignacion.fechaAsignacion}</small></td>
                                                 <td><span class="badge bg-success">${asignacion.estado}</span></td>
                                             </tr>
@@ -1234,7 +1259,7 @@
                 </body>
                 </html>
             `;
-            
+
             ventanaAsignaciones.document.write(htmlTabla);
             ventanaAsignaciones.document.close();
         }
@@ -1244,7 +1269,7 @@
             console.log('💾 Función guardarAsignacion llamada');
             console.log('📊 Puntos seleccionados:', puntosSeleccionados);
             console.log('📋 Asignaciones actuales:', asignaciones);
-            
+
             // Verificar si hay puntos seleccionados
             if (puntosSeleccionados.length === 0) {
                 console.log('❌ No hay puntos seleccionados');
@@ -1252,7 +1277,7 @@
                 alert('Por favor, selecciona al menos un punto en el mapa antes de guardar la asignación.');
                 return;
             }
-            
+
             // Verificar si hay asignaciones realizadas
             if (asignaciones.length === 0) {
                 console.log('❌ No hay asignaciones realizadas');
@@ -1260,9 +1285,9 @@
                 alert('Por favor, asigna cuadrillas o efectivos a los puntos seleccionados antes de guardar.');
                 return;
             }
-            
+
             console.log('✅ Validaciones pasadas, procediendo a guardar...');
-            
+
             // Simular guardado de asignaciones
             const timestamp = new Date().toLocaleString();
             const datosGuardado = {
@@ -1281,15 +1306,15 @@
                     estado: asig.estado
                 }))
             };
-            
+
             // Guardar en localStorage para persistencia
             try {
                 localStorage.setItem('asignaciones_guardadas', JSON.stringify(datosGuardado));
                 console.log('✅ Asignaciones guardadas en localStorage:', datosGuardado);
-                
+
                 // Agrupar asignaciones por punto para una presentación más clara
                 const asignacionesPorPunto = {};
-                
+
                 // Primero, agrupar todas las asignaciones por punto
                 asignaciones.forEach(asig => {
                     const puntoNombre = asig.puntoNombre || `Punto ${asig.puntoId + 1}`;
@@ -1299,17 +1324,17 @@
                             efectivos: new Set()
                         };
                     }
-                    
+
                     // Agrupar cuadrillas
                     if (asig.cuadrilla) {
                         asignacionesPorPunto[puntoNombre].cuadrillas.add(asig.cuadrilla.nombre);
                     }
-                    
+
                     // Agrupar efectivos individuales
                     if (asig.efectivo) {
                         asignacionesPorPunto[puntoNombre].efectivos.add(asig.efectivo.nombre);
                     }
-                    
+
                     // Agrupar múltiples efectivos
                     if (asig.efectivos && asig.efectivos.length > 0) {
                         asig.efectivos.forEach(ef => {
@@ -1317,13 +1342,13 @@
                         });
                     }
                 });
-                
+
                 // Convertir Sets a Arrays para facilitar el manejo
                 Object.keys(asignacionesPorPunto).forEach(punto => {
                     asignacionesPorPunto[punto].cuadrillas = Array.from(asignacionesPorPunto[punto].cuadrillas);
                     asignacionesPorPunto[punto].efectivos = Array.from(asignacionesPorPunto[punto].efectivos);
                 });
-                
+
                 // Debug: Mostrar el estado de las asignaciones agrupadas
                 console.log('🔍 DEBUG - Asignaciones originales:', asignaciones);
                 console.log('🔍 DEBUG - Asignaciones agrupadas por punto:', asignacionesPorPunto);
@@ -1333,20 +1358,20 @@
                 Object.keys(asignacionesPorPunto).forEach(punto => {
                     const asignacion = asignacionesPorPunto[punto];
                     let recursos = [];
-                    
+
                     if (asignacion.cuadrillas.length > 0) {
                         recursos.push(`👥 Cuadrilla responsable: ${asignacion.cuadrillas.join(', ')}`);
                     }
-                    
+
                     if (asignacion.efectivos.length > 0) {
                         recursos.push(`🚔 Efectivos de apoyo (${asignacion.efectivos.length}): ${asignacion.efectivos.join(', ')}`);
                     }
-                    
+
                     mensajesAsignacion.push(`📍 <strong>${punto}</strong><br>&nbsp;&nbsp;&nbsp;${recursos.join('<br>&nbsp;&nbsp;&nbsp;')}`);
                 });
-                
+
                 mostrarResultado(`Asignaciones guardadas exitosamente: ${Object.keys(asignacionesPorPunto).length} trabajos asignados`, 'success');
-                
+
                 // Mostrar confirmación detallada con trabajos específicos
                 const contenidoModal = `
                     <div style="text-align: center; margin-bottom: 20px;">
@@ -1371,14 +1396,14 @@
                         ¡Las asignaciones han sido registradas correctamente!
                     </div>
                 `;
-                
+
                 mostrarModalCentrado('Confirmación de Asignaciones', contenidoModal);
-                
+
                 // Opcional: Limpiar selecciones después de guardar
                 // puntosSeleccionados = [];
                 // asignaciones = [];
                 // actualizarMenuPuntos();
-                
+
             } catch (error) {
                 console.error('❌ Error al guardar asignaciones:', error);
                 mostrarResultado('Error al guardar asignaciones', 'danger');
@@ -1396,25 +1421,25 @@
             try {
                 const gestionData = localStorage.getItem('gestionData');
                 const gestionHeaders = localStorage.getItem('gestionHeaders');
-                
+
                 if (gestionData && gestionHeaders) {
                     const datos = JSON.parse(gestionData);
                     const headers = JSON.parse(gestionHeaders);
-                    
+
                     console.log('📊 Datos cargados desde gestión:', datos.length, 'registros');
                     console.log('📊 Columnas disponibles:', headers);
-                    
+
                     // Procesar y mostrar los datos en el mapa
                     procesarDatosOperaciones(datos, headers);
-                    
+
                     // Mostrar notificación
                     mostrarResultado(`Datos cargados: ${datos.length} registros de operaciones`, 'success');
-                    
+
                     // Limpiar localStorage después de cargar
                     localStorage.removeItem('gestionData');
                     localStorage.removeItem('gestionHeaders');
                     localStorage.removeItem('timestamp');
-                    
+
                     return true;
                 }
             } catch (error) {
@@ -1422,7 +1447,7 @@
             }
             return false;
         }
-        
+
         // Función para agregar un punto al mapa
         function agregarPuntoAlMapa(punto) {
             const marcador = L.marker([punto.lat, punto.lng])
@@ -1431,37 +1456,37 @@
 
             marcador.puntoData = punto;
             marcador.indice = marcadoresEnMapa.length;
-            
-            marcador.on('click', function() {
+
+            marcador.on('click', function () {
                 seleccionarMarcador(this);
             });
-            
+
             // Agregar a la lista de marcadores
             marcadoresEnMapa.push(marcador);
-            
+
             console.log('📍 Punto agregado al mapa:', punto.nombre, 'en', punto.ubicacion);
-            
+
             return marcador;
         }
-        
+
         // Función para procesar datos de operaciones y crear puntos en el mapa
         function procesarDatosOperaciones(datos, headers) {
             // Buscar columnas que puedan contener información geográfica
-            const columnasGeo = headers.filter(header => 
+            const columnasGeo = headers.filter(header =>
                 header.toLowerCase().includes('distrito') ||
                 header.toLowerCase().includes('ubicacion') ||
                 header.toLowerCase().includes('direccion') ||
                 header.toLowerCase().includes('zona') ||
                 header.toLowerCase().includes('coordenada')
             );
-            
+
             console.log('🗺️ Columnas geográficas detectadas:', columnasGeo);
-            
+
             if (columnasGeo.length > 0) {
                 // Usar la primera columna geográfica encontrada
                 const columnaGeo = columnasGeo[0];
                 const indiceColumna = headers.indexOf(columnaGeo);
-                
+
                 // Crear puntos basados en los datos
                 crearPuntosDesdeOperaciones(datos, headers, indiceColumna, columnaGeo);
             } else {
@@ -1469,17 +1494,17 @@
                 crearPuntosEjemploOperaciones(datos);
             }
         }
-        
+
         // Función para crear puntos desde datos de operaciones
         function crearPuntosDesdeOperaciones(datos, headers, indiceColumna, nombreColumna) {
             const puntosCreados = new Map();
-            
+
             datos.forEach((fila, index) => {
                 const valorUbicacion = fila[indiceColumna];
                 if (valorUbicacion && valorUbicacion.trim()) {
                     // Generar coordenadas basadas en la ubicación (simuladas para demo)
                     const coordenadas = generarCoordenadasPorUbicacion(valorUbicacion);
-                    
+
                     if (!puntosCreados.has(valorUbicacion)) {
                         const punto = {
                             id: puntosCreados.size + 1,
@@ -1490,16 +1515,16 @@
                             datos: fila,
                             headers: headers
                         };
-                        
+
                         puntosCreados.set(valorUbicacion, punto);
                         agregarPuntoAlMapa(punto);
                     }
                 }
             });
-            
+
             console.log('📍 Puntos creados desde operaciones:', puntosCreados.size);
         }
-        
+
         // Función para generar coordenadas basadas en ubicación
         function generarCoordenadasPorUbicacion(ubicacion) {
             // Coordenadas base para diferentes distritos/zonas (ejemplo para Lima, Perú)
@@ -1510,7 +1535,7 @@
                 'SAN MARTIN DE PORRES': { lat: -11.8819, lng: -77.0761 },
                 'COMAS': { lat: -11.9319, lng: -77.0561 }
             };
-            
+
             // Buscar coincidencia exacta o parcial
             const ubicacionUpper = ubicacion.toUpperCase();
             for (const [distrito, coords] of Object.entries(coordenadasBase)) {
@@ -1522,18 +1547,18 @@
                     };
                 }
             }
-            
+
             // Coordenadas por defecto (centro de Lima) con variación aleatoria
             return {
                 lat: -12.0464 + (Math.random() - 0.5) * 0.1,
                 lng: -77.0428 + (Math.random() - 0.5) * 0.1
             };
         }
-        
+
         // Función para crear puntos de ejemplo cuando no hay datos geográficos específicos
         function crearPuntosEjemploOperaciones(datos) {
             const cantidadPuntos = Math.min(datos.length, 10); // Máximo 10 puntos
-            
+
             for (let i = 0; i < cantidadPuntos; i++) {
                 const punto = {
                     id: i + 1,
@@ -1544,29 +1569,29 @@
                     datos: datos[i],
                     headers: ['Registro', 'Datos']
                 };
-                
+
                 agregarPuntoAlMapa(punto);
             }
-            
+
             console.log('📍 Puntos de ejemplo creados:', cantidadPuntos);
         }
 
         // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('🚀 Página de prueba cargada');
-            
+
             // Verificar si hay datos desde gestión de operaciones
             const datosDesdeGestion = cargarDatosDesdeGestion();
-            
+
             if (datosDesdeGestion) {
                 mostrarResultado('Datos de operaciones cargados correctamente', 'success');
             } else {
                 mostrarResultado('Página de prueba inicializada correctamente', 'info');
             }
-            
+
             // Agregar listeners de debug a todos los elementos dropdown
             document.querySelectorAll('.dropdown-item').forEach(item => {
-                item.addEventListener('click', function(e) {
+                item.addEventListener('click', function (e) {
                     console.log('🖱️ Click en dropdown item:', this.textContent.trim());
                     console.log('🖱️ Evento:', e);
                 });
@@ -1574,4 +1599,5 @@
         });
     </script>
 </body>
+
 </html>

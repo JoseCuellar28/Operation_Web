@@ -32,9 +32,10 @@ def health():
     try:
         return jsonify(test())
     except Exception as e:
+        print(f"ERROR in health check: {e}")
         return jsonify({
             "connected": False,
-            "error": str(e),
+            "error": "Error interno de conexión",
             "server": os.getenv('DB_SERVER', ''),
             "database": os.getenv('DB_NAME', ''),
             "port": int(os.getenv('DB_PORT', '1433')),
@@ -149,7 +150,8 @@ def api_personal():
                 data.append(item)
             return jsonify({"success": True, "data": data, "total": total})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e), "details": repr(e)}), 500
+        print(f"ERROR in api_personal: {e}")
+        return jsonify({"success": False, "error": "Error interno al obtener personal", "details": "Consulte los logs del servidor"}), 500
 
 @app.get('/api/personal/<dni>/history')
 def get_personal_history(dni):
@@ -179,7 +181,8 @@ def get_personal_history(dni):
                 return jsonify([]), 200
                 
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+        print(f"ERROR in get_personal_history: {e}")
+        return jsonify({"success": False, "message": "Error interno al obtener historial"}), 500
 
 @app.get('/api/table-schema')
 def api_table_schema():
@@ -210,7 +213,8 @@ def api_table_schema():
             data = [{cols[i].lower(): r[i] for i in range(len(cols))} for r in rows]
             return jsonify({"success": True, "table": table, "columns": data})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        print(f"ERROR in api_table_schema: {e}")
+        return jsonify({"success": False, "error": "Error interno al obtener esquema"}), 500
 
 @app.post('/api/upload-excel')
 def api_upload_excel():
@@ -280,7 +284,8 @@ def api_upload_excel():
             
         return jsonify(out), 200
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 200
+        print(f"ERROR in api_upload_excel: {e}")
+        return jsonify({"success": False, "message": "Error interno al procesar archivo"}), 200
 
 
 @app.post('/api/list-sheets')
@@ -304,7 +309,8 @@ def api_list_sheets():
         
         return jsonify({"success": True, "sheets": sheets}), 200
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+        print(f"ERROR in api_list_sheets: {e}")
+        return jsonify({"success": False, "message": "Error interno al listar hojas"}), 500
 
 @app.post('/api/preview-excel')
 def api_preview_excel():
@@ -371,7 +377,8 @@ def api_preview_excel():
         }
         return jsonify(out), 200
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 200
+        print(f"ERROR in api_preview_excel: {e}")
+        return jsonify({"success": False, "message": "Error interno al previsualizar"}), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT','5051')))
