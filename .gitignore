@@ -77,3 +77,8 @@ project.fragment.lock.json
 artifacts/
 **/Properties/launchSettings.json
 .vs/
+
+# .NET Configuration files (contienen credenciales)
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
