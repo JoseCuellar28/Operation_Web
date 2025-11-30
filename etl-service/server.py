@@ -271,15 +271,18 @@ def api_upload_excel():
         try:
             stg = load_staging(res, str(tmp_path), hoja)
         except Exception as e:
-            stg_error = str(e)
+            print(f"ERROR in staging: {e}")
+            stg_error = "Error al cargar staging"
         try:
             snap = merge_snapshot(res)
         except Exception as e:
-            snap_error = str(e)
+            print(f"ERROR in snapshot: {e}")
+            snap_error = "Error al fusionar snapshot"
         try:
             aud = audit(str(tmp_path), hoja, periodo, res, snap if snap else {"inserted":0,"updated":0}, stg if stg else {"inserted":0})
         except Exception as e:
-            audit_error = str(e)
+            print(f"ERROR in audit: {e}")
+            audit_error = "Error en auditoría"
         # Resumen
         # Generate preview rows from normalized data
         rows = []
