@@ -2,6 +2,8 @@
 
 Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 
+> 📖 **[Ver Guía Completa del Proyecto](docs/GUIA_COMPLETA.md)** - Documentación consolidada con todos los capítulos: Seguridad, Base de Datos, ETL, QA, y Deployment.
+
 ## 📁 Estructura del Proyecto
 
 ### 🏗️ Proyectos Principales
