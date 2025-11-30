@@ -129,10 +129,10 @@ class LoginManager {
     setLoadingState(loading) {
         if (loading) {
             this.submitButton.disabled = true;
-            this.submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Iniciando sesión...';
+            this.submitButton.innerHTML = DOMPurify.sanitize('<i class="fas fa-spinner fa-spin me-2"></i>Iniciando sesión...');
         } else {
             this.submitButton.disabled = false;
-            this.submitButton.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión';
+            this.submitButton.innerHTML = DOMPurify.sanitize('<i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión');
         }
     }
 
@@ -221,13 +221,13 @@ class LoginManager {
     showMessage(message, type) {
         if (!this.messageContainer) return;
 
-        this.messageContainer.innerHTML = `
+        this.messageContainer.innerHTML = DOMPurify.sanitize(`
             <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
                 <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        `;
+        `);
 
         // Auto-hide success messages
         if (type === 'success') {
