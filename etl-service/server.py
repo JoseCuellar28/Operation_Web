@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
 import os
 from pathlib import Path
 from lib.db_tools import test, deploy_sql, tables, load_staging, merge_snapshot, audit, _conn
@@ -221,7 +222,7 @@ def api_upload_excel():
         header_row = int(request.form.get('header_row', '-1'))
         usecols = request.form.get('usecols', '')
         # Validar extensión
-        filename = f.filename or ''
+        filename = secure_filename(f.filename or '')
         if not filename.lower().endswith(('.xlsx', '.xlsm')):
             return jsonify({"success": False, "message": "Formato de archivo no soportado"}), 400
         # Guardar temporalmente
@@ -288,7 +289,7 @@ def api_list_sheets():
         if 'file' not in request.files:
             return jsonify({"success": False, "message": "Archivo no adjuntado"}), 400
         f = request.files['file']
-        filename = f.filename or ''
+        filename = secure_filename(f.filename or '')
         if not filename.lower().endswith(('.xlsx', '.xlsm')):
             return jsonify({"success": False, "message": "Formato no soportado"}), 400
             
@@ -314,7 +315,7 @@ def api_preview_excel():
         hoja = request.form.get('hoja', '')
         header_row = int(request.form.get('header_row', '-1'))
         usecols = request.form.get('usecols', '')
-        filename = f.filename or ''
+        filename = secure_filename(f.filename or '')
         if not filename.lower().endswith(('.xlsx', '.xlsm')):
             return jsonify({"success": False, "message": "Formato de archivo no soportado"}), 400
         base = Path(__file__).resolve().parent
