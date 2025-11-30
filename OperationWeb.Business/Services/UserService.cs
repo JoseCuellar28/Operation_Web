@@ -2,6 +2,7 @@ using OperationWeb.Business.Interfaces;
 using OperationWeb.DataAccess;
 using OperationWeb.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace OperationWeb.Business.Services
 {
@@ -102,9 +103,21 @@ namespace OperationWeb.Business.Services
         private string GenerateRandomPassword()
         {
             const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@$";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, 8)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+            var result = new char[8];
+            var data = new byte[8];
+            
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(data);
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                var rnd = data[i] % chars.Length;
+                result[i] = chars[rnd];
+            }
+
+            return new string(result);
         }
     }
 }
