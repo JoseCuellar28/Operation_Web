@@ -12,36 +12,36 @@ const appState = {
 const API_BASE = 'http://localhost:5132/api/DatabaseExplorer';
 
 // Inicialización
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     setupEventListeners();
 });
 
 function setupEventListeners() {
     // Toggle de autenticación Windows
-    document.getElementById('db1-windows-auth').addEventListener('change', function() {
+    document.getElementById('db1-windows-auth').addEventListener('change', function () {
         toggleCredentials('db1', this.checked);
     });
-    
-    document.getElementById('db2-windows-auth').addEventListener('change', function() {
+
+    document.getElementById('db2-windows-auth').addEventListener('change', function () {
         toggleCredentials('db2', this.checked);
     });
 
     // Cambios en el servidor para actualizar visibilidad del puerto
-    document.getElementById('db1-server').addEventListener('input', function() {
+    document.getElementById('db1-server').addEventListener('input', function () {
         const useWindowsAuth = document.getElementById('db1-windows-auth').checked;
         toggleCredentials('db1', useWindowsAuth);
     });
-    
-    document.getElementById('db2-server').addEventListener('input', function() {
+
+    document.getElementById('db2-server').addEventListener('input', function () {
         const useWindowsAuth = document.getElementById('db2-windows-auth').checked;
         toggleCredentials('db2', useWindowsAuth);
     });
 
     // Búsqueda de tablas
-    document.getElementById('table-search').addEventListener('input', function() {
+    document.getElementById('table-search').addEventListener('input', function () {
         filterTables(this.value);
     });
-    
+
     // Inicializar estado de credenciales
     toggleCredentials('db1', document.getElementById('db1-windows-auth').checked);
     toggleCredentials('db2', document.getElementById('db2-windows-auth').checked);
@@ -50,13 +50,13 @@ function setupEventListeners() {
 function toggleCredentials(dbId, useWindowsAuth) {
     const credentialsDiv = document.getElementById(`${dbId}-credentials`);
     const portDiv = document.querySelector(`#${dbId}-form .mb-2:has(#${dbId}-port)`);
-    
+
     credentialsDiv.style.display = useWindowsAuth ? 'none' : 'block';
-    
+
     // Para instancias nombradas (como SQLEXPRESS), nunca mostrar el puerto
     const server = document.getElementById(`${dbId}-server`).value;
     const isNamedInstance = server.includes('\\');
-    
+
     if (portDiv) {
         if (isNamedInstance) {
             portDiv.style.display = 'none';  // Ocultar puerto para instancias nombradas
@@ -69,14 +69,14 @@ function toggleCredentials(dbId, useWindowsAuth) {
 function getConnectionData(dbId) {
     console.log('=== RECOPILANDO DATOS DE CONEXIÓN ===');
     console.log('dbId:', dbId);
-    
+
     const useWindowsAuthElement = document.getElementById(`${dbId}-windows-auth`);
     const serverElement = document.getElementById(`${dbId}-server`);
     const portElement = document.getElementById(`${dbId}-port`);
     const databaseElement = document.getElementById(`${dbId}-database`);
     const usernameElement = document.getElementById(`${dbId}-username`);
     const passwordElement = document.getElementById(`${dbId}-password`);
-    
+
     console.log('Elementos encontrados:');
     console.log('- useWindowsAuthElement:', useWindowsAuthElement);
     console.log('- serverElement:', serverElement);
@@ -84,31 +84,25 @@ function getConnectionData(dbId) {
     console.log('- databaseElement:', databaseElement);
     console.log('- usernameElement:', usernameElement);
     console.log('- passwordElement:', passwordElement);
-    
+
     if (!useWindowsAuthElement || !serverElement || !databaseElement) {
         console.error('ERROR: Elementos requeridos no encontrados');
         return null;
     }
-    
+
     const useWindowsAuth = useWindowsAuthElement.checked;
     const server = serverElement.value;
     const portValue = portElement ? portElement.value : '';
-    
-    console.log('Valores extraídos:');
-    console.log('- useWindowsAuth:', useWindowsAuth);
-    console.log('- server:', server);
-    console.log('- portValue:', portValue);
-    console.log('- database:', databaseElement.value);
-    console.log('- username:', usernameElement ? usernameElement.value : 'N/A');
-    console.log('- password:', passwordElement ? (passwordElement.value ? '***PRESENTE***' : 'VACÍO') : 'N/A');
-    
+
+    // Logs removidos por seguridad
+
     // Para instancias nombradas (como SQLEXPRESS), nunca usar puerto
     const isNamedInstance = server.includes('\\');
     const shouldIncludePort = !isNamedInstance;
-    
+
     console.log('- isNamedInstance:', isNamedInstance);
     console.log('- shouldIncludePort:', shouldIncludePort);
-    
+
     const connectionData = {
         server: server,
         database: databaseElement.value,
@@ -116,16 +110,15 @@ function getConnectionData(dbId) {
         username: useWindowsAuth ? '' : (usernameElement ? usernameElement.value : ''),
         password: useWindowsAuth ? '' : (passwordElement ? passwordElement.value : '')
     };
-    
+
     // Solo incluir puerto si es necesario
     if (shouldIncludePort && portValue) {
         connectionData.port = parseInt(portValue) || 1433;
         console.log('- puerto incluido:', connectionData.port);
     }
-    
-    console.log('Datos finales de conexión:', connectionData);
-    console.log('=== FIN RECOPILACIÓN DATOS ===');
-    
+
+    // console.log('Datos finales de conexión:', connectionData); // Removido por seguridad
+
     return connectionData;
 }
 
@@ -134,24 +127,24 @@ async function testConnection(dbId) {
     console.log('=== INICIO PRUEBA CONEXIÓN ===');
     console.log('dbId:', dbId);
     console.log('Timestamp:', new Date().toISOString());
-    
+
     const statusIndicator = document.getElementById(`${dbId}-status`);
     const loadTablesBtn = document.getElementById(`${dbId}-load-tables`);
-    
+
     console.log('statusIndicator:', statusIndicator);
     console.log('loadTablesBtn:', loadTablesBtn);
-    
+
     try {
         // Cambiar estado a "probando"
         statusIndicator.className = 'status-indicator status-testing';
         console.log('Estado cambiado a testing');
-        
+
         const connectionData = getConnectionData(dbId);
-        console.log('Datos de conexión:', connectionData);
-        
+        // console.log('Datos de conexión:', connectionData); // Removido por seguridad
+
         const url = `${API_BASE}/test-connection`;
         console.log('URL completa:', url);
-        
+
         console.log('Iniciando fetch...');
         const response = await fetch(url, {
             method: 'POST',
@@ -160,7 +153,7 @@ async function testConnection(dbId) {
             },
             body: JSON.stringify(connectionData)
         });
-        
+
         console.log('Response recibida:', response);
         console.log('Response status:', response.status);
         console.log('Response ok:', response.ok);
@@ -172,14 +165,14 @@ async function testConnection(dbId) {
             statusIndicator.className = 'status-indicator status-connected';
             loadTablesBtn.disabled = false;
             appState.connections[dbId].connected = true;
-            
-            showAlert('success', `Conexión exitosa a ${connectionData.database}`, 
-                     `Servidor: ${result.serverVersion}`);
+
+            showAlert('success', `Conexión exitosa a ${connectionData.database}`,
+                `Servidor: ${result.serverVersion}`);
         } else {
             statusIndicator.className = 'status-indicator status-disconnected';
             loadTablesBtn.disabled = true;
             appState.connections[dbId].connected = false;
-            
+
             showAlert('danger', 'Error de conexión', result.message);
         }
     } catch (error) {
@@ -188,11 +181,11 @@ async function testConnection(dbId) {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
         console.error('Error name:', error.name);
-        
+
         statusIndicator.className = 'status-indicator status-disconnected';
         loadTablesBtn.disabled = true;
         appState.connections[dbId].connected = false;
-        
+
         showAlert('danger', 'Error de conexión', `Error: ${error.message}`);
     }
     console.log('=== FIN PRUEBA CONEXIÓN ===');
@@ -201,7 +194,7 @@ async function testConnection(dbId) {
 async function loadTables(dbId) {
     try {
         const connectionData = getConnectionData(dbId);
-        
+
         const response = await fetch(`${API_BASE}/get-tables`, {
             method: 'POST',
             headers: {
@@ -226,9 +219,9 @@ async function loadTables(dbId) {
 
 function displayTables(dbId, tables) {
     const tablesList = document.getElementById(`${dbId}-tables-list`);
-    
+
     if (tables.length === 0) {
-        tablesList.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<p class="text-muted">No se encontraron tablas</p>';
+        tablesList.innerHTML = DOMPurify.sanitize('<p class="text-muted">No se encontraron tablas</p>');
         return;
     }
 
@@ -244,7 +237,7 @@ function displayTables(dbId, tables) {
     Object.keys(groupedTables).forEach(schema => {
         html += `<div class="mb-2">
                     <h6 class="text-primary">${schema}</h6>`;
-        
+
         groupedTables[schema].forEach(table => {
             html += `<div class="table-item" data-db="${dbId}" data-schema="${table.schema}" data-table="${table.name}" onclick="selectTable('${dbId}', '${table.schema}', '${table.name}')">
                         <i class="fas fa-table"></i> ${table.name}
@@ -253,7 +246,7 @@ function displayTables(dbId, tables) {
                         </button>
                      </div>`;
         });
-        
+
         html += '</div>';
     });
 
@@ -276,7 +269,7 @@ async function selectTable(dbId, schema, tableName) {
 
     try {
         const connectionData = getConnectionData(dbId);
-        
+
         // Obtener estructura de la tabla
         const structureResponse = await fetch(`${API_BASE}/get-table-structure`, {
             method: 'POST',
@@ -323,7 +316,7 @@ async function selectTable(dbId, schema, tableName) {
 
 function displayTableDetails(dbId, schema, tableName, columns) {
     const detailsDiv = document.getElementById('table-details');
-    
+
     let html = `
         <h6><i class="fas fa-table"></i> ${schema}.${tableName}</h6>
         <p class="text-muted">Base de Datos: ${dbId.toUpperCase()}</p>
@@ -342,10 +335,10 @@ function displayTableDetails(dbId, schema, tableName, columns) {
                 <tbody>`;
 
     columns.forEach(column => {
-        const dataTypeDisplay = column.maxLength ? 
-            `${column.dataType}(${column.maxLength})` : 
+        const dataTypeDisplay = column.maxLength ?
+            `${column.dataType}(${column.maxLength})` :
             column.dataType;
-        
+
         html += `<tr>
                     <td class="column-info">${column.name}</td>
                     <td class="column-info">${dataTypeDisplay}</td>
@@ -359,7 +352,7 @@ function displayTableDetails(dbId, schema, tableName, columns) {
     });
 
     html += `</tbody></table></div>`;
-    
+
     detailsDiv.innerHTML = DOMPurify.sanitize(html);
 }
 
@@ -368,7 +361,7 @@ function displaySampleData(data) {
 
     const detailsDiv = document.getElementById('table-details');
     const currentContent = detailsDiv.innerHTML;
-    
+
     let html = `<h6 class="mt-3">Datos de Muestra</h6>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped">
@@ -384,22 +377,22 @@ function displaySampleData(data) {
     data.forEach(row => {
         html += '<tr>';
         Object.values(row).forEach(value => {
-            const displayValue = value === null ? '<em>NULL</em>' : 
-                                 typeof value === 'string' && value.length > 50 ? 
-                                 value.substring(0, 50) + '...' : value;
+            const displayValue = value === null ? '<em>NULL</em>' :
+                typeof value === 'string' && value.length > 50 ?
+                    value.substring(0, 50) + '...' : value;
             html += `<td>${displayValue}</td>`;
         });
         html += '</tr>';
     });
 
     html += '</tbody></table></div>';
-    
+
     detailsDiv.innerHTML = DOMPurify.sanitize(currentContent) + html;
 }
 
 function addToReplication(dbId, schema, tableName) {
     const tableKey = `${dbId}.${schema}.${tableName}`;
-    
+
     if (!appState.selectedTables.find(t => t.key === tableKey)) {
         appState.selectedTables.push({
             key: tableKey,
@@ -407,7 +400,7 @@ function addToReplication(dbId, schema, tableName) {
             schema: schema,
             tableName: tableName
         });
-        
+
         updateSelectedTablesDisplay();
         showAlert('success', 'Tabla agregada', `${schema}.${tableName} agregada para replicación`);
     } else {
@@ -423,9 +416,9 @@ function removeFromReplication(tableKey) {
 function updateSelectedTablesDisplay() {
     const selectedDiv = document.getElementById('selected-tables');
     const generateBtn = document.getElementById('generate-code-btn');
-    
+
     if (appState.selectedTables.length === 0) {
-        selectedDiv.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<p class="text-muted">No hay tablas seleccionadas</p>';
+        selectedDiv.innerHTML = DOMPurify.sanitize('<p class="text-muted">No hay tablas seleccionadas</p>');
         generateBtn.disabled = true;
         return;
     }
@@ -443,14 +436,14 @@ function updateSelectedTablesDisplay() {
                  </div>`;
     });
     html += '</div>';
-    
+
     selectedDiv.innerHTML = DOMPurify.sanitize(html);
     generateBtn.disabled = false;
 }
 
 function filterTables(searchTerm) {
     const tableItems = document.querySelectorAll('.table-item');
-    
+
     tableItems.forEach(item => {
         const tableName = item.textContent.toLowerCase();
         if (tableName.includes(searchTerm.toLowerCase())) {
@@ -470,10 +463,10 @@ async function generateReplicationCode() {
     try {
         // Generar código de replicación completo: Base 1 → Base 2
         const code = await generateEntitiesAndDbContext();
-        
+
         // Mostrar el código generado en un modal o nueva ventana
         showGeneratedCode(code);
-        
+
     } catch (error) {
         showAlert('danger', 'Error al generar código de replicación', `Error: ${error.message}`);
     }
@@ -490,7 +483,7 @@ async function generateEntitiesAndDbContext() {
     // Generar entidades para cada tabla seleccionada
     for (const table of appState.selectedTables) {
         const connectionData = getConnectionData(table.dbId);
-        
+
         const structureResponse = await fetch(`${API_BASE}/get-table-structure`, {
             method: 'POST',
             headers: {
@@ -504,7 +497,7 @@ async function generateEntitiesAndDbContext() {
         });
 
         const structureResult = await structureResponse.json();
-        
+
         if (structureResult.success) {
             const entityCode = generateEntityClass(table.tableName, structureResult.columns);
             code.entities.push({
@@ -516,10 +509,10 @@ async function generateEntitiesAndDbContext() {
 
     // Generar DbContext
     code.dbContext = generateDbContextClass();
-    
+
     // Generar configuración de appsettings
     code.appsettings = generateAppSettingsConfig();
-    
+
     // Generar servicio de replicación
     code.replicationService = generateReplicationService();
 
@@ -528,7 +521,7 @@ async function generateEntitiesAndDbContext() {
 
 function generateEntityClass(tableName, columns) {
     const className = toPascalCase(tableName);
-    
+
     let code = `using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -541,32 +534,32 @@ namespace OperationWeb.API.Models
     columns.forEach(column => {
         const propertyName = toPascalCase(column.name);
         const csharpType = mapSqlTypeToCSharp(column.dataType, column.isNullable);
-        
+
         code += `\n        `;
-        
+
         if (column.isPrimaryKey) {
             code += `[Key]\n        `;
         }
-        
+
         if (column.name !== propertyName) {
             code += `[Column("${column.name}")]\n        `;
         }
-        
+
         if (column.maxLength && (column.dataType === 'varchar' || column.dataType === 'nvarchar')) {
             code += `[MaxLength(${column.maxLength})]\n        `;
         }
-        
+
         code += `public ${csharpType} ${propertyName} { get; set; }`;
     });
 
     code += `\n    }\n}`;
-    
+
     return code;
 }
 
 function generateDbContextClass() {
     const entityNames = appState.selectedTables.map(t => toPascalCase(t.tableName));
-    
+
     let code = `using Microsoft.EntityFrameworkCore;
 using OperationWeb.API.Models;
 
@@ -600,7 +593,7 @@ namespace OperationWeb.API.Data
 function generateAppSettingsConfig() {
     const db1Connection = getConnectionData('db1');
     const db2Connection = getConnectionData('db2');
-    
+
     return `{
   "ConnectionStrings": {
     "DefaultConnection": "Server=(localdb)\\\\mssqllocaldb;Database=OperationWebDb;Trusted_Connection=true;MultipleActiveResultSets=true",
@@ -612,7 +605,7 @@ function generateAppSettingsConfig() {
 
 function generateReplicationService() {
     const tableNames = appState.selectedTables.map(t => t.tableName);
-    
+
     return `using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -710,11 +703,11 @@ function mapSqlTypeToCSharp(sqlType, isNullable) {
     };
 
     let csharpType = typeMap[sqlType.toLowerCase()] || 'object';
-    
+
     if (isNullable && csharpType !== 'string' && csharpType !== 'byte[]') {
         csharpType += '?';
     }
-    
+
     return csharpType;
 }
 
@@ -726,7 +719,7 @@ function showGeneratedCode(code) {
     // Crear modal para mostrar el código generado
     const modal = document.createElement('div');
     modal.className = 'modal fade';
-    modal.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
+    modal.innerHTML = DOMPurify.sanitize(`
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
@@ -777,12 +770,12 @@ function showGeneratedCode(code) {
                 </div>
             </div>
         </div>
-    `;
-    
+    `);
+
     document.body.appendChild(modal);
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
-    
+
     // Limpiar modal cuando se cierre
     modal.addEventListener('hidden.bs.modal', () => {
         document.body.removeChild(modal);
@@ -791,7 +784,7 @@ function showGeneratedCode(code) {
 
 function generateEntitiesTabContent(entities) {
     let content = '<div class="accordion" id="entities-accordion">';
-    
+
     entities.forEach((entity, index) => {
         content += `
             <div class="accordion-item">
@@ -808,7 +801,7 @@ function generateEntitiesTabContent(entities) {
             </div>
         `;
     });
-    
+
     content += '</div>';
     return content;
 }
@@ -821,9 +814,9 @@ function showAlert(type, title, message) {
         <strong>${title}</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
+
     document.body.appendChild(alertDiv);
-    
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
         if (alertDiv.parentNode) {
@@ -842,24 +835,24 @@ function downloadCode() {
     try {
         // Generar el código
         const code = generateReplicationCode();
-        
+
         // Crear un archivo ZIP con todos los archivos
         const zip = new JSZip();
-        
+
         // Agregar entidades
         code.entities.forEach(entity => {
             zip.file(`Entities/${entity.name}.cs`, entity.code);
         });
-        
+
         // Agregar DbContext
         zip.file('Data/ReplicationDbContext.cs', code.dbContext);
-        
+
         // Agregar appsettings
         zip.file('appsettings.json', code.appsettings);
-        
+
         // Agregar servicio de replicación
         zip.file('Services/ReplicationService.cs', code.replicationService);
-        
+
         // Agregar archivo README con instrucciones
         const readme = `# Código de Replicación Generado
 
@@ -881,21 +874,21 @@ ${appState.selectedTables.map(table => `- ${table.name}`).join('\n')}
 
 Generado el: ${new Date().toLocaleString()}
 `;
-        
+
         zip.file('README.md', readme);
-        
+
         // Generar y descargar el ZIP
-        zip.generateAsync({type: "blob"}).then(function(content) {
+        zip.generateAsync({ type: "blob" }).then(function (content) {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
-            link.download = `replication-code-${new Date().toISOString().slice(0,10)}.zip`;
+            link.download = `replication-code-${new Date().toISOString().slice(0, 10)}.zip`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             showAlert('success', 'Éxito', 'Código descargado correctamente como archivo ZIP.');
         });
-        
+
     } catch (error) {
         console.error('Error al generar código:', error);
         showAlert('danger', 'Error', 'Error al generar el código para descarga.');

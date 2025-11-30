@@ -95,7 +95,8 @@ namespace OperationWeb.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al asignar personal {PersonalDNI} a cuadrilla {CuadrillaId}", personalDNI, cuadrillaId);
+                var safeDNI = personalDNI.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                _logger.LogError(ex, "Error al asignar personal {PersonalDNI} a cuadrilla {CuadrillaId}", safeDNI, cuadrillaId);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
@@ -116,7 +117,8 @@ namespace OperationWeb.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al desasignar personal {PersonalDNI} de cuadrilla {CuadrillaId}", personalDNI, cuadrillaId);
+                var safeDNI = personalDNI.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                _logger.LogError(ex, "Error al desasignar personal {PersonalDNI} de cuadrilla {CuadrillaId}", safeDNI, cuadrillaId);
                 return StatusCode(500, "Error interno del servidor");
             }
         }
