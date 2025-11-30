@@ -30,8 +30,9 @@ def test():
             out['connected'] = True
             return out
     except Exception as e:
+        print(f"ERROR in db_tools.test: {e}")
         out['connected'] = False
-        out['error'] = str(e)
+        out['error'] = "Error interno de conexión"
         return out
 
 def tables():
@@ -42,7 +43,8 @@ def tables():
             rows = cur.fetchall()
             return {'success': True, 'tables': [{'schema': r[0], 'name': r[1]} for r in rows]}
     except Exception as e:
-        return {'success': False, 'error': str(e)}
+        print(f"ERROR in db_tools.tables: {e}")
+        return {'success': False, 'error': "Error interno al listar tablas"}
 
 def _exec_sql(cur, sql):
     parts = [p for p in sql.split('\n')]
@@ -78,7 +80,8 @@ def deploy_sql(sql_dir):
                     errors.append({'file': f.name, 'error': str(e)})
         return {'success': True, 'executed': executed, 'errors': errors, 'results': results}
     except Exception as e:
-        return {'success': False, 'error': str(e)}
+        print(f"ERROR in db_tools.deploy_sql: {e}")
+        return {'success': False, 'error': "Error interno al desplegar SQL"}
 
 def load_staging(res, archivo, hoja):
     df = res.get('normalizado')
@@ -141,7 +144,8 @@ def load_staging(res, archivo, hoja):
             inserted = len(data_to_insert)
             
     except Exception as e:
-        raise Exception(f"Error cargando staging: {str(e)}")
+        print(f"ERROR in db_tools.load_staging: {e}")
+        raise Exception("Error interno al cargar staging")
         
     return {'inserted': inserted, 'cols_inserted': cols_to_insert}
 
