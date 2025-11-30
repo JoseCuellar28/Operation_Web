@@ -228,7 +228,7 @@ function displayTables(dbId, tables) {
     const tablesList = document.getElementById(`${dbId}-tables-list`);
     
     if (tables.length === 0) {
-        tablesList.innerHTML = '<p class="text-muted">No se encontraron tablas</p>';
+        tablesList.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<p class="text-muted">No se encontraron tablas</p>';
         return;
     }
 
@@ -257,7 +257,7 @@ function displayTables(dbId, tables) {
         html += '</div>';
     });
 
-    tablesList.innerHTML = html;
+    tablesList.innerHTML = DOMPurify.sanitize(html);
 }
 
 async function selectTable(dbId, schema, tableName) {
@@ -360,7 +360,7 @@ function displayTableDetails(dbId, schema, tableName, columns) {
 
     html += `</tbody></table></div>`;
     
-    detailsDiv.innerHTML = html;
+    detailsDiv.innerHTML = DOMPurify.sanitize(html);
 }
 
 function displaySampleData(data) {
@@ -394,7 +394,7 @@ function displaySampleData(data) {
 
     html += '</tbody></table></div>';
     
-    detailsDiv.innerHTML = currentContent + html;
+    detailsDiv.innerHTML = DOMPurify.sanitize(currentContent) + html;
 }
 
 function addToReplication(dbId, schema, tableName) {
@@ -425,7 +425,7 @@ function updateSelectedTablesDisplay() {
     const generateBtn = document.getElementById('generate-code-btn');
     
     if (appState.selectedTables.length === 0) {
-        selectedDiv.innerHTML = '<p class="text-muted">No hay tablas seleccionadas</p>';
+        selectedDiv.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<p class="text-muted">No hay tablas seleccionadas</p>';
         generateBtn.disabled = true;
         return;
     }
@@ -444,7 +444,7 @@ function updateSelectedTablesDisplay() {
     });
     html += '</div>';
     
-    selectedDiv.innerHTML = html;
+    selectedDiv.innerHTML = DOMPurify.sanitize(html);
     generateBtn.disabled = false;
 }
 
@@ -726,7 +726,7 @@ function showGeneratedCode(code) {
     // Crear modal para mostrar el código generado
     const modal = document.createElement('div');
     modal.className = 'modal fade';
-    modal.innerHTML = `
+    modal.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
@@ -817,7 +817,7 @@ function showAlert(type, title, message) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-    alertDiv.innerHTML = `
+    alertDiv.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
         <strong>${title}</strong> ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;

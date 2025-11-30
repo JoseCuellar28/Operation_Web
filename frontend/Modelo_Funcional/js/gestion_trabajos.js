@@ -71,7 +71,7 @@ class GestionTrabajos {
         columnas.forEach(idColumna => {
             const columna = document.getElementById(idColumna);
             if (columna) {
-                columna.innerHTML = '';
+                columna.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
             }
         });
     }
@@ -89,7 +89,7 @@ class GestionTrabajos {
         tarjeta.setAttribute('data-trabajo-id', trabajo.id);
         
         // Contenido de la tarjeta
-        tarjeta.innerHTML = `
+        tarjeta.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
             <div class="card-body p-3">
                 <h6 class="card-title mb-2">${trabajo.titulo}</h6>
                 <p class="card-text small text-muted mb-2">${trabajo.descripcion}</p>
@@ -147,7 +147,7 @@ class GestionTrabajos {
         columnas.forEach(idColumna => {
             const columna = document.getElementById(idColumna);
             if (columna) {
-                columna.innerHTML = `
+                columna.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         ${mensaje}

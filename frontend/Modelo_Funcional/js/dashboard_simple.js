@@ -277,7 +277,7 @@ class DashboardManager {
                 content = this.getWelcomeContent();
         }
 
-        mainContent.innerHTML = content;
+        mainContent.innerHTML = DOMPurify.sanitize(content);
         console.log('[CONTENT] Contenido cargado para:', pageName);
 
         // Cargar datos específicos según la página
@@ -3649,7 +3649,7 @@ function generarNumerosPagina(totalPaginas) {
     const paginationNumbers = document.getElementById('pagination-numbers');
     if (!paginationNumbers) return;
 
-    paginationNumbers.innerHTML = '';
+    paginationNumbers.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
 
     if (totalPaginas <= 1) return;
 
@@ -3751,10 +3751,10 @@ function mostrarEmpleadosEnTabla(empleados) {
     }
 
     // Limpiar tabla
-    tbody.innerHTML = '';
+    tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
 
     if (!empleados || empleados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6b7280;">No hay colaboradores registrados</td></tr>';
+        tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6b7280;">No hay colaboradores registrados</td></tr>';
         return;
     }
 
@@ -3792,7 +3792,7 @@ function mostrarEmpleadosEnTabla(empleados) {
             </button>
         ` : '';
 
-        fila.innerHTML = `
+        fila.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
             <td>${empleado.dni || ''}</td>
             <td>${empleado.inspector || ''}</td>
             <td>${empleado.telefono || ''}</td>
@@ -3848,7 +3848,7 @@ function actualizarContadorColaboradores() {
 function mostrarMensajeError(mensaje) {
     const tbody = document.getElementById('colaboradores-tbody');
     if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: #dc2626; background-color: #fef2f2;">${mensaje}</td></tr>`;
+        tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`<tr><td colspan="8" style="text-align: center; padding: 20px; color: #dc2626; background-color: #fef2f2;">${mensaje}</td></tr>`;
     }
 }
 
@@ -3938,7 +3938,7 @@ function mostrarModalSeleccionHoja(file, sheets) {
         console.log('[SHEET_SELECTION] Modal Rect:', modal.getBoundingClientRect());
     }, 100);
 
-    list.innerHTML = '';
+    list.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
     sheets.forEach(sheet => {
         const btn = document.createElement('button');
         btn.className = 'btn btn-outline-primary'; // Asumiendo bootstrap o similar, sino estilo inline
@@ -4025,9 +4025,9 @@ function abrirModalPreview(prev) {
         document.body.appendChild(overlay);
     }
 
-    sum.innerHTML = '';
-    thead.innerHTML = '';
-    tbody.innerHTML = '';
+    sum.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
+    thead.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
+    tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
     const chips = [
         `Filas: ${prev.rows ? prev.rows.length : 0}`,
         `Campos: ${prev.columns ? prev.columns.length : 0}`,
@@ -6317,7 +6317,7 @@ function renderDataTable() {
         </table >
     `;
 
-    container.innerHTML = tableHTML;
+    container.innerHTML = DOMPurify.sanitize(tableHTML);
 
     // Actualizar contadores
     updateDataCounters(columnsToShow);
@@ -6343,15 +6343,15 @@ function updateDataCounters(columnsToShow = null) {
         const columnCount = columnsToShow ? columnsToShow.length : (gestionHeaders ? gestionHeaders.length : 0);
         const rowCount = gestionData ? gestionData.length : 0;
 
-        columnCountElement.innerHTML = `< i class="fas fa-columns" ></i > Columnas: ${columnCount} `;
-        rowCountElement.innerHTML = `< i class="fas fa-list" ></i > Filas: ${rowCount} `;
+        columnCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-columns" ></i > Columnas: ${columnCount} `;
+        rowCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-list" ></i > Filas: ${rowCount} `;
     }
 }
 
 // Función para mostrar estado vacío
 function showEmptyState() {
     const container = document.getElementById('gestionTableContainer');
-    container.innerHTML = `
+    container.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
     < div class="gestion-empty-state" >
             <div class="gestion-empty-icon">
                 <i class="fas fa-file-excel"></i>
@@ -6366,8 +6366,8 @@ function showEmptyState() {
     const rowCountElement = document.getElementById('rowCount');
 
     if (columnCountElement && rowCountElement) {
-        columnCountElement.innerHTML = `< i class="fas fa-columns" ></i > Columnas: 0`;
-        rowCountElement.innerHTML = `< i class="fas fa-list" ></i > Filas: 0`;
+        columnCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-columns" ></i > Columnas: 0`;
+        rowCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-list" ></i > Filas: 0`;
     }
 
     // Ocultar mensaje de scroll
@@ -6380,7 +6380,7 @@ function showEmptyState() {
 // Función para mostrar estado de carga
 function showLoadingState() {
     const container = document.getElementById('gestionTableContainer');
-    container.innerHTML = `
+    container.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
     < div class="gestion-loading" >
         <div class="gestion-spinner"></div>
             Procesando archivo...
@@ -6771,7 +6771,7 @@ function populateSheetSelector() {
 
     if (sheetSelect && sheetCount) {
         // Limpiar opciones existentes
-        sheetSelect.innerHTML = '<option value="">Selecciona una hoja...</option>';
+        sheetSelect.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<option value="">Selecciona una hoja...</option>';
 
         // Agregar opciones para cada hoja
         availableSheets.forEach(sheet => {
@@ -6782,7 +6782,7 @@ function populateSheetSelector() {
         });
 
         // Actualizar contador
-        sheetCount.innerHTML = `< i class="fas fa-file-alt" ></i > Hojas disponibles: ${availableSheets.length} `;
+        sheetCount.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-file-alt" ></i > Hojas disponibles: ${availableSheets.length} `;
     }
 }
 
@@ -7104,7 +7104,7 @@ function crearBotonMapa() {
     const botonMapa = document.createElement('button');
     botonMapa.id = 'btn-ver-mapa';
     botonMapa.className = 'gestion-btn gestion-btn-success';
-    botonMapa.innerHTML = '<i class="fas fa-map-marked-alt"></i> Ver en Mapa';
+    botonMapa.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<i class="fas fa-map-marked-alt"></i> Ver en Mapa';
     botonMapa.onclick = abrirModalMapa;
 
     contenedorBotones.appendChild(botonMapa);
@@ -7153,7 +7153,7 @@ function crearSelectorColumnasUbicacion() {
     if (!selector) return;
 
     // Limpiar opciones existentes
-    selector.innerHTML = '<option value="">-- Selecciona una columna --</option>';
+    selector.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<option value="">-- Selecciona una columna --</option>';
 
     // Agregar todas las columnas disponibles
     gestionHeaders.forEach(columna => {
@@ -7605,7 +7605,7 @@ function toggleModoDibujo() {
     if (modoDibujoActivo) {
         // Desactivar modo de dibujo
         desactivarModoDibujo();
-        botonModo.innerHTML = '<i class="fas fa-pencil-alt"></i> Modo Dibujo';
+        botonModo.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<i class="fas fa-pencil-alt"></i> Modo Dibujo';
         botonModo.classList.remove('btn-mapa-primary');
         botonModo.classList.add('btn-mapa-secondary');
         botonLimpiar.style.display = 'none';
@@ -7613,7 +7613,7 @@ function toggleModoDibujo() {
     } else {
         // Activar modo de dibujo
         activarModoDibujo();
-        botonModo.innerHTML = '<i class="fas fa-stop"></i> Detener Dibujo';
+        botonModo.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<i class="fas fa-stop"></i> Detener Dibujo';
         botonModo.classList.remove('btn-mapa-secondary');
         botonModo.classList.add('btn-mapa-primary');
         botonLimpiar.style.display = 'inline-block';
@@ -8177,7 +8177,7 @@ function crearSelectorColumnasUbicacionMejorado() {
     }
 
     // Limpiar opciones existentes
-    selector.innerHTML = '<option value="">-- Selecciona una columna --</option>';
+    selector.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<option value="">-- Selecciona una columna --</option>';
     console.log('🧹 Selector limpiado');
 
     // Buscar columnas que puedan contener información geográfica
@@ -8985,7 +8985,7 @@ function mostrarModalCentrado(titulo, contenido) {
     overlay.className = 'modal-overlay';
 
     // Crear contenido del modal
-    overlay.innerHTML = `
+    overlay.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
         <div class="modal-content">
             <div class="modal-header">${titulo}</div>
             <div class="modal-body">${contenido}</div>
