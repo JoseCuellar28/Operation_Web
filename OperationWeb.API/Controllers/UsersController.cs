@@ -28,8 +28,8 @@ namespace OperationWeb.API.Controllers
 
             try
             {
-                var user = await _userService.CreateUserAsync(req.DNI, req.Role);
-                return Ok(new { id = user.Id, dni = user.DNI, role = user.Role });
+                var result = await _userService.CreateUserAsync(req.DNI, req.Role);
+                return Ok(new { id = result.User.Id, dni = result.User.DNI, role = result.User.Role, tempPassword = result.PlainPassword });
             }
             catch (InvalidOperationException ex)
             {

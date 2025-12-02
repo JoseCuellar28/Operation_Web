@@ -118,7 +118,8 @@
 
                     <!-- Link olvidé contraseña -->
                     <div class="text-end mb-4">
-                        <a href="#" class="forgot-password">¿Olvidaste la contraseña?</a>
+                        <a href="#" class="forgot-password" data-bs-toggle="modal"
+                            data-bs-target="#forgotPasswordModal">¿Olvidaste la contraseña?</a>
                     </div>
 
                     <!-- Botón de ingreso -->
@@ -162,6 +163,41 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Olvidé Contraseña -->
+        <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-unlock-alt me-2"></i>Recuperar Contraseña</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted mb-4">Ingresa tu DNI o correo electrónico y te enviaremos las instrucciones
+                            para restablecer tu contraseña.</p>
+
+                        <div id="forgotPasswordMessage" class="alert" style="display: none;"></div>
+
+                        <form id="forgotPasswordForm">
+                            <div class="mb-3">
+                                <label for="forgotDniEmail" class="form-label">DNI o Correo Electrónico</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" id="forgotDniEmail" required
+                                        placeholder="Ej: 41007510 o usuario@email.com">
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary" id="btnSendRecovery">
+                                    <i class="fas fa-paper-plane me-2"></i>Enviar Instrucciones
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -200,6 +236,58 @@
         function refreshCaptcha() {
             fetch((localStorage.getItem('api_net') || 'http://localhost:5132') + '/api/auth/captcha').then(r => r.json()).then(d => { setCaptchaImage(d); });
         }
+
+        // Forgot Password Logic
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const input = document.getElementById('forgotDniEmail');
+            const btn = document.getElementById('btnSendRecovery');
+            const msgDiv = document.getElementById('forgotPasswordMessage');
+            const apiBase = localStorage.getItem('api_net') || 'http://localhost:5132';
+
+            if (!input.value) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+            msgDiv.style.display = 'none';
+            msgDiv.className = 'alert';
+
+            try {
+                const response = await fetch(`${apiBase}/api/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ dniOrEmail: input.value })
+                });
+
+                const data = await response.json();
+
+                // Always show success message for security (user enumeration prevention)
+                msgDiv.className = 'alert alert-success';
+                msgDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + (data.message || 'Si los datos son correctos, recibirás un correo.');
+                msgDiv.style.display = 'block';
+                input.value = '';
+
+                // Close modal after 3 seconds
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                    if (modal) modal.hide();
+                    msgDiv.style.display = 'none';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Instrucciones';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                msgDiv.className = 'alert alert-danger';
+                msgDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Error de conexión. Intente nuevamente.';
+                msgDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar Instrucciones';
+            }
+        });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

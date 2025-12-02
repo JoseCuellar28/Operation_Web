@@ -81,12 +81,12 @@ namespace OperationWeb.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest("Error al procesar la solicitud.");
+                return BadRequest($"Error: {ex.Message}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear personal");
-                return StatusCode(500, "Error interno del servidor");
+                return BadRequest($"Error: {ex.Message} | Inner: {ex.InnerException?.Message}");
             }
         }
 
@@ -129,6 +129,29 @@ namespace OperationWeb.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al eliminar personal");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
+        [HttpPost("history")]
+        public async Task<ActionResult<HistorialCargaPersonal>> RegisterLoadHistory([FromBody] HistorialCargaPersonal history)
+        {
+            try
+            {
+                if (history == null)
+                    return BadRequest("Datos de historial inválidos");
+
+                history.FechaCarga = DateTime.UtcNow;
+                // Ensure user is set if not provided (though frontend should send it)
+                if (string.IsNullOrEmpty(history.Usuario))
+                    history.Usuario = "Sistema";
+
+                var result = await _personalService.RegisterLoadHistoryAsync(history);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al registrar historial de carga");
                 return StatusCode(500, "Error interno del servidor");
             }
         }

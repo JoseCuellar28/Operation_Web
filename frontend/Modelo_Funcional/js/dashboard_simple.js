@@ -277,7 +277,7 @@ class DashboardManager {
                 content = this.getWelcomeContent();
         }
 
-        mainContent.innerHTML = DOMPurify.sanitize(content);
+        mainContent.innerHTML = DOMPurify.sanitize(content, { ADD_TAGS: ['style'], ADD_ATTR: ['onclick', 'onchange', 'onsubmit', 'class', 'id', 'style', 'target', 'placeholder', 'type', 'value', 'name'] });
         console.log('[CONTENT] Contenido cargado para:', pageName);
 
         // Cargar datos específicos según la página
@@ -2858,97 +2858,12 @@ class DashboardManager {
     }
 
     getConfiguracionSistemaContent() {
-        return `
-            <style>
-                .config-container {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    background: white;
-                    padding: 30px;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-                    max-width: 800px;
-                    margin: 0 auto;
-                }
-                .config-header {
-                    margin-bottom: 30px;
-                    border-bottom: 1px solid #eee;
-                    padding-bottom: 15px;
-                }
-                .config-header h2 {
-                    color: #1e3a8a;
-                    margin: 0;
-                    font-size: 24px;
-                }
-                .form-group {
-                    margin-bottom: 20px;
-                }
-                .form-group label {
-                    display: block;
-                    margin-bottom: 8px;
-                    font-weight: 500;
-                    color: #374151;
-                }
-                .form-control {
-                    width: 100%;
-                    padding: 10px 12px;
-                    border: 1px solid #d1d5db;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    transition: border-color 0.2s;
-                }
-                .form-control:focus {
-                    border-color: #2563eb;
-                    outline: none;
-                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-                }
-                .btn-save-config {
-                    background-color: #1e3a8a;
-                    color: white;
-                    border: none;
-                    padding: 12px 24px;
-                    border-radius: 6px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: background-color 0.2s;
-                }
-                .btn-save-config:hover {
-                    background-color: #1e40af;
-                }
-            </style>
-            <div class="config-container">
-                <div class="config-header">
-                    <h2>Configuración de Correo (SMTP)</h2>
-                    <p class="text-muted">Configure los parámetros para el envío de correos electrónicos del sistema.</p>
-                </div>
-                <form id="form-configuracion-smtp" onsubmit="event.preventDefault(); guardarConfiguracion();">
-                    <div class="form-group">
-                        <label>Servidor SMTP (Host)</label>
-                        <input type="text" id="smtp-host" class="form-control" placeholder="smtp.gmail.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Puerto SMTP</label>
-                        <input type="number" id="smtp-port" class="form-control" placeholder="587">
-                    </div>
-                    <div class="form-group">
-                        <label>Usuario SMTP</label>
-                        <input type="text" id="smtp-user" class="form-control" placeholder="tu-email@gmail.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Contraseña SMTP</label>
-                        <input type="password" id="smtp-password" class="form-control" placeholder="********">
-                        <small class="text-muted">Dejar en blanco para no cambiar</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Remitente (From)</label>
-                        <input type="email" id="smtp-from" class="form-control" placeholder="no-reply@tu-dominio.com">
-                    </div>
-                    <div class="text-end mt-4">
-                        <button type="button" class="btn-secondary" onclick="probarEmail()" style="margin-right: 10px; padding: 12px 24px; border-radius: 6px; border: 1px solid #ccc; background: #f3f4f6;">Probar Conexión</button>
-                        <button type="submit" class="btn-save-config">Guardar Configuración</button>
-                    </div>
-                </form>
-            </div>
-        `;
+        if (typeof UIComponents !== 'undefined' && UIComponents.getConfiguracionContent) {
+            return UIComponents.getConfiguracionContent();
+        } else {
+            console.error('UIComponents not loaded');
+            return '<div class="p-4 text-red-500">Error: UIComponents no cargado.</div>';
+        }
     }
 
     getWelcomeContent() {
@@ -3649,7 +3564,7 @@ function generarNumerosPagina(totalPaginas) {
     const paginationNumbers = document.getElementById('pagination-numbers');
     if (!paginationNumbers) return;
 
-    paginationNumbers.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
+    paginationNumbers.innerHTML = DOMPurify.sanitize('');
 
     if (totalPaginas <= 1) return;
 
@@ -3751,78 +3666,37 @@ function mostrarEmpleadosEnTabla(empleados) {
     }
 
     // Limpiar tabla
-    tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
+    tbody.innerHTML = DOMPurify.sanitize('');
 
     if (!empleados || empleados.length === 0) {
-        tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6b7280;">No hay colaboradores registrados</td></tr>';
+        tbody.innerHTML = DOMPurify.sanitize('<tr><td colspan="9" style="text-align: center; padding: 20px; color: #6b7280;">No hay colaboradores registrados</td></tr>', { ADD_ATTR: ['style', 'colspan'] });
         return;
     }
 
     // Agregar filas de empleados
     empleados.forEach(empleado => {
-        const fila = document.createElement('tr');
-
-        // Lógica de estado
-        let estadoClass = 'neutro';
-        let estadoText = 'Sin Estado';
-        const estadoLower = (empleado.estado || '').toLowerCase();
-
-        if (estadoLower === 'cesado') {
-            estadoClass = 'inactivo'; // Rojo
-            estadoText = 'Cesado';
-        } else if (empleado.hasUser && !empleado.userIsActive) {
-            estadoClass = 'pendiente'; // Amarillo (usamos pendiente como warning)
-            estadoText = 'Usuario Inactivo';
-        } else if (estadoLower === 'activo' || (empleado.hasUser && empleado.userIsActive)) {
-            estadoClass = 'activo'; // Verde
-            estadoText = 'Activo';
+        // Use UIComponents to generate the row HTML if available
+        if (typeof UIComponents !== 'undefined' && UIComponents.getColaboradorRow) {
+            const rowHtml = UIComponents.getColaboradorRow(empleado);
+            // We need to create a temporary container to turn the string into a node
+            // or just append the HTML to the tbody string buffer if we were building a string.
+            // Since we are appending children, we can do:
+            const tempDiv = document.createElement('tbody');
+            tempDiv.innerHTML = DOMPurify.sanitize(rowHtml, {
+                ADD_TAGS: ['tr', 'td', 'span', 'button', 'i', 'div'],
+                ADD_ATTR: ['class', 'id', 'style', 'onclick', 'title', 'data-state']
+            });
+            const fila = tempDiv.firstElementChild;
+            if (fila) {
+                tbody.appendChild(fila);
+            }
+        } else {
+            // Fallback to old logic if UIComponents is missing (should not happen)
+            const fila = document.createElement('tr');
+            // ... (old logic omitted for brevity, assuming UIComponents is loaded)
+            fila.innerHTML = '<td colspan="9">Error: UIComponents no cargado</td>';
+            tbody.appendChild(fila);
         }
-
-        // Botón Toggle User
-        const toggleBtn = empleado.hasUser ? `
-            <button class="colaboradores-btn-toggle ${empleado.userIsActive ? 'active' : ''}" onclick="toggleUsuario('${empleado.dni}')" title="${empleado.userIsActive ? 'Desactivar Usuario' : 'Activar Usuario'}">
-                <i class="fas fa-power-off colaboradores-icon" style="color: ${empleado.userIsActive ? '#10b981' : '#ef4444'};"></i>
-            </button>
-        ` : '';
-
-        // Botón Cesar (solo si no está cesado)
-        const cesarBtn = estadoLower !== 'cesado' ? `
-            <button class="colaboradores-btn-cesar" onclick="cesarColaborador('${empleado.dni}')" title="Cesar Colaborador">
-                <i class="fas fa-user-times colaboradores-icon" style="color: #ef4444;"></i>
-            </button>
-        ` : '';
-
-        fila.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
-            <td>${empleado.dni || ''}</td>
-            <td>${empleado.inspector || ''}</td>
-            <td>${empleado.telefono || ''}</td>
-            <td>${empleado.distrito || ''}</td>
-            <td>${empleado.tipo || ''}</td>
-            <td>
-                <span class="estado-badge ${estadoClass}">
-                    ${estadoText}
-                </span>
-            </td>
-            <td>${empleado.fechaInicio ? new Date(empleado.fechaInicio).toLocaleDateString() : ''}</td>
-            <td>${empleado.fechaCese ? new Date(empleado.fechaCese).toLocaleDateString() : ''}</td>
-            <td>${empleado.fechaCreacion ? new Date(empleado.fechaCreacion).toLocaleDateString() : ''}</td>
-            <td>
-                <div class="colaboradores-acciones">
-                    <button class="colaboradores-btn-ver" onclick="verEmpleado('${empleado.dni || ''}')" title="Ver colaborador">
-                        <i class="fas fa-eye colaboradores-icon"></i>
-                    </button>
-                    <button class="colaboradores-btn-editar" onclick="editarEmpleado('${empleado.dni || ''}')" title="Editar colaborador">
-                        <i class="fas fa-edit colaboradores-icon"></i>
-                    </button>
-                    ${toggleBtn}
-                    ${cesarBtn}
-                    <button class="colaboradores-btn-eliminar" onclick="eliminarEmpleado('${empleado.dni || ''}')" title="Eliminar colaborador">
-                        <i class="fas fa-trash colaboradores-icon"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(fila);
     });
 
     console.log(`[EMPLEADOS] Se mostraron ${empleados.length} empleados en la tabla`);
@@ -3848,7 +3722,7 @@ function actualizarContadorColaboradores() {
 function mostrarMensajeError(mensaje) {
     const tbody = document.getElementById('colaboradores-tbody');
     if (tbody) {
-        tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`<tr><td colspan="8" style="text-align: center; padding: 20px; color: #dc2626; background-color: #fef2f2;">${mensaje}</td></tr>`;
+        tbody.innerHTML = DOMPurify.sanitize(`<tr><td colspan="8" style="text-align: center; padding: 20px; color: #dc2626; background-color: #fef2f2;">${mensaje}</td></tr>`, { ADD_ATTR: ['style', 'colspan'] });
     }
 }
 
@@ -3938,7 +3812,7 @@ function mostrarModalSeleccionHoja(file, sheets) {
         console.log('[SHEET_SELECTION] Modal Rect:', modal.getBoundingClientRect());
     }, 100);
 
-    list.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
+    list.innerHTML = DOMPurify.sanitize('');
     sheets.forEach(sheet => {
         const btn = document.createElement('button');
         btn.className = 'btn btn-outline-primary'; // Asumiendo bootstrap o similar, sino estilo inline
@@ -4025,9 +3899,9 @@ function abrirModalPreview(prev) {
         document.body.appendChild(overlay);
     }
 
-    sum.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
-    thead.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
-    tbody.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('';
+    sum.innerHTML = DOMPurify.sanitize('');
+    thead.innerHTML = DOMPurify.sanitize('');
+    tbody.innerHTML = DOMPurify.sanitize('');
     const chips = [
         `Filas: ${prev.rows ? prev.rows.length : 0}`,
         `Campos: ${prev.columns ? prev.columns.length : 0}`,
@@ -6313,11 +6187,11 @@ function renderDataTable() {
     });
 
     tableHTML += `
-            </tbody >
-        </table >
+            </tbody>
+        </table>
     `;
 
-    container.innerHTML = DOMPurify.sanitize(tableHTML);
+    container.innerHTML = DOMPurify.sanitize(tableHTML, { ADD_ATTR: ['class', 'id', 'style', 'onclick', 'onchange'] });
 
     // Actualizar contadores
     updateDataCounters(columnsToShow);
@@ -6343,31 +6217,31 @@ function updateDataCounters(columnsToShow = null) {
         const columnCount = columnsToShow ? columnsToShow.length : (gestionHeaders ? gestionHeaders.length : 0);
         const rowCount = gestionData ? gestionData.length : 0;
 
-        columnCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-columns" ></i > Columnas: ${columnCount} `;
-        rowCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-list" ></i > Filas: ${rowCount} `;
+        columnCountElement.innerHTML = DOMPurify.sanitize(`<i class="fas fa-columns"></i> Columnas: ${columnCount}`, { ADD_ATTR: ['class'] });
+        rowCountElement.innerHTML = DOMPurify.sanitize(`<i class="fas fa-list"></i> Filas: ${rowCount}`, { ADD_ATTR: ['class'] });
     }
 }
 
 // Función para mostrar estado vacío
 function showEmptyState() {
     const container = document.getElementById('gestionTableContainer');
-    container.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
-    < div class="gestion-empty-state" >
+    container.innerHTML = DOMPurify.sanitize(`
+    <div class="gestion-empty-state">
             <div class="gestion-empty-icon">
                 <i class="fas fa-file-excel"></i>
             </div>
             <div class="gestion-empty-text">No hay datos cargados</div>
             <div class="gestion-empty-subtext">Selecciona un archivo Excel para comenzar</div>
-        </div >
-    `;
+        </div>
+    `, { ADD_ATTR: ['class'] });
 
     // Resetear contadores
     const columnCountElement = document.getElementById('columnCount');
     const rowCountElement = document.getElementById('rowCount');
 
     if (columnCountElement && rowCountElement) {
-        columnCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-columns" ></i > Columnas: 0`;
-        rowCountElement.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-list" ></i > Filas: 0`;
+        columnCountElement.innerHTML = DOMPurify.sanitize(`<i class="fas fa-columns"></i> Columnas: 0`, { ADD_ATTR: ['class'] });
+        rowCountElement.innerHTML = DOMPurify.sanitize(`<i class="fas fa-list"></i> Filas: 0`, { ADD_ATTR: ['class'] });
     }
 
     // Ocultar mensaje de scroll
@@ -6380,12 +6254,12 @@ function showEmptyState() {
 // Función para mostrar estado de carga
 function showLoadingState() {
     const container = document.getElementById('gestionTableContainer');
-    container.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
-    < div class="gestion-loading" >
+    container.innerHTML = DOMPurify.sanitize(`
+    <div class="gestion-loading">
         <div class="gestion-spinner"></div>
             Procesando archivo...
-        </div >
-    `;
+        </div>
+    `, { ADD_ATTR: ['class'] });
 }
 
 // Funciones para mostrar/ocultar mensajes
@@ -6771,7 +6645,7 @@ function populateSheetSelector() {
 
     if (sheetSelect && sheetCount) {
         // Limpiar opciones existentes
-        sheetSelect.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<option value="">Selecciona una hoja...</option>';
+        sheetSelect.innerHTML = DOMPurify.sanitize('<option value="">Selecciona una hoja...</option>');
 
         // Agregar opciones para cada hoja
         availableSheets.forEach(sheet => {
@@ -6782,7 +6656,7 @@ function populateSheetSelector() {
         });
 
         // Actualizar contador
-        sheetCount.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`< i class="fas fa-file-alt" ></i > Hojas disponibles: ${availableSheets.length} `;
+        sheetCount.innerHTML = DOMPurify.sanitize(`<i class="fas fa-file-alt"></i> Hojas disponibles: ${availableSheets.length}`, { ADD_ATTR: ['class'] });
     }
 }
 
@@ -7104,7 +6978,7 @@ function crearBotonMapa() {
     const botonMapa = document.createElement('button');
     botonMapa.id = 'btn-ver-mapa';
     botonMapa.className = 'gestion-btn gestion-btn-success';
-    botonMapa.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<i class="fas fa-map-marked-alt"></i> Ver en Mapa';
+    botonMapa.innerHTML = DOMPurify.sanitize('<i class="fas fa-map-marked-alt"></i> Ver en Mapa', { ADD_ATTR: ['class'] });
     botonMapa.onclick = abrirModalMapa;
 
     contenedorBotones.appendChild(botonMapa);
@@ -7153,7 +7027,7 @@ function crearSelectorColumnasUbicacion() {
     if (!selector) return;
 
     // Limpiar opciones existentes
-    selector.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<option value="">-- Selecciona una columna --</option>';
+    selector.innerHTML = DOMPurify.sanitize('<option value="">-- Selecciona una columna --</option>');
 
     // Agregar todas las columnas disponibles
     gestionHeaders.forEach(columna => {
@@ -7605,7 +7479,7 @@ function toggleModoDibujo() {
     if (modoDibujoActivo) {
         // Desactivar modo de dibujo
         desactivarModoDibujo();
-        botonModo.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<i class="fas fa-pencil-alt"></i> Modo Dibujo';
+        botonModo.innerHTML = DOMPurify.sanitize('<i class="fas fa-pencil-alt"></i> Modo Dibujo', { ADD_ATTR: ['class'] });
         botonModo.classList.remove('btn-mapa-primary');
         botonModo.classList.add('btn-mapa-secondary');
         botonLimpiar.style.display = 'none';
@@ -7613,7 +7487,7 @@ function toggleModoDibujo() {
     } else {
         // Activar modo de dibujo
         activarModoDibujo();
-        botonModo.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<i class="fas fa-stop"></i> Detener Dibujo';
+        botonModo.innerHTML = DOMPurify.sanitize('<i class="fas fa-stop"></i> Detener Dibujo', { ADD_ATTR: ['class'] });
         botonModo.classList.remove('btn-mapa-secondary');
         botonModo.classList.add('btn-mapa-primary');
         botonLimpiar.style.display = 'inline-block';
@@ -8177,7 +8051,7 @@ function crearSelectorColumnasUbicacionMejorado() {
     }
 
     // Limpiar opciones existentes
-    selector.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize('<option value="">-- Selecciona una columna --</option>';
+    selector.innerHTML = DOMPurify.sanitize('<option value="">-- Selecciona una columna --</option>');
     console.log('🧹 Selector limpiado');
 
     // Buscar columnas que puedan contener información geográfica
@@ -8985,13 +8859,13 @@ function mostrarModalCentrado(titulo, contenido) {
     overlay.className = 'modal-overlay';
 
     // Crear contenido del modal
-    overlay.innerHTML = DOMPurify.sanitize(DOMPurify).sanitize(`
+    overlay.innerHTML = DOMPurify.sanitize(`
         <div class="modal-content">
             <div class="modal-header">${titulo}</div>
             <div class="modal-body">${contenido}</div>
             <button class="modal-close-btn" onclick="cerrarModal(this)">✅ Completar y Continuar</button>
         </div>
-    `;
+    `, { ADD_ATTR: ['class', 'onclick'] });
 
     // Agregar al body
     document.body.appendChild(overlay);

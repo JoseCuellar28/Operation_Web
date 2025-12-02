@@ -22,7 +22,7 @@ namespace OperationWeb.DataAccess.Entities
         [StringLength(40)]
         public string? Tipo { get; set; }
 
-        [StringLength(20)]
+        [StringLength(50)]
         public string? Estado { get; set; }
 
         public DateTime? FechaInicio { get; set; }

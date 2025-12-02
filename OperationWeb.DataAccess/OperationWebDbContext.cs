@@ -22,6 +22,7 @@ namespace OperationWeb.DataAccess
         public DbSet<PersonalStaging> PersonalStaging { get; set; }
         public DbSet<HistorialCargaPersonal> HistorialCargasPersonal { get; set; }
         public DbSet<MotivoCese> MotivosCese { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

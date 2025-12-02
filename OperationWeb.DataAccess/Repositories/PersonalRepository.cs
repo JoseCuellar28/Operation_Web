@@ -70,11 +70,18 @@ namespace OperationWeb.DataAccess.Repositories
         {
             var query = from p in _context.Personal
                         join u in _context.Users on p.DNI equals u.DNI into userGroup
-                        from user in userGroup.DefaultIfEmpty()
-                        select new { Personal = p, User = user };
+                        from u in userGroup.DefaultIfEmpty()
+                        select new { Personal = p, User = u };
 
             var result = await query.ToListAsync();
             return result.Select(x => (x.Personal, x.User));
+        }
+
+        public async Task<HistorialCargaPersonal> RegisterLoadHistoryAsync(HistorialCargaPersonal history)
+        {
+            await _context.Set<HistorialCargaPersonal>().AddAsync(history);
+            await _context.SaveChangesAsync();
+            return history;
         }
     }
 }

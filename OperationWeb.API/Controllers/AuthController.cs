@@ -296,5 +296,45 @@ namespace OperationWeb.API.Controllers
                 .ToList();
             return Ok(urs);
         }
+
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest req)
+        {
+            try
+            {
+                var userService = HttpContext.RequestServices.GetRequiredService<OperationWeb.Business.Interfaces.IUserService>();
+                await userService.RequestPasswordResetAsync(req.DniOrEmail);
+                return Ok(new { message = "Si el DNI o correo existe, recibirás un email con instrucciones para restablecer tu contraseña." });
+            }
+            catch (Exception ex)
+            {
+                // Don't reveal if user exists or not for security
+                return Ok(new { message = "Si el DNI o correo existe, recibirás un email con instrucciones para restablecer tu contraseña." });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest req)
+        {
+            try
+            {
+                var userService = HttpContext.RequestServices.GetRequiredService<OperationWeb.Business.Interfaces.IUserService>();
+                await userService.ResetPasswordWithTokenAsync(req.Token, req.NewPassword);
+                return Ok(new { message = "Contraseña restablecida exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error al restablecer la contraseña. Intenta de nuevo." });
+            }
+        }
+
+        public record ForgotPasswordRequest(string DniOrEmail);
+        public record ResetPasswordRequest(string Token, string NewPassword);
     }
 }

@@ -186,7 +186,7 @@ class LoginManager {
                     }
 
                     this.showMessage('¡Login exitoso!', 'success');
-                    setTimeout(() => { window.location.href = 'menu1.html'; }, 500);
+                    setTimeout(() => { window.location.href = 'menu_moderno.html'; }, 500);
                     return;
                 } catch (e) {
                     errorType = 'network';

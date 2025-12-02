@@ -10,6 +10,95 @@
     <!-- Bootstrap CSS -->
     <link href="css/vendor/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+            --radius: 0.5rem;
+        }
+
+        .dark {
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 217.2 91.2% 59.8%;
+            --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 224.3 76.3% 48%;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: {
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
+                        },
+                        secondary: {
+                            foreground: "#0f172a",
+                        },
+                        destructive: {
+                            DEFAULT: "#ef4444",
+                            foreground: "#ffffff",
+                        },
+                        muted: {
+                            DEFAULT: "#f8fafc",
+                            foreground: "#64748b",
+                        },
+                        accent: {
+                            DEFAULT: "#3b82f6", // Electric Blue
+                            foreground: "#ffffff",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "0.5rem",
+                        md: "calc(0.5rem - 2px)",
+                        sm: "calc(0.5rem - 4px)",
+                    },
+                }
+            }
+        }
+    </script>
+
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/vendor/all.min.css">
 </head>
@@ -656,22 +745,23 @@
 
 
         <!-- Leaflet CSS -->
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <!-- Leaflet CSS -->
+        <link rel="stylesheet" href="css/vendor/leaflet.css" />
 
         <!-- Leaflet JavaScript -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-        <!-- Bootstrap JavaScript -->
+        <script src="js/vendor/leaflet.js"></script>
+        <!-- Scripts -->
+        <script src="js/vendor/jquery-3.6.0.min.js"></script>
         <script src="js/vendor/bootstrap.bundle.min.js"></script>
-
-        <!-- SheetJS para leer archivos Excel -->
-        <!-- SheetJS para leer archivos Excel -->
-        <script src="js/vendor/xlsx.full.min.js"></script>
-
-        <!-- DOMPurify for XSS protection -->
         <script src="js/vendor/purify.min.js"></script>
+        <script src="js/vendor/xlsx.full.min.js"></script>
+        <script src="js/vendor/leaflet.js"></script>
 
-        <script src="js/dashboard_simple.js?v=12"></script>
+        <!-- UI Components (New) -->
+        <script src="js/ui-components.js?v=modern"></script>
+
+        <!-- Main Dashboard Logic -->
+        <script src="js/dashboard_simple.js?v=modern"></script>
         <script src="js/gestion_trabajos.js"></script>
 
         <style>

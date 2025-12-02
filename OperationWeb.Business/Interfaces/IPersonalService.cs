@@ -12,5 +12,6 @@ namespace OperationWeb.Business.Interfaces
         Task<Personal> UpdateAsync(Personal personal);
         Task<bool> DeleteAsync(string dni);
         Task<bool> TerminateAsync(string dni);
+        Task<HistorialCargaPersonal> RegisterLoadHistoryAsync(HistorialCargaPersonal history);
     }
 }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Collaborators Rows UI Test</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- DOMPurify -->
+    <script src="../frontend/Modelo_Funcional/js/vendor/purify.min.js"></script>
+    <!-- UI Components -->
+    <script src="../frontend/Modelo_Funcional/js/ui-components.js?v=test3"></script>
+</head>
+
+<body>
+    <div id="test-output" style="font-family: monospace; padding: 20px;">Running Tests...</div>
+    <div id="render-target" style="display:none;"></div>
+
+    <script>
+        const output = document.getElementById('test-output');
+        const renderTarget = document.getElementById('render-target');
+        let results = [];
+        let passed = 0;
+        let failed = 0;
+
+        function assert(desc, condition) {
+            const status = condition ? "PASS" : "FAIL";
+            if (condition) passed++; else failed++;
+            results.push(`[${status}] ${desc}`);
+        }
+
+        function runTests() {
+            // Mock Employee Data
+            const mockEmployee = {
+                dni: '12345678',
+                inspector: 'JUAN PEREZ',
+                telefono: '999888777',
+                distrito: 'LIMA',
+                tipo: 'CHOFER',
+                estado: 'Activo',
+                fechaInicio: '2025-01-01',
+                fechaCese: null,
+                fechaCreacion: '2024-12-31',
+                hasUser: true,
+                userIsActive: true
+            };
+
+            // Group 1: Function Existence
+            assert("getColaboradorRow exists", typeof UIComponents.getColaboradorRow === 'function');
+
+            // Group 2: Content Generation
+            const rowHtml = UIComponents.getColaboradorRow(mockEmployee);
+            assert("Row content is not empty", rowHtml.length > 0);
+
+            // Group 3: Tailwind Classes
+            assert("Contains 'border-b'", rowHtml.includes('border-b'));
+            assert("Contains 'hover:bg-muted/50'", rowHtml.includes('hover:bg-muted/50'));
+            assert("Contains 'p-4'", rowHtml.includes('p-4'));
+
+            // Group 4: Status Logic
+            assert("Contains 'bg-green-100'", rowHtml.includes('bg-green-100')); // Active status
+            assert("Contains 'Activo'", rowHtml.includes('Activo'));
+
+            // Group 5: DOMPurify Integration (Simulating dashboard_simple.js logic)
+            const sanitized = DOMPurify.sanitize(rowHtml, {
+                ADD_TAGS: ['tr', 'td', 'span', 'button', 'i', 'div'],
+                ADD_ATTR: ['class', 'id', 'style', 'onclick', 'title']
+            });
+
+            assert("Sanitized content preserves classes", sanitized.includes('class="border-b'));
+            assert("Sanitized content preserves onclick", sanitized.includes('onclick="verEmpleado'));
+
+            // Output Results
+            output.innerHTML = `
+                <h2>Test Results: ${passed}/${passed + failed} Passed</h2>
+                <ul>${results.map(r => `<li style="color:${r.startsWith('[PASS]') ? 'green' : 'red'}">${r}</li>`).join('')}</ul>
+            `;
+        }
+
+        window.onload = runTests;
+    </script>
+</body>
+
+</html>

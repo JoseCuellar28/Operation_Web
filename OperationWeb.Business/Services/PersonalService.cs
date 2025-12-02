@@ -8,10 +8,12 @@ namespace OperationWeb.Business.Services
     public class PersonalService : IPersonalService
     {
         private readonly IPersonalRepository _personalRepository;
+        private readonly IRepository<PersonalEventoLaboral> _eventoRepository;
 
-        public PersonalService(IPersonalRepository personalRepository)
+        public PersonalService(IPersonalRepository personalRepository, IRepository<PersonalEventoLaboral> eventoRepository)
         {
             _personalRepository = personalRepository;
+            _eventoRepository = eventoRepository;
         }
 
         public async Task<IEnumerable<Personal>> GetAllAsync()
@@ -34,7 +36,12 @@ namespace OperationWeb.Business.Services
             }
 
             personal.FechaCreacion = DateTime.UtcNow;
-            return await _personalRepository.AddAsync(personal);
+            var created = await _personalRepository.AddAsync(personal);
+
+            // Log Event: Alta
+            await LogEventoAsync(created.DNI, "Alta", "Creación de nuevo colaborador");
+
+            return created;
         }
 
         public async Task<Personal> UpdateAsync(Personal personal)
@@ -54,9 +61,33 @@ namespace OperationWeb.Business.Services
             existing.FechaCese = personal.FechaCese;
             existing.FechaModificacion = DateTime.UtcNow;
             existing.UsuarioModificacion = personal.UsuarioModificacion;
-            existing.Estado = personal.Estado; // Added Estado update
+            existing.Estado = personal.Estado;
+            
+            // Nuevos campos
+            existing.CodigoEmpleado = personal.CodigoEmpleado;
+            existing.Categoria = personal.Categoria;
+            existing.Division = personal.Division;
+            existing.LineaNegocio = personal.LineaNegocio;
+            existing.Area = personal.Area;
+            existing.Seccion = personal.Seccion;
+            existing.DetalleCebe = personal.DetalleCebe;
+            existing.CodigoCebe = personal.CodigoCebe;
+            existing.MotivoCeseDesc = personal.MotivoCeseDesc;
+            existing.Comentario = personal.Comentario;
+            existing.FechaNacimiento = personal.FechaNacimiento;
+            existing.Sexo = personal.Sexo;
+            existing.Edad = personal.Edad;
+            existing.Permanencia = personal.Permanencia;
+            existing.Email = personal.Email;
+            existing.EmailPersonal = personal.EmailPersonal;
+            existing.JefeInmediato = personal.JefeInmediato;
 
-            return await _personalRepository.UpdateAsync(existing);
+            var updated = await _personalRepository.UpdateAsync(existing);
+
+            // Log Event: Cambio
+            await LogEventoAsync(updated.DNI, "Cambio", "Actualización de datos");
+
+            return updated;
         }
 
         public async Task<bool> DeleteAsync(string dni)
@@ -120,7 +151,37 @@ namespace OperationWeb.Business.Services
             personal.MotivoCeseDesc = "Cese administrativo"; // Default reason, can be updated later
 
             await _personalRepository.UpdateAsync(personal);
+
+            // Log Event: Baja
+            await LogEventoAsync(dni, "Baja", "Cese administrativo");
+
             return true;
+        }
+
+        public async Task<HistorialCargaPersonal> RegisterLoadHistoryAsync(HistorialCargaPersonal history)
+        {
+            return await _personalRepository.RegisterLoadHistoryAsync(history);
+        }
+
+        private async Task LogEventoAsync(string dni, string tipoEvento, string motivo)
+        {
+            try
+            {
+                var evento = new PersonalEventoLaboral
+                {
+                    DNI = dni,
+                    TipoEvento = tipoEvento,
+                    Motivo = motivo,
+                    FechaEvento = DateTime.UtcNow,
+                    Periodo = DateTime.UtcNow.ToString("yyyyMM")
+                };
+                await _eventoRepository.AddAsync(evento);
+            }
+            catch (Exception ex)
+            {
+                // Silently fail logging to not disrupt main flow, but ideally log to ILogger
+                Console.WriteLine($"Error logging event for {dni}: {ex.Message}");
+            }
         }
     }
 }

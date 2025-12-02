@@ -33,6 +33,9 @@ var conn = Environment.GetEnvironmentVariable("DefaultConnection") ??
            builder.Configuration.GetConnectionString("DefaultConnection") ?? 
            string.Empty;
 
+Console.WriteLine($"[DEBUG] Connection String: {(string.IsNullOrEmpty(conn) ? "EMPTY" : conn.Replace("Password=", "Password=***"))}");
+
+
 // Check if we should use SQL:
 // 1. Must have a connection string
 // 2. Connection string must NOT contain "REEMPLAZAR" (placeholder)
@@ -142,84 +145,88 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<OperationWebDbContext>();
-        await db.Database.EnsureCreatedAsync();
-
-        // Ensure Roles exist
-        var adminRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
-        if (adminRole == null)
+        try
         {
-            adminRole = new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" };
-            await db.Roles.AddAsync(adminRole);
-            await db.SaveChangesAsync();
-        }
+            await db.Database.EnsureCreatedAsync();
 
-        var userRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Usuario");
-        if (userRole == null)
-        {
-            userRole = new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" };
-            await db.Roles.AddAsync(userRole);
-            await db.SaveChangesAsync();
-        }
-
-        async Task<int> EnsureUserAsync(string dni, string email)
-        {
-            try
+            // Ensure Roles exist
+            var adminRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+            if (adminRole == null)
             {
-                var existing = await db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
-                if (existing != null) 
-                {
-                    // Ensure Role is set (fix for existing users with null/empty role)
-                    if (string.IsNullOrEmpty(existing.Role))
-                    {
-                        existing.Role = "USER";
-                        await db.SaveChangesAsync();
-                    }
-                    return existing.Id;
-                }
-                var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
-                var u = new OperationWeb.DataAccess.Entities.User
-                {
-                    DNI = dni,
-                    PasswordHash = hash,
-                    Email = email,
-                    Role = "USER", // Default role for seeding
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await db.Users.AddAsync(u);
+                adminRole = new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" };
+                await db.Roles.AddAsync(adminRole);
                 await db.SaveChangesAsync();
-                return u.Id;
             }
-            catch (Exception ex)
+
+            var userRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Usuario");
+            if (userRole == null)
             {
-                app.Logger.LogError(ex, "Error creating user {DNI}", dni);
-                throw;
+                userRole = new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" };
+                await db.Roles.AddAsync(userRole);
+                await db.SaveChangesAsync();
             }
+
+            async Task<int> EnsureUserAsync(string dni, string email)
+            {
+                try
+                {
+                    var existing = await db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
+                    if (existing != null) 
+                    {
+                        if (string.IsNullOrEmpty(existing.Role))
+                        {
+                            existing.Role = "USER";
+                            await db.SaveChangesAsync();
+                        }
+                        return existing.Id;
+                    }
+                    var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
+                    var u = new OperationWeb.DataAccess.Entities.User
+                    {
+                        DNI = dni,
+                        PasswordHash = hash,
+                        Email = email,
+                        Role = "USER",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await db.Users.AddAsync(u);
+                    await db.SaveChangesAsync();
+                    return u.Id;
+                }
+                catch (Exception ex)
+                {
+                    app.Logger.LogError(ex, "Error creating user {DNI}", dni);
+                    return 0;
+                }
+            }
+
+            var joseId = await EnsureUserAsync("10103488", "jose.arbildo@example.local");
+            
+            async Task EnsureUserRoleAsync(int userId, int roleId)
+            {
+                if (userId == 0) return;
+                var exists = await db.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
+                if (exists) return;
+                await db.UserRoles.AddAsync(new OperationWeb.DataAccess.Entities.UserRole { UserId = userId, RoleId = roleId });
+                await db.SaveChangesAsync();
+            }
+
+            if (adminRole != null) await EnsureUserRoleAsync(joseId, adminRole.Id);
+            
+            var jose = await db.Users.FindAsync(joseId);
+            if (jose != null) { jose.Role = "ADMIN"; await db.SaveChangesAsync(); }
         }
-
-        var joseId = await EnsureUserAsync("10103488", "jose.arbildo@example.local");
-        // var edwardId = await EnsureUserAsync("87654321", "edward.vega@example.local"); // Commented out as they might not exist
-        // var ederId = await EnsureUserAsync("11223344", "eder.torres@example.local");
-
-        async Task EnsureUserRoleAsync(int userId, int roleId)
+        catch (Exception ex)
         {
-            var exists = await db.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
-            if (exists) return;
-            await db.UserRoles.AddAsync(new OperationWeb.DataAccess.Entities.UserRole { UserId = userId, RoleId = roleId });
-            await db.SaveChangesAsync();
+            Console.WriteLine($"[WARNING] Database initialization failed: {ex.Message}");
+            // Swallow exception to allow app to start
         }
-
-        await EnsureUserRoleAsync(joseId, adminRole.Id);
-        // Update Jose to be Admin in Role column too
-        var jose = await db.Users.FindAsync(joseId);
-        if (jose != null) { jose.Role = "ADMIN"; await db.SaveChangesAsync(); }
-        // await EnsureUserRoleAsync(edwardId, userRole.Id);
-        // await EnsureUserRoleAsync(ederId, userRole.Id);
     }
 }
 catch (Exception ex)
 {
-    app.Logger.LogError(ex, "Error inicializando la base de datos");
+    app.Logger.LogError(ex, "Critical error in startup logic");
 }
 
 app.Logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Collaborators UI Test</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- DOMPurify -->
+    <script src="../frontend/Modelo_Funcional/js/vendor/purify.min.js"></script>
+    <!-- UI Components -->
+    <script src="../frontend/Modelo_Funcional/js/ui-components.js?v=test2"></script>
+</head>
+
+<body>
+    <div id="test-output" style="font-family: monospace; padding: 20px;">Running Tests...</div>
+    <div id="render-target" style="display:none;"></div>
+
+    <script>
+        const output = document.getElementById('test-output');
+        const renderTarget = document.getElementById('render-target');
+        let results = [];
+        let passed = 0;
+        let failed = 0;
+
+        function assert(desc, condition) {
+            const status = condition ? "PASS" : "FAIL";
+            if (condition) passed++; else failed++;
+            results.push(`[${status}] ${desc}`);
+        }
+
+        function runTests() {
+            // Group 1: Function Existence
+            assert("getColaboradoresTableContent exists", typeof UIComponents.getColaboradoresTableContent === 'function');
+
+            // Group 2: Content Generation
+            const content = UIComponents.getColaboradoresTableContent();
+            assert("Content is not empty", content.length > 0);
+
+            // Group 3: Tailwind Classes
+            assert("Contains 'w-full'", content.includes('w-full'));
+            assert("Contains 'space-y-4'", content.includes('space-y-4'));
+            assert("Contains 'bg-muted/50'", content.includes('bg-muted/50'));
+
+            // Group 4: Table Structure
+            assert("Contains table tag", content.includes('<table'));
+            assert("Contains thead", content.includes('<thead'));
+            assert("Contains tbody", content.includes('<tbody'));
+
+            // Group 5: Actions
+            assert("Contains Search Input", content.includes('id="buscarColaboradores"'));
+            assert("Contains Upload Button", content.includes('onclick="document.getElementById(\'input-carga-masiva\').click()"'));
+
+            // Output Results
+            output.innerHTML = `
+                <h2>Test Results: ${passed}/${passed + failed} Passed</h2>
+                <ul>${results.map(r => `<li style="color:${r.startsWith('[PASS]') ? 'green' : 'red'}">${r}</li>`).join('')}</ul>
+            `;
+        }
+
+        window.onload = runTests;
+    </script>
+</body>
+
+</html>
