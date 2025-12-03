@@ -173,39 +173,39 @@ Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 
 > Nota: Se eliminó `Jwt:DemoUser:PasswordPlain`.
 
-## Fase 3 — Esquema de Seguridad (en progreso)
+## Fase 3 — Asignación Manual y Calidad de Datos (Completado)
 
-- Entidades añadidas (EF Core): Users, Roles, UserRoles.
-- DbContext actualizado con índices únicos y relaciones.
-- Próximos pasos (SQL Server):
-  1. Instalar EF CLI: `~/.dotnet/dotnet tool install --global dotnet-ef --version 9.0.10` y `export PATH="$PATH:$HOME/.dotnet/tools"`.
-  2. Generar migración: `~/.dotnet/dotnet ef migrations add SecurityInit -p OperationWeb.DataAccess/OperationWeb.DataAccess.csproj -s OperationWeb.API/OperationWeb.API.csproj`.
-  3. Aplicar migración: `~/.dotnet/dotnet ef database update -p OperationWeb.DataAccess/OperationWeb.DataAccess.csproj -s OperationWeb.API/OperationWeb.API.csproj`.
-  4. Migrar `AuthController` para validar credenciales contra `Users` y emitir roles en el token.
+- **Asignación Manual de Líderes:**
+  - Implementado `PUT /api/proyectos/{id}/assign` para asignar Gerentes y Jefes manualmente.
+  - Modal de asignación en Frontend conectado a la API.
+  - Lógica de seguridad actualizada para permitir acceso a líderes asignados explícitamente.
 
-## Archivos relevantes
-
-- API `.NET`:
-  - `OperationWeb.API/Program.cs` — CORS, JWT, Rate Limiting, EF InMemory (Development).
-  - `OperationWeb.API/Controllers/AuthController.cs` — Login con BCrypt y Rate Limiting.
-  - `OperationWeb.API/appsettings.json` — URLs y plantillas de configuración.
-- DataAccess:
-  - `OperationWeb.DataAccess/OperationWebDbContext.cs` — DbSet y configuración de entidades.
-  - `OperationWeb.DataAccess.Entities/Empleado.cs` — Validaciones de entrada.
-  - `OperationWeb.DataAccess.Entities/User*.cs`, `Role*.cs` — Esquema de seguridad.
-- Frontend:
-  - `frontend/Modelo_Funcional/js/login.js` — Integración con `/api/auth/login`.
-  - `frontend/Modelo_Funcional/js/dashboard_simple.js` — Consumo de `/api/empleados` con `Bearer`.
-  - `frontend/Modelo_Funcional/js/gestion_trabajos.js` — Kanban con estados normalizados.
+- **Calidad de Datos y Dashboard:**
+  - **Filtro Activo/Cesado:** Lógica estricta basada en `FechaCese` para distinguir personal activo.
+  - **Dashboard Realista:** KPIs y gráficos actualizados para reflejar solo personal activo.
+  - **Sincronización Inteligente de Proyectos:** Estado de proyectos ("Activo"/"Inactivo") calculado automáticamente según la presencia de personal activo en el área.
+  - **Feedback Visual:** Indicadores rojos para personal cesado y proyectos inactivos.
 
 ## Estado actual
 
-- Fase 3: Esquema de seguridad creado (entidades); pendiente ejecutar migraciones en SQL Server y conectar el login a la tabla `Users`.
+- **Fase 1, 2 y 3 Completadas.**
+- Sistema totalmente funcional con:
+  - Autenticación segura (JWT + BCrypt).
+  - Gestión de Cuadrillas y Proyectos.
+  - Seguridad Jerárquica (Admin/Manager/Coordinator) + Asignación Manual.
+  - Dashboard de Indicadores con datos reales filtrados.
+  - Sincronización inteligente entre Personal y Proyectos.
 
 ## 🛠️ Solución de Problemas y Notas Técnicas
 
 ### Borrado de Personal y Restricciones FK
-- **Problema**: Error 500 al borrar un empleado debido a la restricción `FK_Users_Personal_DNI` en la base de datos, la cual no estaba explícita en el modelo EF Core.
+- **Problema**: Error 500 al borrar un empleado debido a la restricción `FK_Users_Personal_DNI` en la base de datos.
 - **Solución**: Se implementó un borrado en cascada manual en `PersonalRepository.DeleteByDNIAsync`.
-- **Detalle Crítico**: Se dividió `SaveChangesAsync` en dos llamadas. La primera confirma el borrado de dependencias (`Users`, `UserRoles`, etc.) y la segunda borra el registro de `Personal`. Esto es necesario para evitar conflictos de FK cuando EF Core no gestiona la relación directamente.
+
+### Sincronización de Proyectos
+- **Lógica**: La sincronización (`ProyectoService.SincronizarProyectosDesdePersonalAsync`) ahora verifica si existen empleados con `FechaCese` nula o futura en cada área.
+- **Resultado**:
+  - > 0 empleados activos -> Proyecto "Activo" (Verde).
+  - 0 empleados activos -> Proyecto "Inactivo" (Rojo).
+- **Frontend**: Requiere cache-busting (`?t=timestamp`) para reflejar cambios inmediatos tras la sincronización.
 
