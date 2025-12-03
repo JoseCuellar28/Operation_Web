@@ -8,7 +8,7 @@ Este proyecto es una plataforma integral para la gestión de operaciones, cuadri
 
 ## 🛠️ Tecnologías Principales
 
-- **Backend**: .NET 9 (ASP.NET Core Web API)
+- **Backend**: .NET 8 (ASP.NET Core Web API)
 - **Base de Datos**: SQL Server + Entity Framework Core
 - **Frontend**: HTML5, CSS3 (Tailwind), JavaScript (Vanilla)
 - **Servicios Auxiliares**: Python (Flask) para procesamiento de datos
