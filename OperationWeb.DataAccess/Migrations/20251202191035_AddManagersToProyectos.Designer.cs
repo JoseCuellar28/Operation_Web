@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OperationWeb.DataAccess;
 
@@ -11,9 +12,11 @@ using OperationWeb.DataAccess;
 namespace OperationWeb.DataAccess.Migrations
 {
     [DbContext(typeof(OperationWebDbContext))]
-    partial class OperationWebDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202191035_AddManagersToProyectos")]
+    partial class AddManagersToProyectos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

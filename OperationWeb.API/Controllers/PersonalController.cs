@@ -12,11 +12,13 @@ namespace OperationWeb.API.Controllers
     {
         private readonly IPersonalService _personalService;
         private readonly ILogger<PersonalController> _logger;
+        private readonly IUserContextService _userContext;
 
-        public PersonalController(IPersonalService personalService, ILogger<PersonalController> logger)
+        public PersonalController(IPersonalService personalService, ILogger<PersonalController> logger, IUserContextService userContext)
         {
             _personalService = personalService;
             _logger = logger;
+            _userContext = userContext;
         }
 
         [HttpGet]
@@ -25,6 +27,57 @@ namespace OperationWeb.API.Controllers
             try
             {
                 var personal = await _personalService.GetAllWithUserStatusAsync();
+
+                // Apply Data Scoping
+                var role = _userContext.GetUserRole();
+                var level = _userContext.GetUserLevel();
+                var division = _userContext.GetUserDivision();
+                var area = _userContext.GetUserArea();
+
+                _logger.LogInformation($"[DEBUG] User Context - Role: '{role}', Level: '{level}', Division: '{division}', Area: '{area}'");
+                _logger.LogInformation($"[DEBUG] Total Personal records before filter: {personal.Count()}");
+
+                // Admin sees everything
+                if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogInformation("[DEBUG] User is Admin. Returning all records.");
+                    return Ok(personal);
+                }
+
+                // Hierarchy Filtering
+                if (string.Equals(level, "Manager", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrEmpty(division))
+                    {
+                        personal = personal.Where(p => string.Equals(p.Division, division, StringComparison.OrdinalIgnoreCase));
+                    }
+                    else
+                    {
+                        _logger.LogWarning("[DEBUG] Manager has no Division. Returning empty.");
+                        return Ok(new List<PersonalWithUserStatusDto>());
+                    }
+                }
+                else if (string.Equals(level, "Coordinator", StringComparison.OrdinalIgnoreCase) || 
+                         string.Equals(level, "Supervisor", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrEmpty(area))
+                    {
+                        personal = personal.Where(p => string.Equals(p.Area, area, StringComparison.OrdinalIgnoreCase));
+                    }
+                    else
+                    {
+                        _logger.LogWarning("[DEBUG] Coordinator/Supervisor has no Area. Returning empty.");
+                        return Ok(new List<PersonalWithUserStatusDto>());
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning($"[DEBUG] Role '{role}' / Level '{level}' not authorized for full list. Returning empty.");
+                    // Regular employees see nothing (or maybe their own record? For now nothing)
+                    return Ok(new List<PersonalWithUserStatusDto>());
+                }
+
+                _logger.LogInformation($"[DEBUG] Returning {personal.Count()} records after filter.");
                 return Ok(personal);
             }
             catch (Exception ex)

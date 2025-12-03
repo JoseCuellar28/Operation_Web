@@ -134,10 +134,17 @@ const UIComponents = {
                         <input 
                             type="text" 
                             id="buscarColaboradores" 
-                            onkeyup="filtrarColaboradores()"
-                            placeholder="Buscar por DNI o Nombre..." 
+                            onkeyup="window.filtrarColaboradores()"
+                            placeholder="Buscar por DNI, Nombre..." 
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
+                    </div>
+                    <div class="w-full sm:w-48">
+                        <select id="filtroEstadoColaboradores" onchange="window.filtrarColaboradores()" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                            <option value="activos" selected>Ver Activos</option>
+                            <option value="cesados">Ver Cesados</option>
+                            <option value="todos">Ver Todos</option>
+                        </select>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="descargarPlantillaColaboradores()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
@@ -148,6 +155,9 @@ const UIComponents = {
                         </button>
                         <button onclick="abrirModalCrearColaborador()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                             <i class="fas fa-plus mr-2"></i> Nuevo
+                        </button>
+                        <button onclick="window.dashboard.sincronizarProyectos()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2">
+                            <i class="fas fa-sync-alt mr-2"></i> Sincronizar
                         </button>
                         <button onclick="limpiarFiltrosColaboradores()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" title="Limpiar Filtros">
                             <i class="fas fa-filter-circle-xmark"></i>
@@ -161,31 +171,29 @@ const UIComponents = {
                         <table class="w-full text-sm" id="tablaColaboradores">
                             <thead class="bg-muted/50">
                                 <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground cursor-pointer hover:text-foreground w-[100px]" onclick="ordenarTablaColaboradores('dni')">
+                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground cursor-pointer hover:text-foreground w-[100px]" onclick="ordenarTablaColaboradores(0)">
                                         DNI <i class="fas fa-sort ml-1 text-xs"></i>
                                     </th>
-                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground cursor-pointer hover:text-foreground min-w-[200px]" onclick="ordenarTablaColaboradores('inspector')">
+                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground cursor-pointer hover:text-foreground min-w-[200px]" onclick="ordenarTablaColaboradores(1)">
                                         NOMBRE <i class="fas fa-sort ml-1 text-xs"></i>
                                     </th>
                                     <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[120px]">TELÉFONO</th>
-                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground min-w-[150px]">AREA</th>
-                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground cursor-pointer hover:text-foreground w-[120px]" onclick="ordenarTablaColaboradores('tipo')">
-                                        PUESTO <i class="fas fa-sort ml-1 text-xs"></i>
-                                    </th>
-                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground cursor-pointer hover:text-foreground w-[100px]" onclick="ordenarTablaColaboradores('estado')">
+                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[150px]">ÁREA</th>
+                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[120px]">PUESTO</th>
+                                    <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground cursor-pointer hover:text-foreground w-[100px]" onclick="ordenarTablaColaboradores(5)">
                                         ESTADO <i class="fas fa-sort ml-1 text-xs"></i>
                                     </th>
                                     <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[150px]">FECHAS</th>
-                                    <th class="h-12 px-4 text-center align-middle font-medium text-muted-foreground w-[140px]">ACCIONES</th>
+                                    <th class="h-12 px-4 text-center align-middle font-medium text-muted-foreground w-[120px]">ACCIONES</th>
                                 </tr>
                                 <!-- Filtros Row -->
                                 <tr class="border-b bg-muted/20">
                                     <td class="p-2"><input type="text" class="colaboradores-filter-input flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs" placeholder="Filtrar DNI..." onkeyup="filtrarPorColumnaColaboradores(0, this.value)"></td>
                                     <td class="p-2"><input type="text" class="colaboradores-filter-input flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs" placeholder="Filtrar nombre..." onkeyup="filtrarPorColumnaColaboradores(1, this.value)"></td>
-                                    <td class="p-2"><input type="text" class="colaboradores-filter-input flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs" placeholder="Filtrar teléfono..." onkeyup="filtrarPorColumnaColaboradores(2, this.value)"></td>
+                                    <td class="p-2"><input type="text" class="colaboradores-filter-input flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs" placeholder="Filtrar..." onkeyup="filtrarPorColumnaColaboradores(2, this.value)"></td>
                                     <td class="p-2"><input type="text" class="colaboradores-filter-input flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs" placeholder="Filtrar área..." onkeyup="filtrarPorColumnaColaboradores(3, this.value)"></td>
                                     <td class="p-2"><input type="text" class="colaboradores-filter-input flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs" placeholder="Filtrar puesto..." onkeyup="filtrarPorColumnaColaboradores(4, this.value)"></td>
-                                    <td class="p-2"><input type="text" class="colaboradores-filter-input flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs" placeholder="Filtrar estado..." onkeyup="filtrarPorColumnaColaboradores(5, this.value)"></td>
+                                    <td class="p-2"></td>
                                     <td class="p-2"></td>
                                     <td class="p-2"></td>
                                 </tr>
@@ -205,6 +213,7 @@ const UIComponents = {
                     <div class="flex items-center space-x-2" id="pagination-numbers">
                         <!-- Pagination buttons will be injected here -->
                     </div>
+                    <div class="hidden" id="total-records">0</div>
                 </div>
             </div>
         `;
@@ -215,18 +224,24 @@ const UIComponents = {
      * @param {Object} empleado - Employee data
      */
     getColaboradorRow: function (empleado) {
-        // Logic for status style
+        // Logic for status style based on FechaCese
         let statusClass = "bg-slate-100 text-slate-800";
         let statusText = "Sin Estado";
-        const estadoLower = (empleado.estado || '').toLowerCase();
 
-        if (estadoLower === 'cesado' || estadoLower === 'inactivo') {
+        const now = new Date();
+        const fechaCese = empleado.fechaCese ? new Date(empleado.fechaCese) : null;
+        // Check if ceased: FechaCese exists AND is in the past (or today)
+        // User query: fechacese IS NULL OR fechacese > GETDATE() -> Active
+        // So: fechacese != NULL AND fechacese <= GETDATE() -> Ceased
+        const isCesado = fechaCese && fechaCese <= now;
+
+        if (isCesado) {
             statusClass = "bg-red-100 text-red-800";
-            statusText = estadoLower === 'cesado' ? "Cesado" : "Inactivo";
+            statusText = "Cesado";
         } else if (empleado.hasUser && !empleado.userIsActive) {
             statusClass = "bg-yellow-100 text-yellow-800";
             statusText = "Usuario Inactivo";
-        } else if (estadoLower === 'activo' || (empleado.hasUser && empleado.userIsActive)) {
+        } else {
             statusClass = "bg-green-100 text-green-800";
             statusText = "Activo";
         }
@@ -238,7 +253,7 @@ const UIComponents = {
             </button>
         ` : '';
 
-        const cesarBtn = estadoLower !== 'cesado' ? `
+        const cesarBtn = !isCesado ? `
             <button onclick="cesarColaborador('${empleado.dni}')" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0" title="Cesar Colaborador">
                 <i class="fas fa-user-times text-destructive"></i>
             </button>
@@ -933,10 +948,10 @@ const UIComponents = {
         let statusClass = 'bg-gray-100 text-gray-800';
         const estado = (proyecto.estado || '').toLowerCase();
 
-        if (estado.includes('curso') || estado.includes('activo')) statusClass = 'bg-green-100 text-green-800';
+        if (estado.includes('cancelado') || estado.includes('inactivo')) statusClass = 'bg-red-100 text-red-800';
         else if (estado.includes('pendiente')) statusClass = 'bg-yellow-100 text-yellow-800';
         else if (estado.includes('finalizado')) statusClass = 'bg-blue-100 text-blue-800';
-        else if (estado.includes('cancelado')) statusClass = 'bg-red-100 text-red-800';
+        else if (estado.includes('curso') || estado.includes('activo')) statusClass = 'bg-green-100 text-green-800';
 
         const presupuesto = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(proyecto.presupuesto || 0);
 
@@ -955,6 +970,9 @@ const UIComponents = {
                 <td class="p-4 align-middle whitespace-nowrap">${presupuesto}</td>
                 <td class="p-4 align-middle text-center whitespace-nowrap">
                     <div class="flex justify-center gap-1">
+                        <button onclick="window.dashboard.abrirModalAsignacion('${proyecto.id}')" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0" title="Asignar Líderes">
+                            <i class="fas fa-user-cog text-purple-600"></i>
+                        </button>
                         <button onclick="verProyecto('${proyecto.id}')" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0" title="Ver">
                             <i class="fas fa-eye text-blue-600"></i>
                         </button>
@@ -967,6 +985,44 @@ const UIComponents = {
                     </div>
                 </td>
             </tr>
+        `;
+    },
+
+    getModalAsignacionContent: function () {
+        return `
+            <div id="modal-asignacion" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 hidden">
+                <div class="bg-background rounded-lg shadow-lg w-full max-w-md p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Asignar Líderes de Proyecto</h3>
+                        <button onclick="window.dashboard.cerrarModalAsignacion()" class="text-muted-foreground hover:text-foreground">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <input type="hidden" id="asignacion-proyecto-id">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Gerente de División</label>
+                            <select id="select-gerente" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <option value="">Seleccione un Gerente...</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">Jefe / Coordinador</label>
+                            <select id="select-jefe" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                <option value="">Seleccione un Jefe...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-4">
+                        <button onclick="window.dashboard.cerrarModalAsignacion()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                            Cancelar
+                        </button>
+                        <button onclick="window.dashboard.guardarAsignacion()" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                            Guardar Asignación
+                        </button>
+                    </div>
+                </div>
+            </div>
         `;
     },
 

@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OperationWeb.Business.Interfaces\OperationWeb.Business.Interfaces.csproj" />
     <ProjectReference Include="..\OperationWeb.Business.Entities\OperationWeb.Business.Entities.csproj" />
     <ProjectReference Include="..\OperationWeb.DataAccess.Interfaces\OperationWeb.DataAccess.Interfaces.csproj" />

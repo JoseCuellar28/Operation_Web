@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OperationWeb.DataAccess;
 
@@ -11,9 +12,11 @@ using OperationWeb.DataAccess;
 namespace OperationWeb.DataAccess.Migrations
 {
     [DbContext(typeof(OperationWebDbContext))]
-    partial class OperationWebDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202140225_AddProyectosTable")]
+    partial class AddProyectosTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -294,7 +297,7 @@ namespace OperationWeb.DataAccess.Migrations
                             ApellidoPaterno = "Pérez",
                             DNI = "12345678",
                             Email = "juan.perez@empresa.com",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(920),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(3000),
                             IdEmpresa = 0,
                             Nombre = "Juan",
                             Telefono = "555-0001"
@@ -305,7 +308,7 @@ namespace OperationWeb.DataAccess.Migrations
                             ApellidoPaterno = "González",
                             DNI = "87654321",
                             Email = "maria.gonzalez@empresa.com",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(920),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(3000),
                             IdEmpresa = 0,
                             Nombre = "María",
                             Telefono = "555-0002"
@@ -316,7 +319,7 @@ namespace OperationWeb.DataAccess.Migrations
                             ApellidoPaterno = "Rodríguez",
                             DNI = "11223344",
                             Email = "carlos.rodriguez@empresa.com",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(920),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(3010),
                             IdEmpresa = 0,
                             Nombre = "Carlos",
                             Telefono = "555-0003"
@@ -327,7 +330,7 @@ namespace OperationWeb.DataAccess.Migrations
                             ApellidoPaterno = "López",
                             DNI = "44332211",
                             Email = "ana.lopez@empresa.com",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(920),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(3010),
                             IdEmpresa = 0,
                             Nombre = "Ana",
                             Telefono = "555-0004"
@@ -550,8 +553,8 @@ namespace OperationWeb.DataAccess.Migrations
                         {
                             DNI = "12345678",
                             Distrito = "Lima",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(820),
-                            FechaInicio = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(820),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2800),
+                            FechaInicio = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2770),
                             Inspector = "Juan Pérez",
                             Telefono = "555-0001",
                             Tipo = "Técnico"
@@ -560,8 +563,8 @@ namespace OperationWeb.DataAccess.Migrations
                         {
                             DNI = "87654321",
                             Distrito = "Miraflores",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(830),
-                            FechaInicio = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(820),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2800),
+                            FechaInicio = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2800),
                             Inspector = "María González",
                             Telefono = "555-0002",
                             Tipo = "Supervisor"
@@ -570,8 +573,8 @@ namespace OperationWeb.DataAccess.Migrations
                         {
                             DNI = "11223344",
                             Distrito = "San Isidro",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(830),
-                            FechaInicio = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(830),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2800),
+                            FechaInicio = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2800),
                             Inspector = "Carlos Rodríguez",
                             Telefono = "555-0003",
                             Tipo = "Operario"
@@ -580,8 +583,8 @@ namespace OperationWeb.DataAccess.Migrations
                         {
                             DNI = "44332211",
                             Distrito = "Surco",
-                            FechaCreacion = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(830),
-                            FechaInicio = new DateTime(2025, 12, 2, 19, 10, 34, 730, DateTimeKind.Utc).AddTicks(830),
+                            FechaCreacion = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2810),
+                            FechaInicio = new DateTime(2025, 12, 2, 14, 2, 24, 984, DateTimeKind.Utc).AddTicks(2810),
                             Inspector = "Ana López",
                             Telefono = "555-0004",
                             Tipo = "Técnico"
@@ -765,10 +768,6 @@ namespace OperationWeb.DataAccess.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Cliente")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Division")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -783,16 +782,8 @@ namespace OperationWeb.DataAccess.Migrations
                     b.Property<DateTime?>("FechaInicio")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("FechaSincronizacion")
+                    b.Property<DateTime>("FechaSincronizacion")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("GerenteDni")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("JefeDni")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()

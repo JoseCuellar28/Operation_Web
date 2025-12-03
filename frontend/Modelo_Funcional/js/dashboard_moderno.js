@@ -285,6 +285,15 @@ class ModernDashboard {
                     mainContent.appendChild(modalDiv.firstElementChild);
                 }
 
+                if (UIComponents.getModalAsignacionContent) {
+                    const modalAsignacionDiv = document.createElement('div');
+                    modalAsignacionDiv.innerHTML = DOMPurify.sanitize(UIComponents.getModalAsignacionContent(), {
+                        ADD_TAGS: ['div', 'h3', 'button', 'i', 'label', 'input', 'select', 'option'],
+                        ADD_ATTR: ['class', 'id', 'style', 'onclick', 'type', 'value']
+                    });
+                    document.body.appendChild(modalAsignacionDiv.firstElementChild);
+                }
+
                 setTimeout(() => {
                     this.cargarProyectos();
 
@@ -437,9 +446,14 @@ class ModernDashboard {
     }
 
     actualizarKPIs(colaboradores, proyectos, vehiculos) {
-        // Colaboradores
-        // Colaboradores - Consideramos activos si no están cesados o inactivos
-        const activos = colaboradores.filter(c => !['Cesado', 'Inactivo', 'Baja'].includes(c.estado)).length;
+        // Colaboradores - Consideramos activos si FechaCese es nula o futura
+        const now = new Date();
+        const activos = colaboradores.filter(c => {
+            const fechaCese = c.fechaCese || c.FechaCese ? new Date(c.fechaCese || c.FechaCese) : null;
+            // Active if no FechaCese OR FechaCese is in the future
+            return !fechaCese || fechaCese > now;
+        }).length;
+
         const kpiColab = document.getElementById('kpi-colaboradores');
         if (kpiColab) kpiColab.textContent = activos;
 
@@ -460,7 +474,7 @@ class ModernDashboard {
         const kpiAsist = document.getElementById('kpi-asistencia');
         const kpiAsistCount = document.getElementById('kpi-asistencia-count');
         if (kpiAsist) kpiAsist.textContent = '85%';
-        if (kpiAsistCount) kpiAsistCount.textContent = `${Math.round(activos * 0.85)}/${activos}`;
+        if (kpiAsistCount) kpiAsistCount.textContent = `${Math.round(activos * 0.85)}/${activos} presentes`;
     }
 
     renderizarGraficos(colaboradores, proyectos, vehiculos) {
@@ -478,8 +492,14 @@ class ModernDashboard {
                 this.charts['colaboradores-tipo'].destroy();
             }
 
+            const now = new Date();
+            const colaboradoresActivos = colaboradores.filter(c => {
+                const fechaCese = c.fechaCese || c.FechaCese ? new Date(c.fechaCese || c.FechaCese) : null;
+                return !fechaCese || fechaCese > now;
+            });
+
             const tipos = {};
-            colaboradores.forEach(c => {
+            colaboradoresActivos.forEach(c => {
                 const tipo = c.tipo || 'Sin Asignar';
                 tipos[tipo] = (tipos[tipo] || 0) + 1;
             });
@@ -625,7 +645,20 @@ class ModernDashboard {
                                 foto: e.foto || e.Foto || '',
                                 firma: e.firma || e.Firma || ''
                             }));
+
+                            // Calculate Counts
+                            const now = new Date();
+                            const total = this.todosLosEmpleados.length;
+                            const cesados = this.todosLosEmpleados.filter(e => e.fechaCese && new Date(e.fechaCese) <= now).length;
+                            const activos = total - cesados;
+
+                            if (counter) {
+                                counter.innerHTML = `<span class="text-green-600">Activos: ${activos}</span> | <span class="text-red-600">Cesados: ${cesados}</span> | Total: ${total}`;
+                            }
+
                             this.finalizarCargaEmpleados('API .NET');
+                            // Trigger initial filter to respect default "Activos" selection
+                            this.filtrarColaboradores();
                             return;
                         }
                     }
@@ -644,24 +677,22 @@ class ModernDashboard {
         }
     }
 
-    finalizarCargaEmpleados(source = 'API') {
-        this.empleadosFiltrados = [...this.todosLosEmpleados];
-        this.paginaActualEmpleados = 1;
-        this.mostrarEmpleadosPaginados();
-        console.log(`[EMPLEADOS] Datos cargados exitosamente (${source})`);
+    finalizarCargaEmpleados(origen) {
+        console.log(`[EMPLEADOS] Carga finalizada desde: ${origen}`);
+        // No need to call render directly here as filtrarColaboradores will do it
 
         // Show notification
-        const msg = source === 'Mock'
+        const msg = origen === 'Mock'
             ? '⚠️ Conexión fallida. Mostrando datos de prueba.'
             : '✅ Conexión exitosa. Datos actualizados.';
 
         // Use existing notification system if available, or simple alert/console
         if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion(msg, source === 'Mock' ? 'warning' : 'success');
+            mostrarNotificacion(msg, origen === 'Mock' ? 'warning' : 'success');
         } else {
             // Create a simple toast if not exists
             const toast = document.createElement('div');
-            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg text-white ${source === 'Mock' ? 'bg-yellow-600' : 'bg-green-600'} transition-opacity duration-500`;
+            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg text-white ${origen === 'Mock' ? 'bg-yellow-600' : 'bg-green-600'} transition-opacity duration-500`;
             toast.textContent = msg;
             document.body.appendChild(toast);
             setTimeout(() => {
@@ -2085,6 +2116,227 @@ class ModernDashboard {
                 </tr>
                 `;
         }
+    }
+
+    // --- Projects Logic ---
+
+    async cargarProyectos() {
+        const tbody = document.getElementById('proyectos-tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">Cargando proyectos...</td></tr>';
+
+        try {
+            const jwt = localStorage.getItem('jwt') || '';
+            const headers = { 'Accept': 'application/json', 'Authorization': jwt ? `Bearer ${jwt}` : '' };
+
+            const response = await fetch(`${API_NET}/api/proyectos?t=${Date.now()}`, { headers });
+            if (response.ok) {
+                this.todosLosProyectos = await response.json();
+                this.proyectosFiltrados = [...this.todosLosProyectos];
+                this.renderTablaProyectos();
+            } else {
+                console.error('[PROYECTOS] Error cargando proyectos:', response.statusText);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-500">Error al cargar proyectos</td></tr>';
+            }
+        } catch (error) {
+            console.error('[PROYECTOS] Error de red:', error);
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-500">Error de conexión</td></tr>';
+        }
+    }
+
+    renderTablaProyectos() {
+        const tbody = document.getElementById('proyectos-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        if (this.proyectosFiltrados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-muted-foreground">No hay proyectos registrados. Pulse "Sincronizar" para importar desde Personal.</td></tr>';
+            return;
+        }
+
+        let allRowsHtml = '';
+        this.proyectosFiltrados.forEach(p => {
+            if (UIComponents.getProyectoRow) {
+                allRowsHtml += UIComponents.getProyectoRow(p);
+            }
+        });
+
+        // Wrap in table structure to prevent DOMPurify from stripping tr/td tags
+        const wrappedHtml = `<table><tbody>${allRowsHtml}</tbody></table>`;
+        const sanitizedWrapped = DOMPurify.sanitize(wrappedHtml, {
+            ADD_TAGS: ['tr', 'td', 'span', 'button', 'i', 'div'],
+            ADD_ATTR: ['class', 'id', 'style', 'onclick', 'title', 'data-state']
+        });
+
+        // Extract the rows from the sanitized table
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = sanitizedWrapped;
+        const sanitizedRows = tempDiv.querySelector('tbody') ? tempDiv.querySelector('tbody').innerHTML : '';
+
+        tbody.innerHTML = sanitizedRows;
+    }
+
+    async sincronizarProyectos() {
+        if (!confirm('¿Está seguro de sincronizar los proyectos desde la base de datos de Personal? Esto creará nuevos proyectos basados en las Áreas existentes.')) {
+            return;
+        }
+
+        const btn = document.querySelector('button[onclick="window.dashboard.sincronizarProyectos()"]');
+        const originalText = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sincronizando...';
+        }
+
+        try {
+            const jwt = localStorage.getItem('jwt') || '';
+            const headers = { 'Accept': 'application/json', 'Authorization': jwt ? `Bearer ${jwt}` : '' };
+
+            const response = await fetch(`${API_NET}/api/proyectos/sync`, {
+                method: 'POST',
+                headers: headers
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(result.message);
+                this.cargarProyectos(); // Reload table
+            } else {
+                const error = await response.json();
+                alert('Error: ' + (error.message || 'Error desconocido'));
+            }
+        } catch (error) {
+            console.error('[PROYECTOS] Error:', error);
+            alert('Error de conexión al sincronizar.');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    }
+
+    filtrarProyectos() {
+        const termino = document.getElementById('buscarProyectos')?.value.toLowerCase() || '';
+        this.proyectosFiltrados = this.todosLosProyectos.filter(p =>
+            p.nombre.toLowerCase().includes(termino) ||
+            (p.cliente && p.cliente.toLowerCase().includes(termino))
+        );
+        this.renderTablaProyectos();
+    }
+
+    filtrarPorColumnaProyectos(index, valor) {
+        if (!valor) {
+            this.proyectosFiltrados = [...this.todosLosProyectos];
+        } else {
+            valor = valor.toLowerCase();
+            this.proyectosFiltrados = this.todosLosProyectos.filter(p => {
+                if (index === 0) return p.id.toString().includes(valor);
+                if (index === 1) return p.nombre.toLowerCase().includes(valor);
+                if (index === 2) return (p.cliente || '').toLowerCase().includes(valor);
+                if (index === 3) return p.estado.toLowerCase().includes(valor);
+                return true;
+            });
+        }
+        this.renderTablaProyectos();
+    }
+
+    async abrirModalAsignacion(idProyecto) {
+        document.getElementById('asignacion-proyecto-id').value = idProyecto;
+
+        // Load potential leaders (Managers and Coordinators/Supervisors)
+        await this.cargarPosiblesLideres();
+
+        // Try to pre-select existing values if we had them in the project object (requires updating getProyectos to return them)
+        // For now, we just open the modal.
+
+        document.getElementById('modal-asignacion').classList.remove('hidden');
+    }
+
+    cerrarModalAsignacion() {
+        document.getElementById('modal-asignacion').classList.add('hidden');
+        document.getElementById('select-gerente').value = '';
+        document.getElementById('select-jefe').value = '';
+    }
+
+    async cargarPosiblesLideres() {
+        try {
+            const jwt = localStorage.getItem('jwt');
+            const response = await fetch(`${API_NET}/api/personal`, {
+                headers: { 'Authorization': `Bearer ${jwt}` }
+            });
+
+            if (response.ok) {
+                const personal = await response.json();
+
+                // Filter for Gerentes
+                const gerentes = personal.filter(p => (p.categoria || '').toLowerCase().includes('gerente'));
+                const selectGerente = document.getElementById('select-gerente');
+                selectGerente.innerHTML = '<option value="">Seleccione un Gerente...</option>';
+                gerentes.forEach(g => {
+                    selectGerente.innerHTML += `<option value="${g.dni}">${g.nombre} ${g.apellidoPaterno}</option>`;
+                });
+
+                // Filter for Jefes/Coordinadores/Supervisores
+                const jefes = personal.filter(p => {
+                    const cat = (p.categoria || '').toLowerCase();
+                    return cat.includes('jefe') || cat.includes('coordinador') || cat.includes('supervisor');
+                });
+                const selectJefe = document.getElementById('select-jefe');
+                selectJefe.innerHTML = '<option value="">Seleccione un Jefe...</option>';
+                jefes.forEach(j => {
+                    selectJefe.innerHTML += `<option value="${j.dni}">${j.nombre} ${j.apellidoPaterno}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando líderes:', error);
+        }
+    }
+
+    async guardarAsignacion() {
+        const idProyecto = document.getElementById('asignacion-proyecto-id').value;
+        const gerenteDni = document.getElementById('select-gerente').value;
+        const jefeDni = document.getElementById('select-jefe').value;
+
+        try {
+            const jwt = localStorage.getItem('jwt');
+            const response = await fetch(`${API_NET}/api/proyectos/${idProyecto}/assign`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: JSON.stringify({ gerenteDni, jefeDni })
+            });
+
+            if (response.ok) {
+                alert('Asignación guardada correctamente.');
+                this.cerrarModalAsignacion();
+                this.cargarProyectos(); // Refresh table
+            } else {
+                const error = await response.json();
+                alert('Error: ' + (error.message || 'Error desconocido'));
+            }
+        } catch (error) {
+            console.error('Error guardando asignación:', error);
+            alert('Error de conexión.');
+        }
+    }
+
+    ordenarTablaProyectos(columna) {
+        // Simple sort implementation
+        this.proyectosFiltrados.sort((a, b) => {
+            let valA = a[columna] || '';
+            let valB = b[columna] || '';
+
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+
+            if (valA < valB) return -1;
+            if (valA > valB) return 1;
+            return 0;
+        });
+        this.renderTablaProyectos();
     }
 }
 

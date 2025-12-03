@@ -63,6 +63,10 @@ builder.Services.AddScoped<OperationWeb.Business.Interfaces.IPersonalService, Op
 builder.Services.AddScoped<OperationWeb.Business.Services.IEncryptionService, OperationWeb.Business.Services.EncryptionService>();
 builder.Services.AddScoped<OperationWeb.Business.Interfaces.IEmailService, OperationWeb.Business.Services.EmailService>();
 builder.Services.AddScoped<OperationWeb.Business.Interfaces.IUserService, OperationWeb.Business.Services.UserService>();
+builder.Services.AddScoped<OperationWeb.Business.Interfaces.IProyectoService, OperationWeb.Business.Services.ProyectoService>();
+builder.Services.AddScoped<OperationWeb.Business.Interfaces.IUserContextService, OperationWeb.Business.Services.UserContextService>();
+builder.Services.AddHttpContextAccessor();
+
 
 // Add CORS
 var corsSection = builder.Configuration.GetSection("Cors");

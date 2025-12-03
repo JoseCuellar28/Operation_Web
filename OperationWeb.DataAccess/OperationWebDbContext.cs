@@ -13,6 +13,8 @@ namespace OperationWeb.DataAccess
         public DbSet<CuadrillaColaborador> CuadrillaColaboradores { get; set; }
         public DbSet<Empleado> Empleados { get; set; }
         public DbSet<Personal> Personal { get; set; }
+        public DbSet<Proyecto> Proyectos { get; set; }
+
         public DbSet<User> Users { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<Role> Roles { get; set; }
