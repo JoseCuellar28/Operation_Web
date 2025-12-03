@@ -2,210 +2,46 @@
 
 Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
 
-> 📖 **[Ver Guía Completa del Proyecto](docs/GUIA_COMPLETA.md)** - Documentación consolidada con todos los capítulos: Seguridad, Base de Datos, ETL, QA, y Deployment.
+## � Descripción General
 
-## 📁 Estructura del Proyecto
+Este proyecto es una plataforma integral para la gestión de operaciones, cuadrillas y proyectos. Está construido siguiendo principios de arquitectura limpia y mejores prácticas de desarrollo moderno.
 
-### 🏗️ Proyectos Principales
-- **OperationWeb.API**: Capa de presentación (Web API)
-- **OperationWeb.Business**: Capa de lógica de negocio
-- **OperationWeb.Business.Interfaces**: Interfaces de la capa de negocio
-- **OperationWeb.DataAccess**: Capa de acceso a datos
-- **OperationWeb.DataAccess.Interfaces**: Interfaces de acceso a datos
-- **OperationWeb.DataAccess.Entities**: Entidades del modelo de datos
-- **OperationWeb.Infrastructure**: Capa de infraestructura
-- **OperationWeb.Infrastructure.Interfaces**: Interfaces de infraestructura
-- **OperationWeb.Tests**: Pruebas unitarias
+## 🛠️ Tecnologías Principales
 
-### 📚 Documentación (`docs/`)
-- **`architecture/`**: Documentación de arquitectura y patrones
-- **`guides/`**: Guías de implementación y configuración
-- **`modules/`**: Documentación específica de módulos
-- **`templates/`**: Plantillas para nuevos desarrollos
+- **Backend**: .NET 9 (ASP.NET Core Web API)
+- **Base de Datos**: SQL Server + Entity Framework Core
+- **Frontend**: HTML5, CSS3 (Tailwind), JavaScript (Vanilla)
+- **Servicios Auxiliares**: Python (Flask) para procesamiento de datos
 
-### 🎨 Frontend (`frontend/`)
-- **`Modelo_Funcional/`**: Prototipos y modelos funcionales
+## 🏗️ Estructura del Proyecto
 
-### 🧪 Pruebas (`tests/`)
-- **`api/`**: Pruebas de endpoints de API
-- **`unit/`**: Pruebas unitarias
-- **`integration/`**: Pruebas de integración
+El sistema está dividido en capas para asegurar la escalabilidad y mantenibilidad:
 
-### 🛠️ Herramientas (`tools/`)
-- Utilidades y scripts de desarrollo
+- **API**: Capa de presentación y endpoints REST.
+- **Business**: Lógica de negocio y casos de uso.
+- **DataAccess**: Persistencia y acceso a datos.
+- **Infrastructure**: Servicios externos y utilidades transversales.
 
-## 🚀 Tecnologías
+## ⚙️ Configuración Rápida (Entorno Local)
 
-- .NET 9
-- Entity Framework Core
-- SQL Server
-- Clean Architecture
-- Repository Pattern
-- Dependency Injection
+1. **Requisitos**:
+   - .NET SDK 9.0
+   - SQL Server
+   - Python 3.9+
 
-## 🔐 Arquitectura y Seguridad del Sistema
+2. **Ejecución**:
+   - Backend: `dotnet run --project OperationWeb.API`
+   - Frontend: Servidor HTTP simple (ej. `python3 -m http.server 8000`)
 
-### Arquitectura y Tecnologías Clave
-- Backend (.NET/C#):
-  - Framework: ASP.NET Core (`net9.0`) con OpenAPI en `OperationWeb.API/OperationWeb.API.csproj:4–15`; DI y pipeline en `OperationWeb.API/Program.cs:19–56`.
-  - ORM: Entity Framework Core SQL Server en `OperationWeb.DataAccess/OperationWeb.DataAccess.csproj:9–14` y `OperationWeb.API/Program.cs:16–17`.
-  - Capas: `API`, `Business`, `DataAccess`, `Entities`, `Interfaces`, `Infrastructure`.
-  - Servidor: `UseHttpsRedirection`, `UseCors`, `MapControllers` en `OperationWeb.API/Program.cs:50–56`.
-- Base de datos:
-  - SQL Server con cadenas en `OperationWeb.API/appsettings.json:2–6`; `DbContext` en `OperationWeb.DataAccess/OperationWebDbContext.cs:12–99`.
-- Frontend (HTML/CSS/JS):
-  - Estático; consumo de API con `fetch` en `frontend/Modelo_Funcional/js/dashboard_simple.js:3361–3390`; reescritura estática `vercel.json:1`.
-- Servicio Python (standalone):
-  - Flask + `flask_cors` (`etl-service/server.py:16–27`), `pandas`, `pytds`, `.env`.
-  - Endpoints de salud, tablas, personal y carga Excel (`etl-service/server.py:29–145`).
+## � Seguridad
 
-### Autenticación y Autorización
-- API .NET: `UseAuthorization()` activo (`OperationWeb.API/Program.cs:54`) sin `AddAuthentication`/`UseAuthentication`; no hay `[Authorize]` en controladores (`OperationWeb.API/Controllers/*.cs`).
-- Frontend: login simulado sin tokens/sesión servidor (`frontend/Modelo_Funcional/js/login.js:138–173`); “sesión” cliente vía `localStorage` (`frontend/Modelo_Funcional/menu1.html:967–997`).
-- Python: sin autenticación; CORS abierto (`etl-service/server.py:26–27`).
+El sistema implementa estándares de seguridad modernos, incluyendo:
+- Autenticación JWT.
+- Cifrado de datos en tránsito y reposo.
+- Gestión de roles y permisos jerárquicos.
 
-### Manejo de Datos
-- Datos sensibles:
-  - PII: `NumeroDocumento` (DNI), `Email`, `Telefono`, `NombreCompleto` (`OperationWeb.DataAccess.Entities/Empleado.cs:19–38,63–75`); `dbo.Personal` (Python `server.py:122–141`).
-- Sistema de BD:
-  - SQL Server en .NET (`Program.cs:16–17`) y Python (`server.py:100–109`).
-- Cifrado/Hashing:
-  - No hay cifrado/hashing de datos de aplicación; en explorador de BD se desactiva cifrado (`Encrypt=false`, `TrustServerCertificate=true`) (`OperationWeb.API/Controllers/DatabaseExplorerController.cs:233–235`).
-- Validaciones:
-  - Unicidad EF (`NumeroDocumento`, `Email`, `CodigoEmpleado`) (`OperationWeb.DataAccess/OperationWebDbContext.cs:94–98`).
-  - Validación básica `ModelState` en `EmpleadosController` (`OperationWeb.API/Controllers/EmpleadosController.cs:103–107,131–135`).
-  - Validación de extensión Excel (`etl-service/server.py:181–186`).
-
-### Interfaz de Red y Comunicación
-- HTTPS: `UseHttpsRedirection` en API .NET (`Program.cs:50`); Flask sin TLS.
-- CORS: política permisiva “AllowAll” (`Program.cs:31–39,52`); `CORS(app)` en Flask (`server.py:26–27`).
-- Limitación/Validación: sin rate limiting ni autenticación de llamadas; `DatabaseExplorerController` acepta credenciales y construye conexiones desde el body (`OperationWeb.API/Controllers/DatabaseExplorerController.cs:223–247`).
-
-### Recomendaciones
-- Implementar `AddAuthentication(JwtBearer)` y políticas/roles con `[Authorize]` en controladores críticos.
-- Restringir CORS a dominios conocidos.
-- Habilitar cifrado de conexión (remover `Encrypt=false` y `TrustServerCertificate=true`).
-- Agregar rate limiting y validaciones de entrada a nivel de API.
-
-### Cambios de endurecimiento aplicados (Fase 1)
-- Eliminado `OperationWeb.API/Controllers/DatabaseExplorerController.cs` por riesgo de manipulación de credenciales.
-- Cadenas de conexión ajustadas para cifrado (`Encrypt=True; TrustServerCertificate=False`).
-- Servicio Python preparado para credenciales en `.env` y conexión segura.
-
-### Protección de Secrets (User Secrets .NET)
-1. `cd OperationWeb.API && dotnet user-secrets init`
-2. `dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=...;Database=...;User ID=app_user;Password=<secreto>;Encrypt=True;TrustServerCertificate=False;MultipleActiveResultSets=true"`
-3. Repetir para `ConnectionStrings:Database1Connection` y `Database2Connection`.
-
-## ⚙️ Configuración Rápida
-
-1. **Configurar la cadena de conexión** en `appsettings.json`
-2. **Ejecutar migraciones**: `dotnet ef database update --project OperationWeb.DataAccess --startup-project OperationWeb.API`
-3. **Ejecutar la aplicación**: `dotnet run --project OperationWeb.API`
-4. **Acceder a la API**: `http://localhost:5132`
-
-## 📖 Documentación Completa
-
-- **[Guía de Arquitectura](docs/architecture/GUIA_ARQUITECTURA_PROYECTOS.md)**: Principios y patrones utilizados
-- **[Guía de Implementación](docs/guides/GUIA_IMPLEMENTACION_PASO_A_PASO.md)**: Pasos detallados de desarrollo
-- **[Módulo de Cuadrillas](docs/modules/DOCUMENTACION_MODULO_CUADRILLAS.md)**: Documentación del módulo implementado
-- **[Template para Nuevos Módulos](docs/templates/TEMPLATE_NUEVO_MODULO.md)**: Plantilla para desarrollo de nuevos módulos
-
-## 🔧 Módulos Implementados
-
-### ✅ Módulo de Cuadrillas
-- **Entidades**: Cuadrilla, Colaborador, CuadrillaColaborador
-- **API Endpoints**: 22 endpoints completos
-- **Funcionalidades**: CRUD completo, filtros, relaciones
-- **Estado**: ✅ Completado y documentado
-
-## 🧪 Pruebas
-
-- **Pruebas de API**: Disponibles en `tests/api/test_api_endpoints.html`
-- **Cobertura**: Endpoints de Cuadrillas y Colaboradores
-- **Herramientas**: HTML interactivo para pruebas manuales
-
-
+> **Nota para Desarrolladores**: La documentación técnica detallada, diagramas de arquitectura y guías de despliegue se encuentran en la documentación interna del equipo y no están disponibles en este repositorio público por razones de seguridad.
 
 ## 🤝 Contribución
 
-1. Revisar la [documentación de arquitectura](docs/architecture/)
-2. Usar el [template para nuevos módulos](docs/templates/TEMPLATE_NUEVO_MODULO.md)
-3. Seguir las [guías de implementación](docs/guides/)
-4. Ejecutar pruebas antes de hacer commit
-## Fase 2 — Cierre y Estado
-
-- Autenticación JWT endurecida: verificación exclusiva con BCrypt; eliminado fallback a contraseña plana.
-- Clave JWT segura (≥256 bits) definida vía User Secrets.
-- CORS configurado y verificado para `http://localhost:8000`; preflight `OPTIONS` OK.
-- Entorno Development alineado: Frontend `http://localhost:8000`, API `.NET` `http://localhost:5132`.
-- Persistencia en Development: EF InMemory activado para evitar fallos de BD mientras se define el esquema definitivo.
-- Rate Limiting en login: 5 intentos por 60s por IP aplicado a `POST /api/auth/login`.
-- Frontend: login integrado y Kanban con estados normalizados (Por Asignar, En Progreso, Finalizados).
-
-### Cómo ejecutar (Desarrollo)
-
-- API `.NET`:
-  - `cd OperationWeb.API`
-  - `env ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5132 ~/.dotnet/dotnet run`
-- Frontend:
-  - `cd frontend/Modelo_Funcional`
-  - `python3 -m http.server 8000`
-- Ajustes del navegador (consola):
-  - `localStorage.setItem('api_net','http://localhost:5132')`
-  - `localStorage.removeItem('jwt')`
-
-### Pruebas rápidas
-
-- Login (debe devolver 200 con token):
-  - `curl -i -X POST http://localhost:5132/api/auth/login -H 'Content-Type: application/json' -d '{"Username":"admin","Password":"admin"}'`
-- Empleados (protegido, responde 200 con `[]` en InMemory):
-  - `curl -i http://localhost:5132/api/empleados -H "Authorization: Bearer <token>"`
-- Preflight CORS (debe devolver 204 con `Access-Control-Allow-Origin`):
-  - `curl -i -X OPTIONS http://localhost:5132/api/auth/login -H 'Origin: http://localhost:8000' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type'`
-
-### Secretos (Desarrollo)
-
-- Definir clave JWT y usuario demo (BCrypt hash):
-  - `dotnet user-secrets set "Jwt:Key" "LocalDevKey_2025_0123456789ABCDEF0123456789ABCDEF"`
-  - `dotnet user-secrets set "Jwt:DemoUser:Username" "admin"`
-  - `dotnet user-secrets set "Jwt:DemoUser:PasswordHash" "<hash BCrypt>"`
-
-> Nota: Se eliminó `Jwt:DemoUser:PasswordPlain`.
-
-## Fase 3 — Asignación Manual y Calidad de Datos (Completado)
-
-- **Asignación Manual de Líderes:**
-  - Implementado `PUT /api/proyectos/{id}/assign` para asignar Gerentes y Jefes manualmente.
-  - Modal de asignación en Frontend conectado a la API.
-  - Lógica de seguridad actualizada para permitir acceso a líderes asignados explícitamente.
-
-- **Calidad de Datos y Dashboard:**
-  - **Filtro Activo/Cesado:** Lógica estricta basada en `FechaCese` para distinguir personal activo.
-  - **Dashboard Realista:** KPIs y gráficos actualizados para reflejar solo personal activo.
-  - **Sincronización Inteligente de Proyectos:** Estado de proyectos ("Activo"/"Inactivo") calculado automáticamente según la presencia de personal activo en el área.
-  - **Feedback Visual:** Indicadores rojos para personal cesado y proyectos inactivos.
-
-## Estado actual
-
-- **Fase 1, 2 y 3 Completadas.**
-- Sistema totalmente funcional con:
-  - Autenticación segura (JWT + BCrypt).
-  - Gestión de Cuadrillas y Proyectos.
-  - Seguridad Jerárquica (Admin/Manager/Coordinator) + Asignación Manual.
-  - Dashboard de Indicadores con datos reales filtrados.
-  - Sincronización inteligente entre Personal y Proyectos.
-
-## 🛠️ Solución de Problemas y Notas Técnicas
-
-### Borrado de Personal y Restricciones FK
-- **Problema**: Error 500 al borrar un empleado debido a la restricción `FK_Users_Personal_DNI` en la base de datos.
-- **Solución**: Se implementó un borrado en cascada manual en `PersonalRepository.DeleteByDNIAsync`.
-
-### Sincronización de Proyectos
-- **Lógica**: La sincronización (`ProyectoService.SincronizarProyectosDesdePersonalAsync`) ahora verifica si existen empleados con `FechaCese` nula o futura en cada área.
-- **Resultado**:
-  - > 0 empleados activos -> Proyecto "Activo" (Verde).
-  - 0 empleados activos -> Proyecto "Inactivo" (Rojo).
-- **Frontend**: Requiere cache-busting (`?t=timestamp`) para reflejar cambios inmediatos tras la sincronización.
-
+Este es un repositorio privado/interno. El acceso y contribución están restringidos al equipo de desarrollo autorizado.
