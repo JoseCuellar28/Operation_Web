@@ -87,6 +87,21 @@ namespace OperationWeb.API.Controllers
             }
         }
 
+        [HttpGet("metadata")]
+        public async Task<ActionResult<PersonalMetadataDto>> GetMetadata()
+        {
+            try
+            {
+                var meta = await _personalService.GetMetadataAsync();
+                return Ok(meta);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener metadata");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
         [HttpPut("{dni}/terminate")]
         public async Task<ActionResult> Terminate(string dni)
         {
@@ -157,7 +172,7 @@ namespace OperationWeb.API.Controllers
                 var actualizado = await _personalService.UpdateAsync(personal);
                 return Ok(actualizado);
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 return BadRequest("Error al procesar la solicitud.");
             }

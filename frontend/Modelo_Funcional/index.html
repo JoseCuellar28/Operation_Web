@@ -116,10 +116,16 @@
                         <div class="error-message" id="captchaError" style="display:none;">Captcha inválido</div>
                     </div>
 
-                    <!-- Link olvidé contraseña -->
-                    <div class="text-end mb-4">
-                        <a href="#" class="forgot-password" data-bs-toggle="modal"
-                            data-bs-target="#forgotPasswordModal">¿Olvidaste la contraseña?</a>
+                    <!-- Remember Me and Forgot Password -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe" style="font-size: 0.9rem;">
+                                Recordar usuario y contraseña
+                            </label>
+                        </div>
+                        <a href="#" class="forgot-password text-decoration-none" data-bs-toggle="modal"
+                            data-bs-target="#forgotPasswordModal" style="font-size: 0.9rem;">¿Olvidaste la contraseña?</a>
                     </div>
 
                     <!-- Botón de ingreso -->

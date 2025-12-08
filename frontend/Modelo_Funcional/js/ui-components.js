@@ -571,11 +571,26 @@ const UIComponents = {
                                     <label class="form-label" style="display: block; margin-bottom: 6px; font-size: 0.875rem; font-weight: 500; color: #334155;">Rol Sugerido</label>
                                     <select class="form-select" id="crear-usuario-rol">
                                         <option value="ADMIN">ADMIN</option>
+                                        <option value="PROJECT_ADMIN">PROJECT ADMIN</option>
                                         <option value="MANAGER">MANAGER</option>
                                         <option value="SUPERVISOR">SUPERVISOR</option>
                                         <option value="USER">USER</option>
                                         <option value="FIELD">FIELD</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="row mt-2" style="margin-top: 12px; display: flex; gap: 20px;">
+                                <div class="col-md-6" style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="crear-usuario-access-web" checked>
+                                        <label for="crear-usuario-access-web" style="font-size: 0.875rem; color: #334155;">Acceso Web</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6" style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="crear-usuario-access-app" checked>
+                                        <label for="crear-usuario-access-app" style="font-size: 0.875rem; color: #334155;">Acceso App Móvil</label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row mt-2" style="margin-top: 12px;">
@@ -678,9 +693,16 @@ const UIComponents = {
         return `
             <div class="w-full p-6 space-y-6">
                 <!-- Page Header -->
-                <div class="mb-6">
-                    <h1 class="text-3xl font-bold text-foreground">Dashboard</h1>
-                    <p class="text-muted-foreground mt-1">Vista general del sistema</p>
+                <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-foreground">Dashboard</h1>
+                        <p class="text-muted-foreground mt-1">Vista general del sistema</p>
+                    </div>
+                    <div class="w-full sm:w-64">
+                        <select id="filtro-division-dashboard" onchange="window.dashboard.filtrarDashboard()" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                            <option value="">Todas las Divisiones</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- KPI Cards -->
@@ -750,20 +772,28 @@ const UIComponents = {
                     </div>
                 </div>
 
-                <!-- Charts Row -->
+                <!-- Charts Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Chart 1: Colaboradores por Tipo -->
+                    <!-- Chart 1: Proyectos Activos por Área (Headcount) -->
                     <div class="rounded-lg border bg-card p-6 shadow-sm">
-                        <h3 class="text-lg font-semibold mb-4">Colaboradores por Tipo</h3>
+                        <h3 class="font-semibold mb-4">Colaboradores por Proyecto (Área)</h3>
+                        <div class="h-64">
+                            <canvas id="chart-proyectos-division"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Colaboradores por Tipo -->
+                    <div class="rounded-lg border bg-card p-6 shadow-sm">
+                        <h3 class="font-semibold mb-4">Colaboradores por Tipo</h3>
                         <div class="h-64">
                             <canvas id="chart-colaboradores-tipo"></canvas>
                         </div>
                     </div>
 
-                    <!-- Chart 2: Estado de Vehículos -->
+                    <!-- Chart 3: Estado de Vehículos -->
                     <div class="rounded-lg border bg-card p-6 shadow-sm">
-                        <h3 class="text-lg font-semibold mb-4">Estado de Vehículos</h3>
-                        <div class="h-64 flex items-center justify-center">
+                        <h3 class="font-semibold mb-4">Estado de Vehículos</h3>
+                        <div class="h-64">
                             <canvas id="chart-vehiculos-estado"></canvas>
                         </div>
                     </div>
@@ -855,7 +885,13 @@ const UIComponents = {
                                     <td class="p-2"><input type="text" class="proyectos-filter-input w-full px-2 py-1 text-xs border rounded" placeholder="Filtrar Cliente..." onkeyup="filtrarPorColumnaProyectos(2, this.value)"></td>
                                     <td class="p-2"><input type="text" class="proyectos-filter-input w-full px-2 py-1 text-xs border rounded" placeholder="Filtrar Inicio..." onkeyup="filtrarPorColumnaProyectos(3, this.value)"></td>
                                     <td class="p-2"><input type="text" class="proyectos-filter-input w-full px-2 py-1 text-xs border rounded" placeholder="Filtrar Fin..." onkeyup="filtrarPorColumnaProyectos(4, this.value)"></td>
-                                    <td class="p-2"><input type="text" class="proyectos-filter-input w-full px-2 py-1 text-xs border rounded" placeholder="Filtrar Estado..." onkeyup="filtrarPorColumnaProyectos(5, this.value)"></td>
+                                    <td class="p-2">
+                                        <select class="proyectos-filter-input w-full px-2 py-1 text-xs border rounded" onchange="filtrarPorColumnaProyectos(5, this.value)">
+                                            <option value="">Todos</option>
+                                            <option value="activos">Activos</option>
+                                            <option value="finalizados">Cesados</option>
+                                        </select>
+                                    </td>
                                     <td class="p-2"><input type="text" class="proyectos-filter-input w-full px-2 py-1 text-xs border rounded" placeholder="Filtrar Presup..." onkeyup="filtrarPorColumnaProyectos(6, this.value)"></td>
                                     <td class="p-2"></td>
                                 </tr>

@@ -25,6 +25,7 @@ namespace OperationWeb.DataAccess
         public DbSet<HistorialCargaPersonal> HistorialCargasPersonal { get; set; }
         public DbSet<MotivoCese> MotivosCese { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<UserAccessConfig> UserAccessConfigs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -185,10 +186,10 @@ namespace OperationWeb.DataAccess
         {
             // Personal semilla (Necesarios para CuadrillaColaboradores)
             modelBuilder.Entity<Personal>().HasData(
-                new Personal { DNI = "12345678", Inspector = "Juan Pérez", Telefono = "555-0001", Distrito = "Lima", Tipo = "Técnico", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
-                new Personal { DNI = "87654321", Inspector = "María González", Telefono = "555-0002", Distrito = "Miraflores", Tipo = "Supervisor", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
-                new Personal { DNI = "11223344", Inspector = "Carlos Rodríguez", Telefono = "555-0003", Distrito = "San Isidro", Tipo = "Operario", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
-                new Personal { DNI = "44332211", Inspector = "Ana López", Telefono = "555-0004", Distrito = "Surco", Tipo = "Técnico", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow }
+                new Personal { DNI = "12345678", Inspector = "Juan Pérez", Telefono = "555-0001", Distrito = "Lima", Tipo = "Técnico", Division = "DG Div EHS", Area = "Area 1", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
+                new Personal { DNI = "87654321", Inspector = "María González", Telefono = "555-0002", Distrito = "Miraflores", Tipo = "Supervisor", Division = "DG Div EHS", Area = "Area 1", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
+                new Personal { DNI = "11223344", Inspector = "Carlos Rodríguez", Telefono = "555-0003", Distrito = "San Isidro", Tipo = "Operario", Division = "Division Norte", Area = "Area 2", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
+                new Personal { DNI = "44332211", Inspector = "Ana López", Telefono = "555-0004", Distrito = "Surco", Tipo = "Técnico", Division = "Division Norte", Area = "Area 2", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow }
             );
 
             // Empleados semilla (Modelo Operativo)

@@ -66,7 +66,7 @@ namespace OperationWeb.DataAccess.Repositories
                 throw;
             }
         }
-        public async Task<IEnumerable<(Personal Personal, User? User)>> GetAllWithUserStatusAsync()
+        public async Task<IEnumerable<(Entities.Personal Personal, Entities.User User)>> GetAllWithUserStatusAsync()
         {
             var query = from p in _context.Personal
                         join u in _context.Users on p.DNI equals u.DNI into userGroup
@@ -75,6 +75,35 @@ namespace OperationWeb.DataAccess.Repositories
 
             var result = await query.ToListAsync();
             return result.Select(x => (x.Personal, x.User));
+        }
+
+        public async Task<(IEnumerable<string> Divisions, IEnumerable<string> Areas, IEnumerable<string> Categories)> GetMetadataAsync()
+        {
+            // UI 'Unidad' maps to DB 'Area'
+            var divisions = await _context.Personal
+                .Where(p => !string.IsNullOrEmpty(p.Area))
+                .Select(p => p.Area)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+
+            // UI 'Area' maps to DB 'DetalleCebe'
+            var areas = await _context.Personal
+                .Where(p => !string.IsNullOrEmpty(p.DetalleCebe))
+                .Select(p => p.DetalleCebe)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+
+            // UI 'Puesto/Posicion' maps to DB 'Tipo'
+            var categories = await _context.Personal
+                .Where(p => !string.IsNullOrEmpty(p.Tipo))
+                .Select(p => p.Tipo)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+
+            return (divisions!, areas!, categories!);
         }
 
         public async Task<HistorialCargaPersonal> RegisterLoadHistoryAsync(HistorialCargaPersonal history)

@@ -16,8 +16,8 @@ namespace OperationWeb.API.Controllers
             _userService = userService;
         }
 
-        public record CreateUserRequest(string DNI, string? Password, string Role);
-
+        public record CreateUserRequest(string DNI, string? Password, string Role, bool AccessWeb = true, bool AccessApp = true);
+        
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest req)
         {
@@ -28,14 +28,14 @@ namespace OperationWeb.API.Controllers
 
             try
             {
-                var result = await _userService.CreateUserAsync(req.DNI, req.Role);
+                var result = await _userService.CreateUserAsync(req.DNI, req.Role, req.AccessWeb, req.AccessApp);
                 return Ok(new { id = result.User.Id, dni = result.User.DNI, role = result.User.Role, tempPassword = result.PlainPassword });
             }
             catch (InvalidOperationException ex)
             {
                 return Conflict("El usuario ya existe."); // 409 Conflict if user exists
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log error
                 return StatusCode(500, "Error interno al crear usuario.");
@@ -51,7 +51,7 @@ namespace OperationWeb.API.Controllers
                 if (!result) return NotFound($"Usuario con DNI {dni} no encontrado");
                 return Ok(new { message = "Estado actualizado correctamente" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, "Error interno al actualizar estado.");
             }

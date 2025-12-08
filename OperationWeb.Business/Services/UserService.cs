@@ -36,7 +36,7 @@ namespace OperationWeb.Business.Services
             return user;
         }
 
-        public async Task<(User User, string PlainPassword)> CreateUserAsync(string dni, string role)
+        public async Task<(User User, string PlainPassword)> CreateUserAsync(string dni, string role, bool accessWeb = true, bool accessApp = true)
         {
             // Check if user exists
             var existing = await _context.Users.FirstOrDefaultAsync(u => u.DNI == dni);
@@ -70,6 +70,17 @@ namespace OperationWeb.Business.Services
             };
 
             _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            // Create Access Config
+            var accessConfig = new UserAccessConfig 
+            { 
+                UserId = user.Id, 
+                AccessWeb = accessWeb, 
+                AccessApp = accessApp,
+                LastUpdated = DateTime.UtcNow 
+            };
+            _context.UserAccessConfigs.Add(accessConfig);
             await _context.SaveChangesAsync();
 
             // Send email

@@ -108,7 +108,7 @@ namespace OperationWeb.API.Controllers
                 var nuevoEmpleado = await _empleadoService.CreateEmpleadoAsync(empleado);
                 return CreatedAtAction(nameof(GetEmpleado), new { id = nuevoEmpleado.IdEmpleado }, nuevoEmpleado);
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 return BadRequest("Error al procesar la solicitud.");
             }
@@ -136,7 +136,7 @@ namespace OperationWeb.API.Controllers
                 var empleadoActualizado = await _empleadoService.UpdateEmpleadoAsync(empleado);
                 return Ok(empleadoActualizado);
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 return BadRequest("Error al procesar la solicitud.");
             }
@@ -161,7 +161,7 @@ namespace OperationWeb.API.Controllers
 
                 return NoContent();
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
                 return BadRequest("Error al procesar la solicitud.");
             }

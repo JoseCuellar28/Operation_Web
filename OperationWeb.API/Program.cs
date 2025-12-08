@@ -153,6 +153,32 @@ try
         {
             await db.Database.EnsureCreatedAsync();
 
+            // Evolutionary DB Update: Ensure UserAccessConfigs table exists without wiping data
+            try 
+            {
+                Console.WriteLine("[DEBUG] ATTEMPTING TO CREATE UserAccessConfigs TABLE...");
+                // Debug Schema
+                // var currentSchema = await db.Database.SqlQueryRaw<string>("SELECT SCHEMA_NAME()").FirstOrDefaultAsync();
+                // Console.WriteLine($"[DEBUG] DEFAULT SCHEMA: {currentSchema}");
+
+                await db.Database.ExecuteSqlRawAsync(@"
+                 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'UserAccessConfigs')
+                 CREATE TABLE UserAccessConfigs (
+                     Id INT IDENTITY(1,1) PRIMARY KEY,
+                     UserId INT NOT NULL,
+                     AccessWeb BIT NOT NULL DEFAULT 1,
+                     AccessApp BIT NOT NULL DEFAULT 1,
+                     LastUpdated DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+                     -- FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+                 );");
+                 Console.WriteLine("[DEBUG] UserAccessConfigs creation logic finished.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WARNING] Failed to ensure UserAccessConfigs table: {ex.Message} - {ex.InnerException?.Message}");
+                // app.Logger.LogError(ex, "Failed to create table");
+            }
+
             // Ensure Roles exist
             var adminRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
             if (adminRole == null)

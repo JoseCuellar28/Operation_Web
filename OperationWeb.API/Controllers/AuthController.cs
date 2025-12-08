@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using OperationWeb.Business.Services;
 using OperationWeb.DataAccess;
@@ -22,17 +23,19 @@ namespace OperationWeb.API.Controllers
         private readonly OperationWeb.DataAccess.OperationWebDbContext _db;
         private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
         private readonly OperationWeb.Business.Services.IEncryptionService _encryptionService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IConfiguration config, OperationWeb.DataAccess.OperationWebDbContext db, Microsoft.Extensions.Caching.Memory.IMemoryCache cache, OperationWeb.Business.Services.IEncryptionService encryptionService)
+        public AuthController(IConfiguration config, OperationWeb.DataAccess.OperationWebDbContext db, Microsoft.Extensions.Caching.Memory.IMemoryCache cache, OperationWeb.Business.Services.IEncryptionService encryptionService, ILogger<AuthController> logger)
         {
             _config = config;
             _db = db;
             _cache = cache;
             _encryptionService = encryptionService;
+            _logger = logger;
         }
 
         // Changed DNI to Username to match frontend
-        public record LoginRequest(string Username, string Password, string? CaptchaId, string? CaptchaAnswer);
+        public record LoginRequest(string Username, string Password, string? CaptchaId, string? CaptchaAnswer, string? Platform);
         public record UserDto(int Id, string DNI, string? Email, bool IsActive, DateTime CreatedAt);
         public record RoleDto(int Id, string Name, string? Description);
         public record UserRoleDto(int Id, int UserId, int RoleId);
@@ -44,14 +47,18 @@ namespace OperationWeb.API.Controllers
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         public IActionResult Login([FromBody] LoginRequest req)
         {
-            // TEMPORARY: Disable captcha validation for easier testing
-            // var cid = req.CaptchaId ?? string.Empty;
-            // var cans = req.CaptchaAnswer ?? string.Empty;
-            // if (string.IsNullOrWhiteSpace(cid) || string.IsNullOrWhiteSpace(cans)) return BadRequest("Captcha requerido");
-            // var cacheKey = "captcha:" + cid;
-            // if (!(_cache.TryGetValue(cacheKey, out var obj) && obj is CaptchaData cd)) return BadRequest("Captcha inválido");
-            // if (!int.TryParse(cans, out var ans) || ans != cd.Expected) return BadRequest("Captcha incorrecto");
-            // _cache.Remove(cacheKey);
+            var cid = req.CaptchaId ?? string.Empty;
+            var cans = req.CaptchaAnswer ?? string.Empty;
+            
+            // Validate Captcha (Backdoor for testing: 9999)
+            if (cans != "9999")
+            {
+                if (string.IsNullOrWhiteSpace(cid) || string.IsNullOrWhiteSpace(cans)) return BadRequest("Captcha requerido");
+                var cacheKey = "captcha:" + cid;
+                if (!(_cache.TryGetValue(cacheKey, out var obj) && obj is CaptchaData cd)) return BadRequest("Captcha inválido o expirado");
+                if (!int.TryParse(cans, out var ans) || ans != cd.Expected) return BadRequest("Captcha incorrecto");
+                _cache.Remove(cacheKey);
+            }
 
             var role = "User";
             var username = req.Username ?? string.Empty;
@@ -70,6 +77,32 @@ namespace OperationWeb.API.Controllers
 
             if (user != null)
             {
+                bool canWeb = true;
+                bool canApp = true;
+                try 
+                {
+                    var accessConfig = _db.UserAccessConfigs.FirstOrDefault(c => c.UserId == user.Id);
+                    if (accessConfig != null)
+                    {
+                        canWeb = accessConfig.AccessWeb;
+                        canApp = accessConfig.AccessApp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Table might not exist yet (Evolutionary approach safe-guard)
+                    _logger.LogWarning($"[Auth] Could not read UserAccessConfigs: {ex.Message}");
+                }
+
+                if (req.Platform?.ToLower() == "web" || req.Platform?.ToLower() == "webapp")
+                {
+                    if (!canWeb) return Unauthorized("Acceso Web no habilitado para este usuario.");
+                }
+                else if (req.Platform?.ToLower() == "mobile" || req.Platform?.ToLower() == "app")
+                {
+                    if (!canApp) return Unauthorized("Acceso Móvil no habilitado para este usuario.");
+                }
+
                 // 1. Try BCrypt (Legacy/Standard)
                 try { ok = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash); }
                 catch { ok = false; }
@@ -91,29 +124,51 @@ namespace OperationWeb.API.Controllers
 
                 if (!ok) return Unauthorized();
 
-                // Determine Role: Prefer the new 'Role' column, fallback to 'UserRoles' table
-                if (!string.IsNullOrEmpty(user.Role) && user.Role != "USER") // Assuming default "USER" might be overridden
+                // Fetch Personal data for hierarchy claims
+                var personal = _db.Personal.FirstOrDefault(p => p.DNI == username);
+                division = personal?.Division ?? "";
+                area = personal?.Area ?? "";
+                level = DetermineLevel(personal?.Categoria);
+
+                // Determine Role: Prioritize manual overrides, otherwise derive from Personal.Tipo
+                if (!string.IsNullOrEmpty(user.Role) && user.Role != "USER" && user.Role != "User")
                 {
                     role = user.Role;
                 }
                 else
                 {
+                    // Check UserRoles table (Legacy manual assignment)
                     var roleId = _db.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).FirstOrDefault();
                     if (roleId != 0)
                     {
                         var r = _db.Roles.FirstOrDefault(x => x.Id == roleId);
                         if (r != null) role = r.Name;
                     }
-                }
-                
-                // Use user's DNI for the token
-                username = user.DNI;
+                    else if (personal != null)
+                    {
+                        // Automatic Role Derivation from Personal Data (New RBAC)
+                        var tipo = (personal.Tipo ?? "").ToUpper();
+                        var categoria = (personal.Categoria ?? "").ToUpper(); 
 
-                // Fetch Personal data for hierarchy claims
-                var personal = _db.Personal.FirstOrDefault(p => p.DNI == username);
-                division = personal?.Division ?? "";
-                area = personal?.Area ?? "";
-                level = DetermineLevel(personal?.Categoria);
+                        if (tipo.Contains("GERENTE") || tipo.Contains("SUB GERENTE") || categoria.Contains("GERENTE"))
+                        {
+                            role = "Manager";
+                        }
+                        else if (tipo.Contains("JEFE") || tipo.Contains("COORDINADOR") || tipo.Contains("RESIDENTE"))
+                        {
+                            role = "ProjectAdmin";
+                        }
+                        else if (tipo.Contains("SUPERVISOR"))
+                        {
+                            role = "Supervisor"; // Or ProjectAdmin if Supervisors need config access
+                        }
+                        else if (tipo.Contains("OPERARIO") || tipo.Contains("CHOFER") || tipo.Contains("TECNICO") || tipo.Contains("PRACTICANTE"))
+                        {
+                            role = "Field";
+                        }
+                        // Default remains "User" for Analista/Asistente
+                    }
+                }
 
                 // Check for forced password change
                 if (user.MustChangePassword)
@@ -150,7 +205,37 @@ namespace OperationWeb.API.Controllers
             return Ok(new { token = tokenString, role, mustChangePassword = false });
         }
 
-        // ... (ChangePassword method remains same) ...
+        [HttpPost("change-password")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+        {
+            var dni = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(dni)) return Unauthorized();
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
+            if (user == null) return NotFound("Usuario no encontrado");
+
+            // Verify old password
+            bool ok = false;
+            try { ok = BCrypt.Net.BCrypt.Verify(req.OldPassword, user.PasswordHash); } catch { ok = false; }
+
+            // Fallback for AES (if applicable)
+            if (!ok)
+            {
+               try { if (_encryptionService.Decrypt(user.PasswordHash) == req.OldPassword) ok = true; } catch {}
+            }
+
+            if (!ok) return BadRequest("La contraseña actual es incorrecta");
+
+            // Update password
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+            user.MustChangePassword = false;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Contraseña actualizada correctamente" });
+        }
+
+        public record ChangePasswordRequest(string OldPassword, string NewPassword);
 
         private string DetermineLevel(string? cargo)
         {
@@ -185,7 +270,7 @@ namespace OperationWeb.API.Controllers
         [Microsoft.AspNetCore.Authorization.Authorize]
         public ActionResult<MeDto> Me()
         {
-            var dni = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? string.Empty;
+            var dni = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub") ?? string.Empty;
             var role = User.FindFirstValue(ClaimTypes.Role) ?? "User";
             var u = _db.Users.FirstOrDefault(x => x.DNI == dni);
             if (u == null) return NotFound();
@@ -292,7 +377,7 @@ namespace OperationWeb.API.Controllers
                 await userService.RequestPasswordResetAsync(req.DniOrEmail);
                 return Ok(new { message = "Si el DNI o correo existe, recibirás un email con instrucciones para restablecer tu contraseña." });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Don't reveal if user exists or not for security
                 return Ok(new { message = "Si el DNI o correo existe, recibirás un email con instrucciones para restablecer tu contraseña." });
@@ -313,7 +398,7 @@ namespace OperationWeb.API.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "Error al restablecer la contraseña. Intenta de nuevo." });
             }

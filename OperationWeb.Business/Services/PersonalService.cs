@@ -163,6 +163,17 @@ namespace OperationWeb.Business.Services
             return await _personalRepository.RegisterLoadHistoryAsync(history);
         }
 
+        public async Task<PersonalMetadataDto> GetMetadataAsync()
+        {
+            var (divs, areas, cats) = await _personalRepository.GetMetadataAsync();
+            return new PersonalMetadataDto
+            {
+                Divisiones = divs,
+                Areas = areas,
+                Cargos = cats
+            };
+        }
+
         private async Task LogEventoAsync(string dni, string tipoEvento, string motivo)
         {
             try

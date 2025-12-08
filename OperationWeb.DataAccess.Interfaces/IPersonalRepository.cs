@@ -7,6 +7,7 @@ namespace OperationWeb.DataAccess.Interfaces
         Task<Personal?> GetByDNIAsync(string dni);
         Task DeleteByDNIAsync(string dni);
         Task<IEnumerable<(Personal Personal, User? User)>> GetAllWithUserStatusAsync();
+        Task<(IEnumerable<string> Divisions, IEnumerable<string> Areas, IEnumerable<string> Categories)> GetMetadataAsync();
         Task<HistorialCargaPersonal> RegisterLoadHistoryAsync(HistorialCargaPersonal history);
     }
 }

@@ -102,7 +102,7 @@ namespace OperationWeb.API.Controllers
                 await client.SendMailAsync(mailMessage);
                 return Ok(new { message = "Correo de prueba enviado exitosamente." });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "Error al enviar correo.", details = "Consulte los logs del servidor." });
             }

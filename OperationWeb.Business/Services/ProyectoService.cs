@@ -26,11 +26,11 @@ namespace OperationWeb.Business.Services
             // 1. Get Stats per Area (Active Employees)
             var areasStats = await _context.Personal
                 .Where(p => !string.IsNullOrEmpty(p.Area))
-                .GroupBy(p => p.Area)
+                .GroupBy(p => p.Area!) // Force non-null
                 .Select(g => new 
                 { 
                     Area = g.Key, 
-                    Division = g.Max(p => p.Division), // Take one division (Max/Min doesn't matter much if consistent)
+                    Division = g.Max(p => p.Division), 
                     ActiveCount = g.Count(p => p.FechaCese == null || p.FechaCese > DateTime.Now)
                 })
                 .ToListAsync();

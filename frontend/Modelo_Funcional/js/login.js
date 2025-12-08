@@ -142,7 +142,7 @@ class LoginManager {
         ];
         const cid = localStorage.getItem('captcha_id') || '';
         const cans = (document.getElementById('captchaAnswer')?.value || '').trim();
-        const body = JSON.stringify({ Username: username, Password: password, CaptchaId: cid, CaptchaAnswer: cans });
+        const body = JSON.stringify({ username: username, password: password, captchaId: cid, captchaAnswer: cans, platform: 'Web' });
         const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
         (async () => {
             let errorType = '';
@@ -181,6 +181,7 @@ class LoginManager {
                     }
                     if (data.mustChangePassword) {
                         this.showMessage('Debes cambiar tu contraseña', 'warning');
+                        this.setLoadingState(false);
                         this.showChangePasswordModal(token);
                         return;
                     }
@@ -237,6 +238,25 @@ class LoginManager {
                     alert.remove();
                 }
             }, 3000);
+        }
+    }
+
+    loadSavedCredentials() {
+        const savedUser = localStorage.getItem('remember_user');
+        const savedPass = localStorage.getItem('remember_pass');
+        const shouldRemember = localStorage.getItem('remember_me') === 'true';
+
+        if (shouldRemember && savedUser && this.usernameInput) {
+            this.usernameInput.value = savedUser;
+            if (this.rememberMeCheckbox) this.rememberMeCheckbox.checked = true;
+
+            if (savedPass && this.passwordInput) {
+                try {
+                    this.passwordInput.value = atob(savedPass);
+                } catch (e) {
+                    console.error('Error decoding password', e);
+                }
+            }
         }
     }
 
