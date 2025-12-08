@@ -101,10 +101,26 @@ namespace OperationWeb.Business.Services
                 return;
             }
 
+
+            // SIMULATION FOR DEV/DEMO ENVIROMENT
+            if (host.Contains("example.com") || host == "localhost")
+             {
+                 Console.WriteLine($"[EmailService] DEV MODE: Simulating email send to {toEmail}");
+                 Console.WriteLine($"[EmailService] SUBJECT: Recuperación de Contraseña");
+                 
+                 // Build reset URL (assuming frontend is on port 8080)
+                 string simulatedUrl = $"http://localhost:8080/frontend/Modelo_Funcional/reset-password.html?token={token}";
+                 
+                 Console.WriteLine($"[EmailService] LINK: {simulatedUrl}");
+                 Console.WriteLine($"[EmailService] TOKEN: {token}");
+
+                 return; // Skip actual sending
+            }
+
             int port = int.TryParse(portStr, out int p) ? p : 587;
 
-            // Build reset URL (assuming frontend is on port 8000)
-            string resetUrl = $"http://localhost:8000/frontend/Modelo_Funcional/reset-password.html?token={token}";
+            // Build reset URL (assuming frontend is on port 8080)
+            string resetUrl = $"http://localhost:8080/frontend/Modelo_Funcional/reset-password.html?token={token}";
 
             try
             {

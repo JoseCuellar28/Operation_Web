@@ -231,7 +231,7 @@ try
                 }
             }
 
-            var joseId = await EnsureUserAsync("10103488", "jose.arbildo@example.local");
+            // var joseId = await EnsureUserAsync("10103488", "jose.arbildo@example.local");
             
             async Task EnsureUserRoleAsync(int userId, int roleId)
             {
@@ -242,10 +242,10 @@ try
                 await db.SaveChangesAsync();
             }
 
-            if (adminRole != null) await EnsureUserRoleAsync(joseId, adminRole.Id);
+            // if (adminRole != null) await EnsureUserRoleAsync(joseId, adminRole.Id);
             
-            var jose = await db.Users.FindAsync(joseId);
-            if (jose != null) { jose.Role = "ADMIN"; await db.SaveChangesAsync(); }
+            // var jose = await db.Users.FindAsync(joseId);
+            // if (jose != null) { jose.Role = "ADMIN"; await db.SaveChangesAsync(); }
         }
         catch (Exception ex)
         {

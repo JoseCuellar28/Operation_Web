@@ -1508,4 +1508,14 @@ const UIComponents = {
 };
 
 // Expose to global scope
+
+// Expose to global scope
 window.UIComponents = UIComponents;
+
+// Global Logout Function
+window.logout = function () {
+    console.log("Cerrando sesión...");
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+};

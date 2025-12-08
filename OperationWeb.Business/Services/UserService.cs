@@ -176,6 +176,22 @@ namespace OperationWeb.Business.Services
                 throw new InvalidOperationException("El usuario no tiene un correo electrónico registrado.");
             }
 
+            // Invalidate previous tokens for security (As per user request: "Old links should wait")
+            var activeTokens = await _context.PasswordResetTokens
+                .Where(t => t.DNI == user.DNI && !t.IsUsed)
+                .ToListAsync();
+
+            if (activeTokens.Any())
+            {
+                foreach (var t in activeTokens)
+                {
+                    t.IsUsed = true;
+                    // Optionally set UsedAt or a special flag, but IsUsed=true is enough to invalidate
+                }
+                // Save changes immediately so old tokens are dead before new one is created
+                await _context.SaveChangesAsync();
+            }
+
             // Generate token
             var token = Guid.NewGuid().ToString("N");
             var resetToken = new PasswordResetToken

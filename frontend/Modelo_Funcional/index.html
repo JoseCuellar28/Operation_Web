@@ -125,7 +125,8 @@
                             </label>
                         </div>
                         <a href="#" class="forgot-password text-decoration-none" data-bs-toggle="modal"
-                            data-bs-target="#forgotPasswordModal" style="font-size: 0.9rem;">¿Olvidaste la contraseña?</a>
+                            data-bs-target="#forgotPasswordModal" style="font-size: 0.9rem;">¿Olvidaste la
+                            contraseña?</a>
                     </div>
 
                     <!-- Botón de ingreso -->
@@ -170,37 +171,37 @@
             </div>
         </div>
 
-        <!-- Modal Olvidé Contraseña -->
-        <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title"><i class="fas fa-unlock-alt me-2"></i>Recuperar Contraseña</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-muted mb-4">Ingresa tu DNI o correo electrónico y te enviaremos las instrucciones
-                            para restablecer tu contraseña.</p>
+    </div>
+    <!-- Modal Olvidé Contraseña -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-unlock-alt me-2"></i>Recuperar Contraseña</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-4">Ingresa tu DNI o correo electrónico y te enviaremos las instrucciones
+                        para restablecer tu contraseña.</p>
 
-                        <div id="forgotPasswordMessage" class="alert" style="display: none;"></div>
+                    <div id="forgotPasswordMessage" class="alert" style="display: none;"></div>
 
-                        <form id="forgotPasswordForm">
-                            <div class="mb-3">
-                                <label for="forgotDniEmail" class="form-label">DNI o Correo Electrónico</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                    <input type="text" class="form-control" id="forgotDniEmail" required
-                                        placeholder="Ej: 41007510 o usuario@email.com">
-                                </div>
+                    <form id="forgotPasswordForm">
+                        <div class="mb-3">
+                            <label for="forgotDniEmail" class="form-label">DNI o Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="forgotDniEmail" required
+                                    placeholder="Ej: 41007510 o usuario@email.com">
                             </div>
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary" id="btnSendRecovery">
-                                    <i class="fas fa-paper-plane me-2"></i>Enviar Instrucciones
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="btnSendRecovery">
+                                <i class="fas fa-paper-plane me-2"></i>Enviar Instrucciones
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
