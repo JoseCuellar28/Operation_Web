@@ -97,25 +97,27 @@ namespace OperationWeb.API.Controllers
                 
                 if (inputPlatform == "web" || inputPlatform == "webapp") normalizedPlatform = "web";
                 else if (inputPlatform == "mobile" || inputPlatform == "app") normalizedPlatform = "mobile";
-                else return BadRequest("Plataforma no válida o no especificada (web/app).");
-
-                // Security: Explicit Permission Check
-                // This pattern ensures user input (Platform) is validated against trusted storage (canWeb/canApp)
-                // independently, preventing bypass via boolean complexity.
-                if (normalizedPlatform == "web" && !canWeb) 
-                {
-                    _logger.LogWarning($"[Auth] Access denied for user {user.DNI} on Web");
-                    return Unauthorized("Acceso no habilitado para Web.");
-                }
                 
-                if (normalizedPlatform == "mobile" && !canApp) 
+                // Security: Default Deny (Whitelist Pattern)
+                // We default to FALSE. We only allow if strict conditions are met.
+                bool isAuthorized = false;
+
+                if (normalizedPlatform == "web" && canWeb)
                 {
-                    _logger.LogWarning($"[Auth] Access denied for user {user.DNI} on Mobile");
-                    return Unauthorized("Acceso no habilitado para App.");
+                    isAuthorized = true;
+                }
+                else if (normalizedPlatform == "mobile" && canApp)
+                {
+                    isAuthorized = true;
                 }
 
-                // If we get here, the platform is valid AND the user has permission for it.
-                // Proceed to password check.
+                if (!isAuthorized)
+                {
+                    // CWE-117 Fix: Prevent Log Forging by not logging user-controlled data (DNI/Platform) directly
+                    // without strict sanitization. Using a generic message is safest/simplest.
+                    _logger.LogWarning("[Auth] Access denied: User does not have permission for the requested platform.");
+                    return Unauthorized("Acceso no habilitado para la plataforma solicitada.");
+                }
 
                 // 1. Try BCrypt
                 try { ok = BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash); }
