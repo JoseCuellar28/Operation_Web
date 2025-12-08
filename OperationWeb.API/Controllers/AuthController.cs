@@ -104,8 +104,8 @@ namespace OperationWeb.API.Controllers
                     return BadRequest("Plataforma no válida o no especificada (web/app).");
                 }
 
-                if (isWeb && !canWeb) return Unauthorized("Acceso Web no habilitado para este usuario.");
-                if (isMobile && !canApp) return Unauthorized("Acceso Móvil no habilitado para este usuario.");
+                bool isAuthorized = (isWeb && canWeb) || (isMobile && canApp);
+                if (!isAuthorized) return Unauthorized("Acceso no habilitado para la plataforma solicitada.");
 
                 // 1. Try BCrypt (Legacy/Standard)
                 try { ok = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash); }

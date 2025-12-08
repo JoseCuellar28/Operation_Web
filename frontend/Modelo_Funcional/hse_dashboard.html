@@ -4,267 +4,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo HSE - Operation Smart</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <title>HSE - Seguridad y Salud</title>
+
+    <!-- Tailwind CSS -->
+    <script src="js/vendor/tailwindcss.js"></script>
+
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles/dashboard_moderno.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- DOMPurify -->
+    <script src="js/vendor/purify.min.js"></script>
+
     <style>
-        .hse-card {
-            transition: transform 0.3s;
-            cursor: pointer;
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --success: 142.1 76.2% 36.3%;
+            --success-foreground: 355.7 100% 97.3%;
+            --warning: 38 92% 50%;
+            --warning-foreground: 48 96% 89%;
+            --radius: 0.5rem;
         }
 
-        .hse-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        body {
+            font-family: 'Inter', sans-serif;
         }
 
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+        /* Modal Styles (Reused) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            backdrop-filter: blur(4px);
         }
 
-        .status-open {
-            background-color: #ffebee;
-            color: #c62828;
+        .modal-overlay.active {
+            display: flex;
         }
 
-        .status-closed {
-            background-color: #e8f5e9;
-            color: #2e7d32;
+        .modal-container {
+            background: white;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "hsl(var(--primary))",
+                        destructive: "hsl(var(--destructive))",
+                        success: "hsl(var(--success))",
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark-blue fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="menu_moderno.html">
-                <i class="fas fa-shield-alt text-success me-2"></i>
-                <span class="fw-bold">HSE</span> <span class="fw-light ms-1">Operation Smart</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="menu_moderno.html"><i class="fas fa-home me-1"></i> Inicio</a>
-                    </li>
-                    <li class="nav-item dropdown ms-3">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
-                            data-bs-toggle="dropdown">
-                            <div class="avatar-circle me-2 bg-success">
-                                <span id="userInitials">U</span>
-                            </div>
-                            <div class="d-none d-md-block text-start">
-                                <div class="fw-medium small" id="userName">Usuario</div>
-                                <div class="text-white-50 x-small" id="userRole">Rol</div>
-                            </div>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i
-                                        class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
-                        </ul>
-                    </li>
-                </ul>
+<body class="bg-gray-50 text-slate-900 antialiased overflow-hidden">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 h-full flex flex-col border-r border-slate-200 bg-white shadow-sm z-20">
+            <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center font-bold text-white shadow-sm">
+                    HSE
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg">HSE Module</h1>
+                    <p class="text-xs text-slate-500">Security & Health</p>
+                </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="main-content container-fluid pt-5 mt-4">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4 pt-3">
-            <div>
-                <h2 class="fw-bold text-dark-blue">Panel de Seguridad y Salud</h2>
-                <p class="text-muted">Gestión de incidentes, inspecciones y cumplimiento.</p>
-            </div>
-            <div>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newInspectionModal">
-                    <i class="fas fa-clipboard-check me-2"></i>Nueva Inspección
-                </button>
-                <button class="btn btn-warning text-white ms-2" data-bs-toggle="modal"
-                    data-bs-target="#newIncidentModal">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Reportar Incidente
-                </button>
-            </div>
-        </div>
+            <nav class="flex-1 px-3 py-4 space-y-2">
+                <a href="menu_moderno.html"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i class="fas fa-arrow-left w-5"></i>
+                    <span class="font-medium">Volver al Menú</span>
+                </a>
+                <div class="h-px bg-slate-200 my-2"></div>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-green-50 text-green-700 font-medium">
+                    <i class="fas fa-shield-alt w-5"></i>
+                    <span>Dashboard HSE</span>
+                </a>
+                <a href="#"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i class="fas fa-clipboard-check w-5"></i>
+                    <span>Mis Inspecciones</span>
+                </a>
+                <a href="#"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                    <i class="fas fa-exclamation-triangle w-5"></i>
+                    <span>Reportar Incidente</span>
+                </a>
+            </nav>
+        </aside>
 
-        <!-- KPI Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card h-100 border-0 shadow-sm p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted small mb-1 text-uppercase fw-bold">Días sin Accidentes</p>
-                            <h3 class="fw-bold text-success mb-0" id="safeDays">0</h3>
-                        </div>
-                        <div class="icon-square bg-success-subtle text-success rounded-3">
-                            <i class="fas fa-calendar-check fa-lg"></i>
-                        </div>
-                    </div>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-slate-50">
+            <!-- Header -->
+            <header
+                class="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 shadow-sm z-10">
+                <h1 class="text-xl font-bold text-slate-800">Panel de Seguridad y Salud</h1>
+                <div class="flex items-center gap-3">
+                    <span id="user-display" class="text-sm font-medium text-slate-600">Usuario</span>
+                    <button onclick="logout()"
+                        class="px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors">
+                        Salir
+                    </button>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-0 shadow-sm p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted small mb-1 text-uppercase fw-bold">Inspecciones (Mes)</p>
-                            <h3 class="fw-bold text-primary mb-0" id="totalInspections">0</h3>
-                        </div>
-                        <div class="icon-square bg-primary-subtle text-primary rounded-3">
-                            <i class="fas fa-clipboard-list fa-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-0 shadow-sm p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted small mb-1 text-uppercase fw-bold">Incidentes Abiertos</p>
-                            <h3 class="fw-bold text-danger mb-0" id="openIncidents">0</h3>
-                        </div>
-                        <div class="icon-square bg-danger-subtle text-danger rounded-3">
-                            <i class="fas fa-exclamation-circle fa-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card h-100 border-0 shadow-sm p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted small mb-1 text-uppercase fw-bold">Entregas EPP</p>
-                            <h3 class="fw-bold text-info mb-0" id="ppeDeliveries">0</h3>
-                        </div>
-                        <div class="icon-square bg-info-subtle text-info rounded-3">
-                            <i class="fas fa-hard-hat fa-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </header>
 
-        <!-- Recent Activity Section -->
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="fw-bold mb-0">Últimas Inspecciones</h5>
+            <!-- Dashboard Content -->
+            <main class="flex-1 overflow-y-auto p-6 space-y-6">
+
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- Safe Days Card -->
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Días sin Accidentes</p>
+                            <h2 class="text-3xl font-bold text-green-600" id="kpi-safe-days">-</h2>
+                        </div>
+                        <div
+                            class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th class="ps-4">ID</th>
-                                        <th>Fecha</th>
-                                        <th>Tipo</th>
-                                        <th>Referencia</th>
-                                        <th>Estado</th>
-                                        <th>Puntaje</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="inspectionsTableBody">
-                                    <!-- Dynamic Data -->
-                                </tbody>
-                            </table>
+
+                    <!-- Inspections Card -->
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Inspecciones (Mes)</p>
+                            <h2 class="text-3xl font-bold text-blue-600" id="kpi-inspections">-</h2>
+                        </div>
+                        <div
+                            class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                    </div>
+
+                    <!-- Open Incidents Card -->
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Incidentes Abiertos</p>
+                            <h2 class="text-3xl font-bold text-yellow-600" id="kpi-incidents">-</h2>
+                        </div>
+                        <div
+                            class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                    </div>
+
+                    <!-- PPE Delivery Card -->
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Entregas EPP (Mes)</p>
+                            <h2 class="text-3xl font-bold text-purple-600" id="kpi-ppe">-</h2>
+                        </div>
+                        <div
+                            class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl">
+                            <i class="fas fa-hard-hat"></i>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="fw-bold mb-0">Acciones Rápidas</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-3">
-                            <button class="btn btn-outline-primary text-start p-3 hse-card"
-                                onclick="window.location.href='#'">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-truck-pickup fa-2x me-3"></i>
-                                    <div>
-                                        <div class="fw-bold">Checklist Vehicular</div>
-                                        <small class="text-muted">Inspección diaria de unidades</small>
-                                    </div>
-                                </div>
-                            </button>
-                            <button class="btn btn-outline-success text-start p-3 hse-card"
-                                onclick="window.location.href='#'">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-hard-hat fa-2x me-3"></i>
-                                    <div>
-                                        <div class="fw-bold">Entrega de EPP</div>
-                                        <small class="text-muted">Registrar entrega de equipo</small>
-                                    </div>
-                                </div>
-                            </button>
-                            <button class="btn btn-outline-info text-start p-3 hse-card"
-                                onclick="window.location.href='#'">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-building fa-2x me-3"></i>
-                                    <div>
-                                        <div class="fw-bold">Inspección de Sitio</div>
-                                        <small class="text-muted">Auditoría de condiciones de obra</small>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
+
+                <!-- Actions & Table -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-slate-800">Inspecciones Recientes</h2>
+                    <button onclick="openInspectionModal()"
+                        class="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium shadow-md transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        Nueva Inspección
+                    </button>
                 </div>
-            </div>
+
+                <!-- Table -->
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold text-slate-700">ID</th>
+                                <th class="px-6 py-4 font-semibold text-slate-700">Fecha</th>
+                                <th class="px-6 py-4 font-semibold text-slate-700">Tipo</th>
+                                <th class="px-6 py-4 font-semibold text-slate-700">Referencia</th>
+                                <th class="px-6 py-4 font-semibold text-slate-700">Inspector</th>
+                                <th class="px-6 py-4 font-semibold text-slate-700">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="inspections-table-body">
+                            <!-- Rows injected by JS -->
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-400">Cargando datos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </main>
         </div>
     </div>
 
-    <!-- Modal: Nueva Inspeccion -->
-    <div class="modal fade" id="newInspectionModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">Nueva Inspección</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="inspectionForm">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Tipo</label>
-                                <select class="form-select" id="inspType" required>
-                                    <option value="Vehicular">Vehicular</option>
-                                    <option value="Site">Obra / Sitio</option>
-                                    <option value="Office">Oficina</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Referencia (Placa / Sitio)</label>
-                                <input type="text" class="form-control" id="inspRef" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Comentarios Generales</label>
-                                <textarea class="form-control" id="inspComments" rows="3"></textarea>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" onclick="createInspection()">Guardar</button>
-                </div>
+    <!-- Modal: Nueva Inspección -->
+    <div id="modal-inspection" class="modal-overlay">
+        <div class="modal-container">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800">Nueva Inspección</h3>
+                <button onclick="closeInspectionModal()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times text-xl"></i></button>
             </div>
+
+            <form id="inspection-form" class="p-6 space-y-4" onsubmit="handleInspectionSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Inspección</label>
+                        <select name="type"
+                            class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            required>
+                            <option value="Vehicular" selected>Vehicular</option>
+                            <option value="Site">Sitio / Obra</option>
+                            <option value="Office">Oficina</option>
+                            <option value="Tool">Herramientas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Referencia (Placa/Sitio)</label>
+                        <input type="text" name="reference" placeholder="EJ: V-123 o Patio A"
+                            class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Observaciones</label>
+                    <textarea name="comments" rows="3"
+                        class="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        placeholder="Detalles de la inspección..."></textarea>
+                </div>
+
+                <div class="bg-blue-50 p-3 rounded-lg flex items-start gap-3">
+                    <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                    <p class="text-xs text-blue-700">Esta es una inspección rápida. Para checklists detallados, use la
+                        funcionalidad avanzada (Próximamente).</p>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeInspectionModal()"
+                        class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-medium">Cancelar</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium shadow-md">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="js/ui-components.js"></script>
-    <script src="js/hse_dashboard.js"></script>
+    <script src="js/hse_logic.js"></script>
 </body>
 
 </html>

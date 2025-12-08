@@ -70,6 +70,13 @@ class ModernDashboard {
                 ],
             },
             {
+                label: "Seguridad (HSE)",
+                icon: "fa-shield-alt",
+                children: [
+                    { label: "Dashboard HSE", icon: "fa-hard-hat", page: "hse_dashboard.html", external: true }
+                ]
+            },
+            {
                 label: "Operaciones Diarias",
                 icon: "fa-clipboard-list",
                 children: [
@@ -288,7 +295,11 @@ class ModernDashboard {
                     `;
                     childBtn.onclick = (e) => {
                         e.stopPropagation();
-                        this.loadPage(child.page, child.label);
+                        if (child.external) {
+                            window.location.href = child.page;
+                        } else {
+                            this.loadPage(child.page, child.label);
+                        }
                     };
                     subMenu.appendChild(childBtn);
                 });
