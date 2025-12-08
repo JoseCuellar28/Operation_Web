@@ -45,7 +45,7 @@ try:
     
     conn.commit()
     print(f"Contraseña reseteada exitosamente para DNI 41007510")
-    print(f"Nueva contraseña temporal: {new_password}")
+    print(f"Nueva contraseña temporal: ********")
     print(f"El usuario deberá cambiarla en el primer login")
     
     conn.close()

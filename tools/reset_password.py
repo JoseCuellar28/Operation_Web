@@ -24,7 +24,7 @@ def reset_password_aes():
         # "OperationWebIV!!" (16 chars)
         iv_bytes = b"OperationWebIV!!"
         
-        print(f"Encrypting '{new_password}' with fallback Key/IV...")
+        print(f"Encrypting '********' with fallback Key/IV...")
         
         # Encrypt using AES-256 CBC PKCS7
         cipher = AES.new(key_bytes, AES.MODE_CBC, iv_bytes)

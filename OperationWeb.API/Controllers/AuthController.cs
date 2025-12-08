@@ -94,13 +94,20 @@ namespace OperationWeb.API.Controllers
                     _logger.LogWarning($"[Auth] Could not read UserAccessConfigs: {ex.Message}");
                 }
 
-                if (req.Platform?.ToLower() == "web" || req.Platform?.ToLower() == "webapp")
+                var platform = (req.Platform ?? "").ToLower();
+
+                if (platform == "web" || platform == "webapp")
                 {
                     if (!canWeb) return Unauthorized("Acceso Web no habilitado para este usuario.");
                 }
-                else if (req.Platform?.ToLower() == "mobile" || req.Platform?.ToLower() == "app")
+                else if (platform == "mobile" || platform == "app")
                 {
                     if (!canApp) return Unauthorized("Acceso Móvil no habilitado para este usuario.");
+                }
+                else
+                {
+                    // CRITICAL FIX: Deny by default if platform is unknown or missing
+                    return BadRequest("Plataforma no válida o no especificada (web/app).");
                 }
 
                 // 1. Try BCrypt (Legacy/Standard)
