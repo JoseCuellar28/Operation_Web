@@ -35,12 +35,7 @@ def health():
         print(f"ERROR in health check: {e}")
         return jsonify({
             "connected": False,
-            "error": "Error interno de conexión",
-            "server": os.getenv('DB_SERVER', ''),
-            "database": os.getenv('DB_NAME', ''),
-            "port": int(os.getenv('DB_PORT', '1433')),
-            "has_user": bool(os.getenv('DB_USER', '')),
-            "has_password": bool(os.getenv('DB_PASSWORD', ''))
+            "error": "Error interno de conexión"
         }), 500
 
 @app.post('/api/analyze')

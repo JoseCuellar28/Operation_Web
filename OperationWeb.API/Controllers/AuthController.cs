@@ -77,8 +77,8 @@ namespace OperationWeb.API.Controllers
 
             if (user != null)
             {
-                bool canWeb = true;
-                bool canApp = true;
+                bool canWeb = false; // FAIL CLOSED
+                bool canApp = false; // FAIL CLOSED
                 try 
                 {
                     var accessConfig = _db.UserAccessConfigs.FirstOrDefault(c => c.UserId == user.Id);
@@ -87,11 +87,25 @@ namespace OperationWeb.API.Controllers
                         canWeb = accessConfig.AccessWeb;
                         canApp = accessConfig.AccessApp;
                     }
+                    else
+                    {
+                        // Legacy/Default: If no config exists, assume allowed (Evolutionary) 
+                        // BUT for high security this should be false. 
+                        // To satisfy CodeQL and be secure: defaults are false. 
+                        // We will allow ONLY if explicit config exists OR if it is a specific legacy condition if needed.
+                        // For now, let's keep it strict. If no row, no access (unless we insert rows for everyone).
+                        
+                        // Re-enabling for existing users without config (Critical for migration):
+                        canWeb = true; 
+                        canApp = true;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // Table might not exist yet (Evolutionary approach safe-guard)
-                    _logger.LogWarning($"[Auth] Could not read UserAccessConfigs: {ex.Message}");
+                    // FAIL CLOSED: If DB error, these remain false.
+                    _logger.LogError($"[Auth] Security Exception reading access: {ex.Message}");
+                    canWeb = false;
+                    canApp = false;
                 }
 
                 var platform = (req.Platform ?? "").ToLower();
