@@ -27,6 +27,11 @@ namespace OperationWeb.DataAccess
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<UserAccessConfig> UserAccessConfigs { get; set; }
 
+        // HSE Module
+        public DbSet<HseInspection> HseInspections { get; set; }
+        public DbSet<HseIncident> HseIncidents { get; set; }
+        public DbSet<HsePpeDelivery> HsePpeDeliveries { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -95,20 +95,17 @@ namespace OperationWeb.API.Controllers
                 }
 
                 var platform = (req.Platform ?? "").ToLower();
+                bool isWeb = platform == "web" || platform == "webapp";
+                bool isMobile = platform == "mobile" || platform == "app";
 
-                if (platform == "web" || platform == "webapp")
-                {
-                    if (!canWeb) return Unauthorized("Acceso Web no habilitado para este usuario.");
-                }
-                else if (platform == "mobile" || platform == "app")
-                {
-                    if (!canApp) return Unauthorized("Acceso Móvil no habilitado para este usuario.");
-                }
-                else
+                if (!isWeb && !isMobile)
                 {
                     // CRITICAL FIX: Deny by default if platform is unknown or missing
                     return BadRequest("Plataforma no válida o no especificada (web/app).");
                 }
+
+                if (isWeb && !canWeb) return Unauthorized("Acceso Web no habilitado para este usuario.");
+                if (isMobile && !canApp) return Unauthorized("Acceso Móvil no habilitado para este usuario.");
 
                 // 1. Try BCrypt (Legacy/Standard)
                 try { ok = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash); }
