@@ -142,7 +142,7 @@ class LoginManager {
         ];
         const cid = localStorage.getItem('captcha_id') || '';
         const cans = (document.getElementById('captchaAnswer')?.value || '').trim();
-        const body = JSON.stringify({ username: username, password: password, captchaId: cid, captchaAnswer: cans, platform: 'Web' });
+        const body = JSON.stringify({ Username: username, Password: password, CaptchaId: cid, CaptchaAnswer: cans, Platform: 'web' });
         const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
         (async () => {
             let errorType = '';

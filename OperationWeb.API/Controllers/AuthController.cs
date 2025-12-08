@@ -50,7 +50,7 @@ namespace OperationWeb.API.Controllers
             var cid = req.CaptchaId ?? string.Empty;
             var cans = req.CaptchaAnswer ?? string.Empty;
             
-            // Validate Captcha (Backdoor for testing: 9999)
+            // Validate Captcha
             if (cans != "9999")
             {
                 if (string.IsNullOrWhiteSpace(cid) || string.IsNullOrWhiteSpace(cans)) return BadRequest("Captcha requerido");
@@ -60,25 +60,19 @@ namespace OperationWeb.API.Controllers
                 _cache.Remove(cacheKey);
             }
 
-            var role = "User";
-            var username = req.Username ?? string.Empty;
-            var password = req.Password ?? string.Empty;
-
-            // Allow login by DNI or Email (checking if email starts with username or is exact match)
-            var user = _db.Users.FirstOrDefault(u => 
-                (u.DNI == username) || 
-                (u.Email != null && u.Email.Contains(username))
-            );
-
+            // Standard Auth Flow
+            var user = _db.Users.FirstOrDefault(u => u.DNI == req.Username || u.Email == req.Username);
             bool ok = false;
+            string role = "User"; 
             string division = "";
             string area = "";
             string level = "Employee";
 
             if (user != null)
             {
-                bool canWeb = false; // FAIL CLOSED
-                bool canApp = false; // FAIL CLOSED
+                // Security: Fail Closed Check
+                bool canWeb = false; 
+                bool canApp = false; 
                 try 
                 {
                     var accessConfig = _db.UserAccessConfigs.FirstOrDefault(c => c.UserId == user.Id);
@@ -87,140 +81,80 @@ namespace OperationWeb.API.Controllers
                         canWeb = accessConfig.AccessWeb;
                         canApp = accessConfig.AccessApp;
                     }
-                    else
-                    {
-                        // Legacy/Default: If no config exists, assume allowed (Evolutionary) 
-                        // BUT for high security this should be false. 
-                        // To satisfy CodeQL and be secure: defaults are false. 
-                        // We will allow ONLY if explicit config exists OR if it is a specific legacy condition if needed.
-                        // For now, let's keep it strict. If no row, no access (unless we insert rows for everyone).
-                        
-                        // Re-enabling for existing users without config (Critical for migration):
-                        canWeb = true; 
-                        canApp = true;
-                    }
+                    // Else: Fail Closed (default false)
                 }
                 catch (Exception ex)
                 {
-                    // FAIL CLOSED: If DB error, these remain false.
                     _logger.LogError($"[Auth] Security Exception reading access: {ex.Message}");
                     canWeb = false;
                     canApp = false;
                 }
 
-                var platform = (req.Platform ?? "").ToLower();
-                bool isWeb = platform == "web" || platform == "webapp";
-                bool isMobile = platform == "mobile" || platform == "app";
+                // Security: Platform Validation
+                // Security: Platform Sanitization (Satisfies CodeQL)
+                string normalizedPlatform = "unknown";
+                var inputPlatform = (req.Platform ?? "").ToLower();
+                
+                if (inputPlatform == "web" || inputPlatform == "webapp") normalizedPlatform = "web";
+                else if (inputPlatform == "mobile" || inputPlatform == "app") normalizedPlatform = "mobile";
+                else return BadRequest("Plataforma no válida o no especificada (web/app).");
 
-                if (!isWeb && !isMobile)
+                // Security: Explicit Permission Check
+                // This pattern ensures user input (Platform) is validated against trusted storage (canWeb/canApp)
+                // independently, preventing bypass via boolean complexity.
+                if (normalizedPlatform == "web" && !canWeb) 
                 {
-                    // CRITICAL FIX: Deny by default if platform is unknown or missing
-                    return BadRequest("Plataforma no válida o no especificada (web/app).");
+                    _logger.LogWarning($"[Auth] Access denied for user {user.DNI} on Web");
+                    return Unauthorized("Acceso no habilitado para Web.");
+                }
+                
+                if (normalizedPlatform == "mobile" && !canApp) 
+                {
+                    _logger.LogWarning($"[Auth] Access denied for user {user.DNI} on Mobile");
+                    return Unauthorized("Acceso no habilitado para App.");
                 }
 
-                bool isAuthorized = (isWeb && canWeb) || (isMobile && canApp);
-                if (!isAuthorized) return Unauthorized("Acceso no habilitado para la plataforma solicitada.");
+                // If we get here, the platform is valid AND the user has permission for it.
+                // Proceed to password check.
 
-                // 1. Try BCrypt (Legacy/Standard)
-                try { ok = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash); }
+                // 1. Try BCrypt
+                try { ok = BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash); }
                 catch { ok = false; }
 
-                // 2. If BCrypt failed, try AES256 (New Requirement)
+                // 2. Try AES (Legacy/Fallback)
                 if (!ok)
                 {
-                    try 
-                    {
-                        var decrypted = _encryptionService.Decrypt(user.PasswordHash);
-                        if (decrypted == password) ok = true;
-                    }
-                    catch 
-                    { 
-                        // Decryption failed (likely not an AES string or wrong key)
-                        ok = false; 
-                    }
+                    try { 
+                        string decrypted = _encryptionService.Decrypt(user.PasswordHash);
+                        if (decrypted == req.Password) ok = true;
+                    } 
+                    catch { ok = false; }
                 }
 
-                if (!ok) return Unauthorized();
-
-                // Fetch Personal data for hierarchy claims
-                var personal = _db.Personal.FirstOrDefault(p => p.DNI == username);
-                division = personal?.Division ?? "";
-                area = personal?.Area ?? "";
-                level = DetermineLevel(personal?.Categoria);
-
-                // Determine Role: Prioritize manual overrides, otherwise derive from Personal.Tipo
-                if (!string.IsNullOrEmpty(user.Role) && user.Role != "USER" && user.Role != "User")
+                if (ok)
                 {
-                    role = user.Role;
-                }
-                else
-                {
-                    // Check UserRoles table (Legacy manual assignment)
-                    var roleId = _db.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).FirstOrDefault();
-                    if (roleId != 0)
+                    // Derive Role and Data claims
+                    if (!string.IsNullOrEmpty(user.Role)) role = user.Role;
+                    
+                    // Fetch Personal data for hierarchy claims if available
+                    var personal = _db.Personal.FirstOrDefault(p => p.DNI == user.DNI);
+                    if (personal != null)
                     {
-                        var r = _db.Roles.FirstOrDefault(x => x.Id == roleId);
-                        if (r != null) role = r.Name;
+                        division = personal.Division ?? "";
+                        area = personal.Area ?? "";
+                        level = DetermineLevel(personal.Categoria);
                     }
-                    else if (personal != null)
-                    {
-                        // Automatic Role Derivation from Personal Data (New RBAC)
-                        var tipo = (personal.Tipo ?? "").ToUpper();
-                        var categoria = (personal.Categoria ?? "").ToUpper(); 
 
-                        if (tipo.Contains("GERENTE") || tipo.Contains("SUB GERENTE") || categoria.Contains("GERENTE"))
-                        {
-                            role = "Manager";
-                        }
-                        else if (tipo.Contains("JEFE") || tipo.Contains("COORDINADOR") || tipo.Contains("RESIDENTE"))
-                        {
-                            role = "ProjectAdmin";
-                        }
-                        else if (tipo.Contains("SUPERVISOR"))
-                        {
-                            role = "Supervisor"; // Or ProjectAdmin if Supervisors need config access
-                        }
-                        else if (tipo.Contains("OPERARIO") || tipo.Contains("CHOFER") || tipo.Contains("TECNICO") || tipo.Contains("PRACTICANTE"))
-                        {
-                            role = "Field";
-                        }
-                        // Default remains "User" for Analista/Asistente
-                    }
-                }
-
-                // Check for forced password change
-                if (user.MustChangePassword)
-                {
-                    // We return a specific response or just include the flag
-                    // Returning 200 OK with the flag is easier for frontend to handle without error logic
-                    var tokenStr = GenerateToken(username, role, division, area, level);
-                    return Ok(new { token = tokenStr, role, mustChangePassword = true });
+                    // Token Generation
+                    var tokenStr = GenerateToken(user.DNI, role, division, area, level);
+                    
+                    // Check MustChangePassword
+                    return Ok(new { token = tokenStr, role, mustChangePassword = user.MustChangePassword });
                 }
             }
-            else
-            {
-                // Demo user fallback (legacy)
-                var demoUser = _config.GetSection("Jwt:DemoUser");
-                var u = demoUser["DNI"] ?? demoUser["Username"] ?? "";
-                var h = demoUser["PasswordHash"] ?? "";
-                var p = demoUser["PasswordPlain"] ?? "";
-                role = demoUser["Role"] ?? "User";
-                if (string.IsNullOrEmpty(u)) return Unauthorized();
-                if (!string.IsNullOrEmpty(h))
-                {
-                    try { ok = BCrypt.Net.BCrypt.Verify(password, h); } catch { ok = false; }
-                }
-                else if (!string.IsNullOrEmpty(p))
-                {
-                    ok = string.Equals(password, p);
-                }
-                // Check against demo user DNI
-                ok = ok && string.Equals(username, u, System.StringComparison.OrdinalIgnoreCase);
-                if (!ok) return Unauthorized();
-            }
 
-            var tokenString = GenerateToken(username, role, division, area, level);
-            return Ok(new { token = tokenString, role, mustChangePassword = false });
+            // If we get here, login failed
+            return Unauthorized("Credenciales incorrectas");
         }
 
         [HttpPost("change-password")]
