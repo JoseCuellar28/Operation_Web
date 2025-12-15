@@ -27,7 +27,6 @@ jobs:
   build-docker:
     needs: build-dotnet
     runs-on: ubuntu-latest
-    steps:
     permissions:
       contents: read
       packages: write
