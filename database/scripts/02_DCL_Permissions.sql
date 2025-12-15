@@ -1,18 +1,10 @@
--- 4. CREACIÓN DE USUARIO NO ADMINISTRATIVO Y PERMISOS (DCL)
-
--- Nota: Este script debe ejecutarse por un admin (sa)
-IF NOT EXISTS (SELECT name FROM master.sys.server_principals WHERE name = 'app_limited_user')
-BEGIN
-    CREATE LOGIN [app_limited_user] WITH PASSWORD=N'StrongPass123!@#', DEFAULT_DATABASE=[OperationWebDB], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF;
-END
-GO
-
-USE [OperationWebDB]
-GO
+-- 4. CREACIÓN DE USUARIO CONTENIDO (Azure SQL Best Practice)
+-- Usamos "Contained User" para no depender de la base de datos master.
+-- Esto hace la base de datos totalmente portable.
 
 IF NOT EXISTS (SELECT name FROM sys.database_principals WHERE name = 'app_limited_user')
 BEGIN
-    CREATE USER [app_limited_user] FOR LOGIN [app_limited_user];
+    CREATE USER [app_limited_user] WITH PASSWORD = N'StrongPass123!@#';
 END
 GO
 
