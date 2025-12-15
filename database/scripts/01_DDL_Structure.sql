@@ -68,3 +68,28 @@ BEGIN
     RETURN @Count;
 END;
 GO
+
+-- Patch: Add missing columns to Users table (Idempotent)
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'Email')
+BEGIN
+    ALTER TABLE [dbo].[Users] ADD [Email] [nvarchar](255) NULL;
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'IsActive')
+BEGIN
+    ALTER TABLE [dbo].[Users] ADD [IsActive] [bit] NOT NULL DEFAULT 1;
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'CreatedAt')
+BEGIN
+    ALTER TABLE [dbo].[Users] ADD [CreatedAt] [datetime] NOT NULL DEFAULT GETDATE();
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'MustChangePassword')
+BEGIN
+    ALTER TABLE [dbo].[Users] ADD [MustChangePassword] [bit] NOT NULL DEFAULT 0;
+END
+GO
