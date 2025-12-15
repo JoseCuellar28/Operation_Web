@@ -17,6 +17,12 @@ namespace OperationWeb.DataAccess.Entities
         public bool AccessWeb { get; set; } = true;
         public bool AccessApp { get; set; } = true;
 
+        [StringLength(50)]
+        public string? JobLevel { get; set; } // 'Manager', 'Coordinator', 'Supervisor', 'Employee'
+
+        [StringLength(100)]
+        public string? ProjectScope { get; set; }
+
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     }
 }

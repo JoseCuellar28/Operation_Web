@@ -8,7 +8,41 @@ const UIComponents = {
      * Configuration Tab Content
      * Returns the HTML string for the system configuration form
      */
-    getConfiguracionContent: function () {
+    /**
+     * Profiles Content
+     * Returns the HTML string for the profiles management page
+     */
+    getPerfilesContent: function () {
+        return `
+            <div class="max-w-4xl mx-auto p-6 space-y-8">
+                <!-- Header -->
+                <div class="flex flex-col space-y-2">
+                    <h2 class="text-2xl font-bold tracking-tight text-primary">Gestión de Perfiles</h2>
+                    <p class="text-muted-foreground">Administra los roles y niveles de acceso de los usuarios.</p>
+                </div>
+
+                <!-- Content Placeholder -->
+                <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-12 flex flex-col items-center justify-center text-center">
+                    <div class="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                        <i class="fas fa-id-card text-4xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Módulo en Construcción</h3>
+                    <p class="text-muted-foreground max-w-md mx-auto">
+                        Estamos preparando esta sección para que puedas crear y gestionar perfiles de usuario personalizados.
+                        Pronto podrás definir permisos granulares y niveles de acceso.
+                    </p>
+                    <div class="mt-8">
+                        <button class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                            <i class="fas fa-bell mr-2"></i> Notificarme cuando esté listo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Configuration Tab Content
         return `
             <div class="max-w-4xl mx-auto p-6 space-y-8">
                 <!-- Header -->

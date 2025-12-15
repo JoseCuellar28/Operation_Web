@@ -103,6 +103,7 @@ class ModernDashboard {
                     { label: "Crea tus Proyectos", icon: "fa-map-marker-alt", page: "creacion-proyectos" },
                     { label: "Crea tus Vehículos", icon: "fa-truck", page: "gestion-vehiculos" },
                     { label: "Crea tus Materiales", icon: "fa-tools", page: "gestion-materiales" },
+                    { label: "Crea tus Perfiles", icon: "fa-id-card", page: "gestion-perfiles" },
                     { label: "Gestión de Formatos", icon: "fa-file-contract", page: "gestion-formatos" },
                     { label: "Configuración de Sistema", icon: "fa-sliders-h", page: "configuracion-sistema" },
                 ],
@@ -135,6 +136,7 @@ class ModernDashboard {
             'creacion-proyectos': [], // Admin Only (default restriction)
             'gestion-vehiculos': ['PROJECTADMIN', 'PROJECT_ADMIN'],
             'gestion-materiales': ['PROJECTADMIN', 'PROJECT_ADMIN'],
+            'gestion-perfiles': ['PROJECTADMIN', 'PROJECT_ADMIN'],
             'gestion-formatos': [], // Admin Only
             'configuracion-sistema': [] // Admin Only
         };
@@ -468,6 +470,13 @@ class ModernDashboard {
                 mainContent.innerHTML = DOMPurify.sanitize(content, {
                     ADD_TAGS: ['style', 'tr', 'td', 'span', 'button', 'i', 'div', 'input', 'table', 'thead', 'tbody', 'th', 'label'],
                     ADD_ATTR: ['class', 'id', 'style', 'onclick', 'onchange', 'type', 'accept', 'for']
+                });
+                return;
+            } else if (pageName === 'gestion-perfiles' && UIComponents.getPerfilesContent) {
+                content = UIComponents.getPerfilesContent();
+                mainContent.innerHTML = DOMPurify.sanitize(content, {
+                    ADD_TAGS: ['style', 'div', 'span', 'button', 'i', 'h2', 'h3', 'p'],
+                    ADD_ATTR: ['class', 'id', 'style', 'onclick']
                 });
                 return;
             } else {

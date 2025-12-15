@@ -23,3 +23,19 @@ jobs:
         run: dotnet restore OperationWeb.sln
       - name: Build
         run: dotnet build OperationWeb.sln --configuration Release --no-restore
+
+  build-docker:
+    needs: build-dotnet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          tags: operationweb:latest

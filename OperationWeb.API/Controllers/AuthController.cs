@@ -73,9 +73,10 @@ namespace OperationWeb.API.Controllers
                 // Security: Fail Closed Check
                 bool canWeb = false; 
                 bool canApp = false; 
+                OperationWeb.DataAccess.Entities.UserAccessConfig? accessConfig = null;
                 try 
                 {
-                    var accessConfig = _db.UserAccessConfigs.FirstOrDefault(c => c.UserId == user.Id);
+                    accessConfig = _db.UserAccessConfigs.FirstOrDefault(c => c.UserId == user.Id);
                     if (accessConfig != null)
                     {
                         canWeb = accessConfig.AccessWeb;
@@ -144,7 +145,7 @@ namespace OperationWeb.API.Controllers
                     {
                         division = personal.Division ?? "";
                         area = personal.Area ?? "";
-                        level = DetermineLevel(personal.Categoria);
+                        level = DetermineLevel(personal.Categoria ?? personal.Tipo, accessConfig, user.DNI, _db);
                     }
 
                     // Token Generation
@@ -191,8 +192,36 @@ namespace OperationWeb.API.Controllers
 
         public record ChangePasswordRequest(string OldPassword, string NewPassword);
 
-        private string DetermineLevel(string? cargo)
+        private string DetermineLevel(string? cargo, OperationWeb.DataAccess.Entities.UserAccessConfig? config, string userDni, OperationWeb.DataAccess.OperationWebDbContext db)
         {
+            // Level 1: Persistent Config (UserAccessConfigs)
+            if (config != null && !string.IsNullOrEmpty(config.JobLevel))
+            {
+                return config.JobLevel;
+            }
+
+            // Level 2: Project Assignment (Proyectos)
+            // Need to query Proyectos. Implementing simple check.
+            try 
+            {
+                // Raw SQL for speed/simplicity as Proyectos entity might not be fully mapped in context yet
+                // Or try to use DB Context if Proyectos DBSet exists. 
+                // Since I cannot see Proyectos DbSet in context code shown earlier, I'll use Raw SQL.
+                // Use parameterization to avoid SQL Injection warnings
+                var isManager = db.Database.SqlQueryRaw<int>("SELECT COUNT(1) as Value FROM Proyectos WHERE GerenteDni = {0}", userDni).AsEnumerable().FirstOrDefault();
+                if (isManager > 0) return "Manager";
+
+                var isChief = db.Database.SqlQueryRaw<int>("SELECT COUNT(1) as Value FROM Proyectos WHERE JefeDni = {0}", userDni).AsEnumerable().FirstOrDefault();
+                if (isChief > 0) return "Coordinator";
+            }
+            catch (Exception ex)
+            {
+                // Fallback to Level 3 on error
+                 _logger.LogWarning($"[Auth] Project check failed: {ex.Message}");
+            }
+
+
+            // Level 3: Legacy Excel Data (Personal)
             if (string.IsNullOrEmpty(cargo)) return "Employee";
             cargo = cargo.ToUpper();
             if (cargo.Contains("GERENTE")) return "Manager";

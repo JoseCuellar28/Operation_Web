@@ -3,6 +3,7 @@
 Thumbs.db
 *.tmp
 *.temp
+.tmp.driveupload/
 
 # Logs
 *.log

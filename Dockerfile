@@ -6,7 +6,8 @@ WORKDIR /app
 COPY OperationWeb.API/*.csproj ./OperationWeb.API/
 COPY OperationWeb.Business/*.csproj ./OperationWeb.Business/
 COPY OperationWeb.DataAccess/*.csproj ./OperationWeb.DataAccess/
-COPY OperationWeb.Common/*.csproj ./OperationWeb.Common/
+COPY OperationWeb.DataAccess.Entities/*.csproj ./OperationWeb.DataAccess.Entities/
+COPY OperationWeb.Infrastructure/*.csproj ./OperationWeb.Infrastructure/
 
 RUN dotnet restore ./OperationWeb.API/OperationWeb.API.csproj
 
