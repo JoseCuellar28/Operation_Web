@@ -14,7 +14,7 @@ using OperationWeb.Business;
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "http://localhost:5132");
+// builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "http://localhost:5132");
 
 // Add services to the container.
 builder.Services.AddControllers();
