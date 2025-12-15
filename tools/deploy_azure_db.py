@@ -22,9 +22,11 @@ SERVER = 'operationweb-sql-server.database.windows.net'
 DATABASE = 'OperationWebDB'
 USERNAME = 'sqladmin'
 PASSWORD = 'ChangeThisStrongPassword123!'
-DRIVER = '{ODBC Driver 17 for SQL Server}' # Standard in Azure Cloud Shell
 
-CONNECTION_STRING = f'DRIVER={DRIVER};SERVER={SERVER};PORT=1433;DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}'
+def get_connection_string(driver):
+    # Driver 18 requires strict encryption settings
+    param_extra = ";Encrypt=yes;TrustServerCertificate=yes" if "18" in driver else ""
+    return f'DRIVER={driver};SERVER={SERVER};PORT=1433;DATABASE={DATABASE};UID={USERNAME};PWD={PASSWORD}{param_extra}'
 
 def execute_sql_file(cursor, file_path):
     print(f"--- Processing {os.path.basename(file_path)} ---")
@@ -32,14 +34,13 @@ def execute_sql_file(cursor, file_path):
         with open(file_path, 'r') as f:
             content = f.read()
             
-        # Split by GO command (case insensitive, on its own line)
-        # Regex is safer but simple split works for our strict scripts
+        # Split by GO command (simple implementation)
         statements = content.split('GO')
         
         for statement in statements:
             statement = statement.strip()
             if statement:
-                print(f"Executing: {statement[:50]}...")
+                # print(f"Executing: {statement[:50]}...") # Verbose
                 cursor.execute(statement)
         print(f"SUCCESS: {file_path}")
     except Exception as e:
@@ -48,13 +49,34 @@ def execute_sql_file(cursor, file_path):
 
 def main():
     print("Connecting to Azure SQL...")
+    
+    # Try common Azure drivers in order
+    drivers = [
+        '{ODBC Driver 18 for SQL Server}',
+        '{ODBC Driver 17 for SQL Server}',
+        '{ODBC Driver 13 for SQL Server}'
+    ]
+    
+    conn = None
+    for driver in drivers:
+        try:
+            print(f"Attempting connection with: {driver}")
+            conn_str = get_connection_string(driver)
+            conn = pyodbc.connect(conn_str, autocommit=True)
+            print("Connected!")
+            break
+        except Exception as e:
+            print(f"Driver {driver} failed: {e}")
+            
+    if not conn:
+        print("\nCRITICAL FAILURE: Could not connect with any available ODBC driver.")
+        return
+
     try:
-        conn = pyodbc.connect(CONNECTION_STRING, autocommit=True)
         cursor = conn.cursor()
-        print("Connected!")
         
         # Define scripts order
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # Go up from tools/
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         scripts = [
             os.path.join(base_dir, 'database', 'scripts', '01_DDL_Structure.sql'),
             os.path.join(base_dir, 'database', 'scripts', '02_DCL_Permissions.sql')
@@ -69,8 +91,10 @@ def main():
         print("\nDeployment Completed Successfully!")
         
     except Exception as e:
-        print(f"\nCRITICAL FAILURE: {e}")
-        print("Tip: If driver not found, Azure Cloud Shell might use 'ODBC Driver 18...'. Trying fallback...")
+        print(f"\nRuntime Error: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
     main()
