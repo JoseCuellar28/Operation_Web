@@ -11,7 +11,8 @@ using OperationWeb.Business.Interfaces;
 using OperationWeb.Business;
 
 // Load .env file
-DotNetEnv.Env.Load();
+// Load .env file (Safe execution)
+try { DotNetEnv.Env.Load(); } catch { /* Ignore missing .env in production */ }
 
 var builder = WebApplication.CreateBuilder(args);
 // builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "http://localhost:5132");
@@ -143,6 +144,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+// Health Check Endpoint
+app.MapGet("/health", () => Results.Ok("Healthy"));
 
 // Non-blocking initialization to prevent Azure 504 Gateway Timeout
 Task.Run(async () =>

@@ -62,7 +62,6 @@ resource "azurerm_linux_web_app" "webapp" {
 
   app_settings = {
     "DefaultConnection" = "Server=tcp:${azurerm_mssql_server.sqlserver.fully_qualified_domain_name},1433;Initial Catalog=OperationWebDB;Persist Security Info=False;User ID=sqladmin;Password=ChangeThisStrongPassword123!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-    "WEBSITES_PORT" = "8080"
   }
 }
 

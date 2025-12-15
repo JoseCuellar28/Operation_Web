@@ -28,7 +28,8 @@ WORKDIR /app
 COPY --from=build /app/out .
 
 # Expose port
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+# Expose port 80 (Standard for Web Apps)
+EXPOSE 80
+ENV ASPNETCORE_HTTP_PORTS=80
 
 ENTRYPOINT ["dotnet", "OperationWeb.API.dll"]
