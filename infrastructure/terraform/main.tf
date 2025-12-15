@@ -51,7 +51,7 @@ resource "azurerm_linux_web_app" "webapp" {
   service_plan_id     = azurerm_service_plan.appserviceplan.id
 
   site_config {
-      docker_image     = "josearbildo/operationweb-api"
+      docker_image     = "ghcr.io/josecuellar28/operationweb-api"
       docker_image_tag = "latest"
     }
     always_on = false
