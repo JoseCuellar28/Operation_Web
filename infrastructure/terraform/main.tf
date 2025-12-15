@@ -14,7 +14,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "rg" {
   name     = "OperationWeb-RG"
-  location = "East US"
+  location = "West US 2"
 }
 
 # Azure SQL Server
@@ -31,7 +31,7 @@ resource "azurerm_mssql_server" "sqlserver" {
 resource "azurerm_mssql_database" "sqldb" {
   name      = "OperationWebDB"
   server_id = azurerm_mssql_server.sqlserver.id
-  sku_name  = "S0"
+  sku_name  = "Basic"
 }
 
 # App Service Plan
@@ -40,7 +40,7 @@ resource "azurerm_service_plan" "appserviceplan" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   os_type             = "Linux"
-  sku_name            = "B1"
+  sku_name            = "F1"
 }
 
 # Web App for Containers (Docker)
@@ -51,13 +51,21 @@ resource "azurerm_linux_web_app" "webapp" {
   service_plan_id     = azurerm_service_plan.appserviceplan.id
 
   site_config {
-    application_stack {
       docker_image     = "josearbildo/operationweb-api"
       docker_image_tag = "latest"
     }
+    always_on = false
   }
+}
 
-  app_settings = {
+resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
+  name             = "AllowAzureServices"
+  server_id        = azurerm_mssql_server.sqlserver.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
+app_settings = {
     "DB_CONNECTION_STRING" = "Server=tcp:${azurerm_mssql_server.sqlserver.fully_qualified_domain_name},1433;Initial Catalog=OperationWebDB;Persist Security Info=False;User ID=sqladmin;Password=ChangeThisStrongPassword123!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   }
 }
