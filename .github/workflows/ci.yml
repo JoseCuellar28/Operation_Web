@@ -52,4 +52,4 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/operationweb-api:latest
+          tags: ghcr.io/josecuellar28/operationweb-api:latest
