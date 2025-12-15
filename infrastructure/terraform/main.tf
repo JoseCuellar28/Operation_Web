@@ -51,10 +51,17 @@ resource "azurerm_linux_web_app" "webapp" {
   service_plan_id     = azurerm_service_plan.appserviceplan.id
 
   site_config {
-      docker_image     = "ghcr.io/josecuellar28/operationweb-api"
-      docker_image_tag = "latest"
+    # Using specific Docker settings for Linux App Service
+    always_on = false 
+    
+    application_stack {
+        docker_image     = "ghcr.io/josecuellar28/operationweb-api"
+        docker_image_tag = "latest"
     }
-    always_on = false
+  }
+
+  app_settings = {
+    "DB_CONNECTION_STRING" = "Server=tcp:${azurerm_mssql_server.sqlserver.fully_qualified_domain_name},1433;Initial Catalog=OperationWebDB;Persist Security Info=False;User ID=sqladmin;Password=ChangeThisStrongPassword123!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   }
 }
 
@@ -63,9 +70,4 @@ resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
   server_id        = azurerm_mssql_server.sqlserver.id
   start_ip_address = "0.0.0.0"
   end_ip_address   = "0.0.0.0"
-}
-
-app_settings = {
-    "DB_CONNECTION_STRING" = "Server=tcp:${azurerm_mssql_server.sqlserver.fully_qualified_domain_name},1433;Initial Catalog=OperationWebDB;Persist Security Info=False;User ID=sqladmin;Password=ChangeThisStrongPassword123!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-  }
 }
