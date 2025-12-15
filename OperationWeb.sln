@@ -3,25 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.API", "OperationWeb.API\OperationWeb.API.csproj", "{A1782C40-5088-44AC-ACE3-BDBADB2FE6B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.API", "OperationWeb.API/OperationWeb.API.csproj", "{A1782C40-5088-44AC-ACE3-BDBADB2FE6B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Business", "OperationWeb.Business\OperationWeb.Business.csproj", "{2A1BA11A-49B2-4333-84BC-6B463E8AE56C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Business", "OperationWeb.Business/OperationWeb.Business.csproj", "{2A1BA11A-49B2-4333-84BC-6B463E8AE56C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Business.Interfaces", "OperationWeb.Business.Interfaces\OperationWeb.Business.Interfaces.csproj", "{DD67CF12-E060-45B0-A262-F32F72A3E71C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Business.Interfaces", "OperationWeb.Business.Interfaces/OperationWeb.Business.Interfaces.csproj", "{DD67CF12-E060-45B0-A262-F32F72A3E71C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Business.Entities", "OperationWeb.Business.Entities\OperationWeb.Business.Entities.csproj", "{C661B4B7-F0E0-416D-8213-555822C2FFB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Business.Entities", "OperationWeb.Business.Entities/OperationWeb.Business.Entities.csproj", "{C661B4B7-F0E0-416D-8213-555822C2FFB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.DataAccess", "OperationWeb.DataAccess\OperationWeb.DataAccess.csproj", "{DC32BD3E-BE29-4B45-A6F1-6D671A6F083D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.DataAccess", "OperationWeb.DataAccess/OperationWeb.DataAccess.csproj", "{DC32BD3E-BE29-4B45-A6F1-6D671A6F083D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.DataAccess.Interfaces", "OperationWeb.DataAccess.Interfaces\OperationWeb.DataAccess.Interfaces.csproj", "{7E52EF5C-CCE2-4AD4-8374-CE9682C9C5FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.DataAccess.Interfaces", "OperationWeb.DataAccess.Interfaces/OperationWeb.DataAccess.Interfaces.csproj", "{7E52EF5C-CCE2-4AD4-8374-CE9682C9C5FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.DataAccess.Entities", "OperationWeb.DataAccess.Entities\OperationWeb.DataAccess.Entities.csproj", "{FC3D13C5-C3BE-4268-B8A6-6B6EFC53EA9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.DataAccess.Entities", "OperationWeb.DataAccess.Entities/OperationWeb.DataAccess.Entities.csproj", "{FC3D13C5-C3BE-4268-B8A6-6B6EFC53EA9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Infrastructure", "OperationWeb.Infrastructure\OperationWeb.Infrastructure.csproj", "{EADF4389-D6D2-432D-8F5B-F1F8F4C78C26}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Infrastructure", "OperationWeb.Infrastructure/OperationWeb.Infrastructure.csproj", "{EADF4389-D6D2-432D-8F5B-F1F8F4C78C26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Infrastructure.Interfaces", "OperationWeb.Infrastructure.Interfaces\OperationWeb.Infrastructure.Interfaces.csproj", "{7932DCDE-18F9-4B99-B438-8CC695B85065}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Infrastructure.Interfaces", "OperationWeb.Infrastructure.Interfaces/OperationWeb.Infrastructure.Interfaces.csproj", "{7932DCDE-18F9-4B99-B438-8CC695B85065}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Tests", "OperationWeb.Tests\OperationWeb.Tests.csproj", "{3B7AB3A1-28CB-4B89-812C-98A62ECCD96E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationWeb.Tests", "OperationWeb.Tests/OperationWeb.Tests.csproj", "{3B7AB3A1-28CB-4B89-812C-98A62ECCD96E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
