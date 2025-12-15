@@ -11,7 +11,7 @@ using OperationWeb.Business.Interfaces;
 using OperationWeb.Business;
 
 // Load .env file
-// Load .env file (Safe execution)
+// Load .env file (Safe execution) - Trigger Deploy
 try { DotNetEnv.Env.Load(); } catch { /* Ignore missing .env in production */ }
 
 var builder = WebApplication.CreateBuilder(args);
