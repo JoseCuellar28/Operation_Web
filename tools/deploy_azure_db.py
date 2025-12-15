@@ -1,5 +1,20 @@
-import pyodbc
+import sys
+import subprocess
 import os
+
+# Auto-install dependency if missing
+try:
+    import pyodbc
+except ImportError:
+    print("Installing missing dependency: pyodbc...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyodbc"])
+        print("Dependency installed. Retrying import...")
+        import pyodbc
+    except Exception as e:
+        print(f"FAILED to auto-install pyodbc: {e}")
+        print("Please run: pip install pyodbc")
+        sys.exit(1)
 
 # Configuration
 SERVER = 'operationweb-sql-server.database.windows.net'
