@@ -1,7 +1,8 @@
 
 import pytds
+import sys
 
-def inspect_schema():
+def check_project_divisions():
     try:
         server = '100.112.55.58'
         database = 'DB_Operation'
@@ -9,18 +10,19 @@ def inspect_schema():
         password = 'Joarcu28'
         port = 1433
 
-
-        print(f"Conectando a {server}...")
+        print(f"Checking Proyectos Divisions...")
+        
         with pytds.connect(server=server, user=user, password=password, database=database, port=port, autocommit=True) as conn:
             cursor = conn.cursor()
-            
-            print("\nSAMPLE: Personal")
-            cursor.execute("SELECT TOP 5 DNI, Inspector, Tipo, Categoria FROM Personal")
-            for row in cursor.fetchall():
-                print(row)
+
+            cursor.execute("SELECT DISTINCT Division, COUNT(*) FROM Proyectos GROUP BY Division")
+            rows = cursor.fetchall()
+            print("Distinct Division values in Proyectos:")
+            for r in rows:
+                print(f"  '{r[0]}' (Count: {r[1]})")
 
     except Exception as e:
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    inspect_schema()
+    check_project_divisions()

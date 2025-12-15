@@ -21,11 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OperationWeb.Business\OperationWeb.Business.csproj" />
-    <ProjectReference Include="..\OperationWeb.Business.Interfaces\OperationWeb.Business.Interfaces.csproj" />
-    <ProjectReference Include="..\OperationWeb.DataAccess\OperationWeb.DataAccess.csproj" />
-    <ProjectReference Include="..\OperationWeb.DataAccess.Interfaces\OperationWeb.DataAccess.Interfaces.csproj" />
-    <ProjectReference Include="..\OperationWeb.API\OperationWeb.API.csproj" />
+    <ProjectReference Include="../OperationWeb.Business/OperationWeb.Business.csproj" />
+    <ProjectReference Include="../OperationWeb.Business.Interfaces/OperationWeb.Business.Interfaces.csproj" />
+    <ProjectReference Include="../OperationWeb.DataAccess/OperationWeb.DataAccess.csproj" />
+    <ProjectReference Include="../OperationWeb.DataAccess.Interfaces/OperationWeb.DataAccess.Interfaces.csproj" />
+    <ProjectReference Include="../OperationWeb.API/OperationWeb.API.csproj" />
   </ItemGroup>
 
 </Project>
