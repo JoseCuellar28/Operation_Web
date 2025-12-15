@@ -9,8 +9,9 @@ except ImportError:
     print("Installing missing dependency: pyodbc...")
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyodbc"])
-        print("Dependency installed. Retrying import...")
-        import pyodbc
+        print("Dependency installed. Restarting script to load new components...")
+        # Restart the current process to load the new package
+        os.execv(sys.executable, [sys.executable] + sys.argv)
     except Exception as e:
         print(f"FAILED to auto-install pyodbc: {e}")
         print("Please run: pip install pyodbc")
