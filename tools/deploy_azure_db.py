@@ -79,7 +79,8 @@ def main():
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         scripts = [
             os.path.join(base_dir, 'database', 'scripts', '01_DDL_Structure.sql'),
-            os.path.join(base_dir, 'database', 'scripts', '02_DCL_Permissions.sql')
+            os.path.join(base_dir, 'database', 'scripts', '02_DCL_Permissions.sql'),
+            os.path.join(base_dir, 'database', 'scripts', '03_DML_Seed_Admin.sql')
         ]
         
         for script in scripts:
