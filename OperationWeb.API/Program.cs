@@ -147,120 +147,61 @@ app.MapControllers();
 // Health Check Endpoint
 app.MapGet("/health", () => Results.Ok("Healthy"));
 
-// Non-blocking initialization to prevent Azure 504 Gateway Timeout
-// Task.Run(async () =>
-// {
-//     try
-//     {
-//         // Wait 5 seconds to ensure app is fully up
-//         await Task.Delay(5000); 
+// BLOCKING INITIALIZATION (The "No-Fail" Approach)
+// We await this explicitly to ensure the DB is ready before the app creates the HTTP server.
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<OperationWebDbContext>();
+        
+        Console.WriteLine("[STARTUP] Checking Database...");
+        // 1. Create Tables
+        await db.Database.EnsureCreatedAsync();
+        Console.WriteLine("[STARTUP] Database Tables Verified/Created.");
 
-//         using (var scope = app.Services.CreateScope())
-//         {
-//             var db = scope.ServiceProvider.GetRequiredService<OperationWebDbContext>();
-//             try
-//             {
-//                 await db.Database.EnsureCreatedAsync();
+        // 2. Evolutionary SQL for UserAccessConfigs
+        try 
+        {
+            await db.Database.ExecuteSqlRawAsync(@"
+                IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'UserAccessConfigs')
+                CREATE TABLE UserAccessConfigs (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    UserId INT NOT NULL,
+                    AccessWeb BIT NOT NULL DEFAULT 1,
+                    AccessApp BIT NOT NULL DEFAULT 1,
+                    LastUpdated DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+                );");
+                Console.WriteLine("[STARTUP] UserAccessConfigs check complete.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[STARTUP WARNING] Secondary table check failed: {ex.Message}");
+        }
 
-//                 // Evolutionary DB Update: Ensure UserAccessConfigs table exists without wiping data
-//                 try 
-//                 {
-//                     Console.WriteLine("[DEBUG] ATTEMPTING TO CREATE UserAccessConfigs TABLE...");
-//                     // Debug Schema
-//                     // var currentSchema = await db.Database.SqlQueryRaw<string>("SELECT SCHEMA_NAME()").FirstOrDefaultAsync();
-//                     // Console.WriteLine($"[DEBUG] DEFAULT SCHEMA: {currentSchema}");
-
-//                     await db.Database.ExecuteSqlRawAsync(@"
-//                      IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'UserAccessConfigs')
-//                      CREATE TABLE UserAccessConfigs (
-//                          Id INT IDENTITY(1,1) PRIMARY KEY,
-//                          UserId INT NOT NULL,
-//                          AccessWeb BIT NOT NULL DEFAULT 1,
-//                          AccessApp BIT NOT NULL DEFAULT 1,
-//                          LastUpdated DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-//                          -- FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
-//                      );");
-//                      Console.WriteLine("[DEBUG] UserAccessConfigs creation logic finished.");
-//                 }
-//                 catch (Exception ex)
-//                 {
-//                     Console.WriteLine($"[WARNING] Failed to ensure UserAccessConfigs table: {ex.Message} - {ex.InnerException?.Message}");
-//                     // app.Logger.LogError(ex, "Failed to create table");
-//                 }
-
-//                 // Ensure Roles exist
-//                 var adminRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
-//                 if (adminRole == null)
-//                 {
-//                     adminRole = new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" };
-//                     await db.Roles.AddAsync(adminRole);
-//                     await db.SaveChangesAsync();
-//                 }
-
-//                 var userRole = await db.Roles.FirstOrDefaultAsync(r => r.Name == "Usuario");
-//                 if (userRole == null)
-//                 {
-//                     userRole = new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" };
-//                     await db.Roles.AddAsync(userRole);
-//                     await db.SaveChangesAsync();
-//                 }
-
-//                 async Task<int> EnsureUserAsync(string dni, string email)
-//                 {
-//                     try
-//                     {
-//                         var existing = await db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
-//                         if (existing != null) 
-//                         {
-//                             if (string.IsNullOrEmpty(existing.Role))
-//                             {
-//                                 existing.Role = "USER";
-//                                 await db.SaveChangesAsync();
-//                             }
-//                             return existing.Id;
-//                         }
-//                         var hash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
-//                         var u = new OperationWeb.DataAccess.Entities.User
-//                         {
-//                             DNI = dni,
-//                             PasswordHash = hash,
-//                             Email = email,
-//                             Role = "USER",
-//                             IsActive = true,
-//                             CreatedAt = DateTime.UtcNow
-//                         };
-//                         await db.Users.AddAsync(u);
-//                         await db.SaveChangesAsync();
-//                         return u.Id;
-//                     }
-//                     catch (Exception ex)
-//                     {
-//                         Console.WriteLine($"Error creating user {dni}: {ex.Message}");
-//                         return 0;
-//                     }
-//                 }
-                
-//                 async Task EnsureUserRoleAsync(int userId, int roleId)
-//                 {
-//                     if (userId == 0) return;
-//                     var exists = await db.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
-//                     if (exists) return;
-//                     await db.UserRoles.AddAsync(new OperationWeb.DataAccess.Entities.UserRole { UserId = userId, RoleId = roleId });
-//                     await db.SaveChangesAsync();
-//                 }
-//             }
-//             catch (Exception ex)
-//             {
-//                 Console.WriteLine($"[WARNING] Database initialization failed: {ex.Message}");
-//                 // Swallow exception to allow app to start
-//             }
-//         }
-//     }
-//     catch (Exception ex)
-//     {
-//          Console.WriteLine($"Critical error in background startup logic: {ex.Message}");
-//     }
-// });
+        // 3. Ensure Roles
+        if (!await db.Roles.AnyAsync(r => r.Name == "Admin"))
+        {
+            await db.Roles.AddAsync(new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" });
+            Console.WriteLine("[STARTUP] Admin Role Created.");
+        }
+        if (!await db.Roles.AnyAsync(r => r.Name == "Usuario"))
+        {
+            await db.Roles.AddAsync(new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" });
+            Console.WriteLine("[STARTUP] User Role Created.");
+        }
+        await db.SaveChangesAsync();
+        Console.WriteLine("[STARTUP] Initialization Complete.");
+    }
+}
+catch (Exception ex)
+{
+    // Log CRITICAL error but allow app to crash so Azure restarts it
+    Console.WriteLine($"[CRITICAL STARTUP ERROR] Database initialization failed: {ex.Message}");
+    // We do NOT rethrow to avoid 502 Bad Gateway loop if DB is transiently down, 
+    // but without DB the app is useless anyway. 
+    // Ideally we let it crash, but for Azure cold start stability, we log and proceed.
+}
 
 app.Logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
 app.Logger.LogInformation("DB provider: {Provider}", useSql ? "SqlServer" : "InMemory");
