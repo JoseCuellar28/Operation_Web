@@ -12,6 +12,10 @@ provider "azurerm" {
   features {}
 }
 
+resource "random_id" "unique" {
+  byte_length = 4
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = "OperationWeb-RG"
   location = "West US 2"
@@ -19,7 +23,7 @@ resource "azurerm_resource_group" "rg" {
 
 # Azure SQL Server
 resource "azurerm_mssql_server" "sqlserver" {
-  name                         = "operationweb-sql-server"
+  name                         = "operationweb-sql-${random_id.unique.hex}"
   resource_group_name          = azurerm_resource_group.rg.name
   location                     = azurerm_resource_group.rg.location
   version                      = "12.0"
@@ -79,7 +83,7 @@ resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
 
 # Frontend Hosting (Static Website)
 resource "azurerm_storage_account" "frontend_storage" {
-  name                     = "operationwebfrontend"
+  name                     = "opwebfront${random_id.unique.hex}"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"

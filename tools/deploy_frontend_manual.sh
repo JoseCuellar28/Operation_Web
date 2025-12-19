@@ -10,18 +10,20 @@ RG_NAME="OperationWeb-RG"
 
 echo -e "${GREEN}🚀 STARTING FRONTEND DEPLOYMENT (Manual Mode)${NC}"
 echo "--------------------------------------------"
-echo "Creating Storage Account: $STORAGE_NAME"
+echo -e "${GREEN}🔍 Finding Storage Account created by Terraform...${NC}"
 
-# 1. Create Storage Account
-az storage account create \
-    --name $STORAGE_NAME \
-    --resource-group $RG_NAME \
-    --location westus2 \
-    --sku Standard_LRS \
-    --kind StorageV2
+# Find account starting with "opwebfront" in the Resource Group
+STORAGE_NAME=$(az storage account list -g $RG_NAME --query "[?starts_with(name, 'opwebfront')].name" -o tsv)
 
-# 2. Enable Static Website
-echo -e "${GREEN}🌍 Enabling Static Website...${NC}"
+if [ -z "$STORAGE_NAME" ]; then
+    echo -e "${RED}❌ No Storage Account found! Did you run 'terraform apply'?${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Found Account: $STORAGE_NAME${NC}"
+
+# 2. Enable Static Website (Idempotent - ensures it's on)
+echo -e "${GREEN}🌍 Ensuring Static Website is enabled...${NC}"
 az storage blob service-properties update \
     --account-name $STORAGE_NAME \
     --static-website \
