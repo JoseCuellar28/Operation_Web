@@ -92,7 +92,7 @@ echo -e "${BLUE}⬆️  Zipping & Deploying Backend...${NC}"
 cd publish_output
 zip -r ../backend_deploy.zip .
 cd ..
-az webapp deployment source config-zip --resource-group $RG_NAME --name $APP_NAME --src backend_deploy.zip
+az webapp deploy --resource-group $RG_NAME --name $APP_NAME --src-path backend_deploy.zip --type zip
 echo "✅ Backend Deployed."
 
 # Get Backend URL
