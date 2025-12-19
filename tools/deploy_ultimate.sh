@@ -14,7 +14,7 @@ echo "This will create a robust, production-ready environment."
 
 # --- VARIABLES ---
 RG_NAME="OperationWeb-RG"
-LOCATION="eastus"
+LOCATION="eastus2"
 SUFFIX=$((RANDOM % 9000 + 1000))  # Simple random 4-digit
 SQL_SERVER="opwebsql${SUFFIX}"
 DB_NAME="OperationWebDB"
