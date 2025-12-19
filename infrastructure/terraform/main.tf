@@ -86,8 +86,8 @@ resource "azurerm_storage_account" "frontend_storage" {
   account_replication_type = "LRS"
 
   static_website {
-    index_document     = "frontend/Modelo_Funcional/index.html"
-    error_404_document = "frontend/Modelo_Funcional/index.html"
+    index_document     = "index.html"
+    error_404_document = "index.html"
   }
 }
 
