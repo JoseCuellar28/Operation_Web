@@ -181,17 +181,95 @@ try
 
         // 3. Ensure Roles
         if (!await db.Roles.AnyAsync(r => r.Name == "Admin"))
-        {
-            await db.Roles.AddAsync(new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador" });
-            Console.WriteLine("[STARTUP] Admin Role Created.");
-        }
+            await db.Roles.AddAsync(new OperationWeb.DataAccess.Entities.Role { Name = "Admin", Description = "Administrador del Sistema" });
         if (!await db.Roles.AnyAsync(r => r.Name == "Usuario"))
+            await db.Roles.AddAsync(new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario Operativo" });
+        await db.SaveChangesAsync();
+
+        // 4. Seed Users (Automated Golden Script)
+        // Hash for "Prueba123" using the fixed key in EncryptionService
+        string defaultPassHash = "a0kQ6/k3DJnSDZaed0nxxQ=="; 
+        
+        // 4.1 Admin User
+        var adminUser = await db.Users.FirstOrDefaultAsync(u => u.DNI == "admin");
+        if (adminUser == null)
         {
-            await db.Roles.AddAsync(new OperationWeb.DataAccess.Entities.Role { Name = "Usuario", Description = "Usuario estándar" });
-            Console.WriteLine("[STARTUP] User Role Created.");
+            adminUser = new OperationWeb.DataAccess.Entities.User 
+            { 
+                DNI = "admin", 
+                Email = "admin@ocal.com", 
+                PasswordHash = defaultPassHash, 
+                Role = "Admin", 
+                IsActive = true, 
+                CreatedAt = DateTime.UtcNow,
+                MustChangePassword = false
+            };
+            await db.Users.AddAsync(adminUser);
+            await db.SaveChangesAsync();
+            Console.WriteLine("[STARTUP] Seeded Admin User.");
+        }
+
+        // 4.2 Collaborator User
+        var colabUser = await db.Users.FirstOrDefaultAsync(u => u.DNI == "colaborador");
+        if (colabUser == null)
+        {
+            colabUser = new OperationWeb.DataAccess.Entities.User 
+            { 
+                DNI = "colaborador", 
+                Email = "colab@ocal.com", 
+                PasswordHash = defaultPassHash, 
+                Role = "Usuario", 
+                IsActive = true, 
+                CreatedAt = DateTime.UtcNow,
+                MustChangePassword = false
+            };
+            await db.Users.AddAsync(colabUser);
+            await db.SaveChangesAsync();
+            Console.WriteLine("[STARTUP] Seeded Collaborator User.");
+        }
+
+        // 5. Seed Access Configs (Crucial for Web Login)
+        if (!await db.UserAccessConfigs.AnyAsync(c => c.UserId == adminUser.Id))
+        {
+            await db.UserAccessConfigs.AddAsync(new OperationWeb.DataAccess.Entities.UserAccessConfig 
+            { 
+                UserId = adminUser.Id, 
+                AccessWeb = true, 
+                AccessApp = true, 
+                JobLevel = "Manager", 
+                LastUpdated = DateTime.UtcNow 
+            });
+        }
+
+        if (!await db.UserAccessConfigs.AnyAsync(c => c.UserId == colabUser.Id))
+        {
+            await db.UserAccessConfigs.AddAsync(new OperationWeb.DataAccess.Entities.UserAccessConfig 
+            { 
+                UserId = colabUser.Id, 
+                AccessWeb = true, 
+                AccessApp = true, 
+                JobLevel = "Employee", 
+                LastUpdated = DateTime.UtcNow 
+            });
         }
         await db.SaveChangesAsync();
-        Console.WriteLine("[STARTUP] Initialization Complete.");
+
+        // 6. Seed Projects (Test Data)
+        // Using Raw SQL because Proyectos might not be fully mapped in DbSet yet or to be safe
+        var countProyectos = await db.Database.SqlQueryRaw<int>("SELECT COUNT(1) as Value FROM Proyectos").FirstOrDefaultAsync();
+        if (countProyectos == 0)
+        {
+             await db.Database.ExecuteSqlRawAsync(@"
+                INSERT INTO Proyectos (Nombre, Codigo, Estado, FechaInicio, GerenteDni, JefeDni)
+                VALUES 
+                ('Mantenimiento Linea 1', 'PRJ-001', 'Activo', GETUTCDATE(), 'admin', 'colaborador'),
+                ('Ampliación Subestación Norte', 'PRJ-002', 'Planificacion', GETUTCDATE(), 'admin', 'otro'),
+                ('Reparación Emergencia', 'PRJ-003', 'Activo', GETUTCDATE(), 'admin', 'colaborador');
+            ");
+            Console.WriteLine("[STARTUP] Seeded Test Projects.");
+        }
+
+        Console.WriteLine("[STARTUP] Initialization Complete (Users & Data Ready).");
     }
 }
 catch (Exception ex)
