@@ -64,7 +64,7 @@ echo -e "${GREEN}✅ Frontend URL reserved: $FRONTEND_URL${NC}"
 # 4. APP SERVICE (BACKEND)
 echo -e "${BLUE}☁️  Creating App Service Plan (B1)...${NC}"
 PLAN_NAME="OperationWebPlan"
-az appservice plan create --name $PLAN_NAME --resource-group $RG_NAME --sku B1 --is-linux --output none
+az appservice plan create --name $PLAN_NAME --resource-group $RG_NAME --sku F1 --is-linux --output none
 
 echo -e "${BLUE}🚀 Creating Web App ($APP_NAME)...${NC}"
 az webapp create --resource-group $RG_NAME --plan $PLAN_NAME --name $APP_NAME \
