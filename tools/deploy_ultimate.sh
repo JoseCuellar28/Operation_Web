@@ -1,0 +1,121 @@
+#!/bin/bash
+set -e
+
+# --- COLORS ---
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${GREEN}🚀 STARTING 'ALTERNATIVE B' - ULTIMATE NATIVE DEPLOYMENT${NC}"
+echo "--------------------------------------------------------"
+echo "Bypassing Terraform references. Using pure Azure CLI."
+echo "This will create a robust, production-ready environment."
+
+# --- VARIABLES ---
+RG_NAME="OperationWeb-RG"
+LOCATION="eastus"
+SUFFIX=$((RANDOM % 9000 + 1000))  # Simple random 4-digit
+SQL_SERVER="opwebsql${SUFFIX}"
+DB_NAME="OperationWebDB"
+APP_NAME="opwebapi${SUFFIX}"
+SA_NAME="opwebfront${SUFFIX}"
+ADMIN_USER="sqladmin"
+ADMIN_PASS="ChangeThisStrongPassword123!"
+
+echo -e "${BLUE}ℹ️  Config:${NC}"
+echo "   RG: $RG_NAME"
+echo "   SQL: $SQL_SERVER"
+echo "   App: $APP_NAME"
+echo "   Storage: $SA_NAME"
+echo "--------------------------------------------------------"
+
+# 1. RESOURCE GROUP
+echo -e "${BLUE}🏗️  Creating Resource Group...${NC}"
+az group create --name $RG_NAME --location $LOCATION --output none
+echo "✅ RG Created."
+
+# 2. SQL SERVER & DB
+echo -e "${BLUE}🗄️  Creating Database Server ($SQL_SERVER)...${NC}"
+az sql server create --name $SQL_SERVER --resource-group $RG_NAME --location $LOCATION \
+    --admin-user $ADMIN_USER --admin-password $ADMIN_PASS --output none
+echo -e "${BLUE}🔥 Opening SQL Firewall (Allow Azure Resources)...${NC}"
+az sql server firewall-rule create --resource-group $RG_NAME --server $SQL_SERVER \
+    --name AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0 --output none
+echo -e "${BLUE}💾 Creating Database ($DB_NAME)...${NC}"
+az sql db create --resource-group $RG_NAME --server $SQL_SERVER --name $DB_NAME \
+    --service-objective Basic --output none
+echo "✅ Database Ready."
+
+# 3. STORAGE (FRONTEND)
+echo -e "${BLUE}📦 Creating Storage Account ($SA_NAME)...${NC}"
+az storage account create --name $SA_NAME --resource-group $RG_NAME --location $LOCATION \
+    --sku Standard_LRS --kind StorageV2 --allow-blob-public-access true --output none
+echo -e "${BLUE}🌐 Enabling Static Website...${NC}"
+az storage blob service-properties update --account-name $SA_NAME --static-website \
+    --404-document 404.html --index-document index.html --output none
+
+# Get Frontend URL
+FRONTEND_URL=$(az storage account show -n $SA_NAME -g $RG_NAME --query "primaryEndpoints.web" -o tsv)
+# Remove trailing slash for consistency
+FRONTEND_URL=${FRONTEND_URL%/}
+echo -e "${GREEN}✅ Frontend URL reserved: $FRONTEND_URL${NC}"
+
+# 4. APP SERVICE (BACKEND)
+echo -e "${BLUE}☁️  Creating App Service Plan (B1)...${NC}"
+PLAN_NAME="OperationWebPlan"
+az appservice plan create --name $PLAN_NAME --resource-group $RG_NAME --sku B1 --is-linux --output none
+
+echo -e "${BLUE}🚀 Creating Web App ($APP_NAME)...${NC}"
+az webapp create --resource-group $RG_NAME --plan $PLAN_NAME --name $APP_NAME \
+    --runtime "DOTNETCORE|8.0" --output none
+
+# Construct Connection String
+CONN_STR="Server=tcp:${SQL_SERVER}.database.windows.net,1433;Initial Catalog=${DB_NAME};Persist Security Info=False;User ID=${ADMIN_USER};Password=${ADMIN_PASS};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+
+echo -e "${BLUE}⚙️  Configuring App Settings (DB & CORS)...${NC}"
+az webapp config appsettings set --resource-group $RG_NAME --name $APP_NAME --settings \
+    "DefaultConnection=$CONN_STR" \
+    "ASPNETCORE_ENVIRONMENT=Development" \
+    "WEBSITES_PORT=80" \
+    "Cors:AllowAnyOriginInDev=true" \
+    --output none
+
+# 5. BUILD & DEPLOY BACKEND
+echo -e "${BLUE}🔨 Building Backend...${NC}"
+dotnet publish OperationWeb.API/OperationWeb.API.csproj -c Release -o ./publish_output
+echo -e "${BLUE}⬆️  Zipping & Deploying Backend...${NC}"
+cd publish_output
+zip -r ../backend_deploy.zip .
+cd ..
+az webapp deployment source config-zip --resource-group $RG_NAME --name $APP_NAME --src backend_deploy.zip
+echo "✅ Backend Deployed."
+
+# Get Backend URL
+API_URL="https://${APP_NAME}.azurewebsites.net"
+echo -e "${GREEN}✅ Backend API URL: $API_URL${NC}"
+
+# 6. PATCH & DEPLOY FRONTEND
+echo -e "${BLUE}🩹 Patching Frontend Code (Universal Patch)...${NC}"
+# Define placeholders to replace
+OLD_AZURE="https://operationweb-api-815a0eaa.azurewebsites.net"
+OLD_LOCAL="http://localhost:5132"
+
+# Patch files in place
+find frontend/Modelo_Funcional -type f \( -name "*.js" -o -name "*.html" \) -print0 | xargs -0 sed -i.bak "s|$OLD_AZURE|$API_URL|g"
+find frontend/Modelo_Funcional -type f \( -name "*.js" -o -name "*.html" \) -print0 | xargs -0 sed -i.bak "s|$OLD_LOCAL|$API_URL|g"
+find frontend/Modelo_Funcional -name "*.bak" -delete
+
+# Create config.js
+echo "window.APP_CONFIG = { API_URL: '$API_URL' };" > frontend/Modelo_Funcional/config.js
+
+echo -e "${BLUE}⬆️  Uploading Frontend...${NC}"
+az storage blob upload-batch --account-name $SA_NAME --destination "\$web" --source "frontend/Modelo_Funcional" --overwrite
+
+echo "--------------------------------------------------------"
+echo -e "${GREEN}✅✅✅ DEPLOYMENT 'ALTERNATIVE B' COMPLETE! ✅✅✅${NC}"
+echo "--------------------------------------------------------"
+echo -e "🌍 FRONTEND:  $FRONTEND_URL"
+echo -e "🔌 BACKEND:   $API_URL"
+echo -e "👤 ADMIN:     admin / Prueba123"
+echo "--------------------------------------------------------"

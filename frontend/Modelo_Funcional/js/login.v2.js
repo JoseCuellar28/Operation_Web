@@ -1,5 +1,6 @@
 // Login Manager Class
-const API_NET = localStorage.getItem('api_net') || 'http://localhost:5132';
+// Restoration of Dynamic Configuration (User Request)
+const API_NET = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || localStorage.getItem('api_net') || 'https://operationweb-api-815a0eaa.azurewebsites.net';
 class LoginManager {
     constructor() {
         console.log('🏗️ Constructor LoginManager iniciado');

@@ -211,13 +211,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- DOMPurify for XSS protection -->
     <script src="js/vendor/purify.min.js"></script>
+    <!-- Dynamic Configuration -->
+    <script src="config.js"></script>
     <!-- Custom JS -->
-    <script src="js/login.js"></script>
+    <script src="js/login.v2.js"></script>
     <script>
         function setCaptchaImage(d) {
             localStorage.setItem('captcha_id', d.id);
             var img = document.getElementById('captchaImage');
-            var base = (localStorage.getItem('api_net') || 'http://localhost:5132');
+            var base = 'https://operationweb-api-815a0eaa.azurewebsites.net';
             if (!img) return;
             if (d.image) {
                 img.src = d.image;
@@ -233,7 +235,7 @@
             if (u) { u.value = ''; u.setAttribute('autocomplete', 'off'); u.setAttribute('autocapitalize', 'none'); }
             if (p) { p.value = ''; p.setAttribute('autocomplete', 'off'); }
             try {
-                var r = await fetch((localStorage.getItem('api_net') || 'http://localhost:5132') + '/api/auth/captcha');
+                var r = await fetch('https://operationweb-api-815a0eaa.azurewebsites.net/api/auth/captcha');
                 if (r.ok) {
                     var d = await r.json();
                     setCaptchaImage(d);
@@ -241,7 +243,7 @@
             } catch { }
         });
         function refreshCaptcha() {
-            fetch((localStorage.getItem('api_net') || 'http://localhost:5132') + '/api/auth/captcha').then(r => r.json()).then(d => { setCaptchaImage(d); });
+            fetch('https://operationweb-api-815a0eaa.azurewebsites.net/api/auth/captcha').then(r => r.json()).then(d => { setCaptchaImage(d); });
         }
 
         // Forgot Password Logic
@@ -251,7 +253,7 @@
             const input = document.getElementById('forgotDniEmail');
             const btn = document.getElementById('btnSendRecovery');
             const msgDiv = document.getElementById('forgotPasswordMessage');
-            const apiBase = localStorage.getItem('api_net') || 'http://localhost:5132';
+            const apiBase = 'https://operationweb-api-815a0eaa.azurewebsites.net';
 
             if (!input.value) return;
 

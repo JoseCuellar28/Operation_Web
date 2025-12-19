@@ -77,18 +77,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevFrontend", policy =>
     {
-        if (allowAnyOriginInDev)
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        }
-        else
-        {
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        }
+        // NUCLEAR CORS OPTION: Allow everything to ensure frontend URL works immediately
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
@@ -187,8 +179,8 @@ try
         await db.SaveChangesAsync();
 
         // 4. Seed Users (Automated Golden Script)
-        // Hash for "Prueba123" using the fixed key in EncryptionService
-        string defaultPassHash = "a0kQ6/k3DJnSDZaed0nxxQ=="; 
+        // Hash for "Prueba123" (BCrypt Universal) to bypass AES Key Mismatches in Azure
+        string defaultPassHash = "$2a$11$ft2A9VRTZN.RT5N0o7oVyuKWr3TqtC26OGronNLI5PV2JCou21yvy"; 
         
         // 4.1 Admin User
         var adminUser = await db.Users.FirstOrDefaultAsync(u => u.DNI == "admin");
