@@ -1,6 +1,6 @@
 // Login Manager Class
-// Restoration of Dynamic Configuration (User Request)
-const API_NET = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || localStorage.getItem('api_net') || 'https://operationweb-api-815a0eaa.azurewebsites.net';
+// Restoration of Dynamic Configuration (User Request) - Priority Fix: Console (localStorage) wins over Config
+const API_NET = localStorage.getItem('api_net') || (window.APP_CONFIG && window.APP_CONFIG.API_URL) || 'https://operationweb-api-815a0eaa.azurewebsites.net';
 class LoginManager {
     constructor() {
         console.log('🏗️ Constructor LoginManager iniciado');

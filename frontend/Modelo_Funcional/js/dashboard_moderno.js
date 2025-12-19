@@ -2991,8 +2991,8 @@ window.logout = () => {
     // Clear localStorage
     localStorage.removeItem('jwt');
     localStorage.removeItem('user');
-    localStorage.removeItem('api_net');
-    localStorage.removeItem('api_fase4');
+    // localStorage.removeItem('api_net');
+    // localStorage.removeItem('api_fase4');
 
     // Redirect to index.html (main page)
     window.location.href = 'index.html';
