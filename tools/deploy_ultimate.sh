@@ -14,7 +14,7 @@ echo "This will create a robust, production-ready environment."
 
 # --- VARIABLES ---
 RG_NAME="OperationWeb-RG"
-LOCATION="northcentralus"
+LOCATION="centralus"
 SUFFIX=$((RANDOM % 9000 + 1000))  # Simple random 4-digit
 SQL_SERVER="opwebsql${SUFFIX}"
 DB_NAME="OperationWebDB"
@@ -62,7 +62,7 @@ FRONTEND_URL=${FRONTEND_URL%/}
 echo -e "${GREEN}✅ Frontend URL reserved: $FRONTEND_URL${NC}"
 
 # 4. APP SERVICE (BACKEND)
-echo -e "${BLUE}☁️  Creating App Service Plan (B1)...${NC}"
+echo -e "${BLUE}☁️  Creating App Service Plan (F1 - Free)...${NC}"
 PLAN_NAME="OperationWebPlan"
 az appservice plan create --name $PLAN_NAME --resource-group $RG_NAME --sku F1 --is-linux --output none
 
