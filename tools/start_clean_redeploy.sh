@@ -52,3 +52,8 @@ echo "--------------------------------------------"
 echo "Next steps:"
 echo "1. Wait 2-3 minutes for the container to start."
 echo "2. Check https://operationweb-api.azurewebsites.net/health"
+
+echo "--------------------------------------------"
+echo -e "${GREEN}🌍 PHASE 3: FRONTEND DEPLOYMENT${NC}"
+cd ../../
+sh tools/deploy_frontend_manual.sh
