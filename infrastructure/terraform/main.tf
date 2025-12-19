@@ -49,7 +49,7 @@ resource "azurerm_service_plan" "appserviceplan" {
 
 # Web App for Containers (Docker)
 resource "azurerm_linux_web_app" "webapp" {
-  name                = "operationweb-api"
+  name                = "operationweb-api-${random_id.unique.hex}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_service_plan.appserviceplan.location
   service_plan_id     = azurerm_service_plan.appserviceplan.id
@@ -97,4 +97,8 @@ resource "azurerm_storage_account" "frontend_storage" {
 
 output "frontend_url" {
   value = azurerm_storage_account.frontend_storage.primary_web_endpoint
+}
+
+output "api_url" {
+  value = "https://${azurerm_linux_web_app.webapp.default_hostname}"
 }
