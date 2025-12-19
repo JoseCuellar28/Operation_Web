@@ -128,8 +128,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-app.UseRateLimiter();
 app.UseCors("DevFrontend");
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
