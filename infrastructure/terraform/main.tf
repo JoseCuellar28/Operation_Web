@@ -65,7 +65,8 @@ resource "azurerm_linux_web_app" "webapp" {
   }
 
   app_settings = {
-    "DefaultConnection" = "Server=tcp:${azurerm_mssql_server.sqlserver.fully_qualified_domain_name},1433;Initial Catalog=OperationWebDB;Persist Security Info=False;User ID=sqladmin;Password=ChangeThisStrongPassword123!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+    "DefaultConnection"      = "Server=tcp:${azurerm_mssql_server.sqlserver.fully_qualified_domain_name},1433;Initial Catalog=OperationWebDB;Persist Security Info=False;User ID=sqladmin;Password=ChangeThisStrongPassword123!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+    "ASPNETCORE_ENVIRONMENT" = "Development"
   }
 
   # CRITICAL FIX: Wait for Firewall Rule BEFORE starting App to prevent connection errors on first boot
