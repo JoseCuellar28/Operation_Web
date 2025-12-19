@@ -30,9 +30,8 @@ var isDev = builder.Environment.IsDevelopment() ||
             string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase);
 
 // Try to get connection string from environment variable first, then configuration
-var conn = Environment.GetEnvironmentVariable("DefaultConnection") ?? 
-           builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-           string.Empty;
+// FIX: Use standard Configuration to allow CLI override (CLI > Env > JSON)
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
 Console.WriteLine($"[DEBUG] Connection String: {(string.IsNullOrEmpty(conn) ? "EMPTY" : conn.Replace("Password=", "Password=***"))}");
 
