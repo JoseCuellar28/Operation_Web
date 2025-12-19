@@ -14,7 +14,7 @@ echo "This will create a robust, production-ready environment."
 
 # --- VARIABLES ---
 RG_NAME="OperationWeb-RG"
-LOCATION="eastus2"
+LOCATION="northcentralus"
 SUFFIX=$((RANDOM % 9000 + 1000))  # Simple random 4-digit
 SQL_SERVER="opwebsql${SUFFIX}"
 DB_NAME="OperationWebDB"
@@ -38,7 +38,7 @@ echo "✅ RG Created."
 # 2. SQL SERVER & DB
 echo -e "${BLUE}🗄️  Creating Database Server ($SQL_SERVER)...${NC}"
 az sql server create --name $SQL_SERVER --resource-group $RG_NAME --location $LOCATION \
-    --admin-user $ADMIN_USER --admin-password $ADMIN_PASS --output none
+    --admin-user $ADMIN_USER --admin-password $ADMIN_PASS
 echo -e "${BLUE}🔥 Opening SQL Firewall (Allow Azure Resources)...${NC}"
 az sql server firewall-rule create --resource-group $RG_NAME --server $SQL_SERVER \
     --name AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0 --output none
