@@ -93,6 +93,9 @@ cd publish_output
 zip -r ../backend_deploy.zip .
 cd ..
 # Deploy using CURL to bypass Cloud Shell Auth issues and handle Credential Propagation
+echo -e "${BLUE}🔓 Ensuring SCM Basic Auth is Enabled...${NC}"
+az resource update --resource-group $RG_NAME --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent sites/$APP_NAME --set properties.allow=true --output none
+
 echo -e "${BLUE}⏳ Waiting 20s for credentials to activate...${NC}"
 sleep 20
 
