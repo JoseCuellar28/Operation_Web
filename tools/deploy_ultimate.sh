@@ -39,12 +39,14 @@ echo "✅ RG Created."
 echo -e "${BLUE}🗄️  Creating Database Server ($SQL_SERVER)...${NC}"
 az sql server create --name $SQL_SERVER --resource-group $RG_NAME --location $LOCATION \
     --admin-user $ADMIN_USER --admin-password $ADMIN_PASS
+echo -e "${BLUE}⏳ Waiting 30s for SQL Server propagation...${NC}"
+sleep 30
 echo -e "${BLUE}🔥 Opening SQL Firewall (Allow Azure Resources)...${NC}"
 az sql server firewall-rule create --resource-group $RG_NAME --server $SQL_SERVER \
-    --name AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0 --output none
+    --name AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
 echo -e "${BLUE}💾 Creating Database ($DB_NAME)...${NC}"
 az sql db create --resource-group $RG_NAME --server $SQL_SERVER --name $DB_NAME \
-    --service-objective Basic --output none
+    --service-objective Basic
 echo "✅ Database Ready."
 
 # 3. STORAGE (FRONTEND)
