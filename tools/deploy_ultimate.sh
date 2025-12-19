@@ -72,6 +72,9 @@ echo -e "${BLUE}🚀 Creating Web App ($APP_NAME)...${NC}"
 az webapp create --resource-group $RG_NAME --plan $PLAN_NAME --name $APP_NAME \
     --runtime "DOTNETCORE|8.0" --output none
 
+echo -e "${BLUE}⏳ Waiting 10s for App Service to settle...${NC}"
+sleep 10
+
 # Construct Connection String
 CONN_STR="Server=tcp:${SQL_SERVER}.database.windows.net,1433;Initial Catalog=${DB_NAME};Persist Security Info=False;User ID=${ADMIN_USER};Password=${ADMIN_PASS};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 
@@ -80,8 +83,7 @@ az webapp config appsettings set --resource-group $RG_NAME --name $APP_NAME --se
     "DefaultConnection=$CONN_STR" \
     "ASPNETCORE_ENVIRONMENT=Development" \
     "WEBSITES_PORT=80" \
-    "Cors:AllowAnyOriginInDev=true" \
-    --output none
+    "Cors__AllowAnyOriginInDev=true"
 
 # 5. BUILD & DEPLOY BACKEND
 echo -e "${BLUE}🔨 Building Backend...${NC}"
