@@ -76,3 +76,21 @@ resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
   start_ip_address = "0.0.0.0"
   end_ip_address   = "0.0.0.0"
 }
+
+# Frontend Hosting (Static Website)
+resource "azurerm_storage_account" "frontend_storage" {
+  name                     = "operationwebfrontend"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  static_website {
+    index_document     = "frontend/Modelo_Funcional/index.html"
+    error_404_document = "frontend/Modelo_Funcional/index.html"
+  }
+}
+
+output "frontend_url" {
+  value = azurerm_storage_account.frontend_storage.primary_web_endpoint
+}

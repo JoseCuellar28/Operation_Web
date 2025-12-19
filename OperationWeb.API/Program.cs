@@ -71,7 +71,7 @@ builder.Services.AddHttpContextAccessor();
 
 // Add CORS
 var corsSection = builder.Configuration.GetSection("Cors");
-var allowedOrigins = corsSection.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:8000", "http://localhost:8080" };
+var allowedOrigins = corsSection.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:8000", "http://localhost:8080", "http://localhost:5173" };
 var allowAnyOriginInDev = corsSection.GetValue<bool>("AllowAnyOriginInDev");
 builder.Services.AddCors(options =>
 {
