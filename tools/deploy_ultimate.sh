@@ -92,8 +92,16 @@ echo -e "${BLUE}⬆️  Zipping & Deploying Backend...${NC}"
 cd publish_output
 zip -r ../backend_deploy.zip .
 cd ..
-az webapp deploy --resource-group $RG_NAME --name $APP_NAME --src-path backend_deploy.zip --type zip
-echo "✅ Backend Deployed."
+# Deploy using CURL to bypass Cloud Shell Auth issues
+echo -e "${BLUE}🔑 Fetching Publishing Credentials...${NC}"
+CREDS=$(az webapp deployment list-publishing-credentials -n $APP_NAME -g $RG_NAME --query "[publishingUserName, publishingPassword]" -o tsv)
+PUB_USER=$(echo $CREDS | awk '{print $1}')
+PUB_PASS=$(echo $CREDS | awk '{print $2}')
+
+echo -e "${BLUE}📤 Uploading Payload (CURL -> Kudu)...${NC}"
+# Use standard Basic Auth zipdeploy
+curl -X POST -u "$PUB_USER:$PUB_PASS" --data-binary @"backend_deploy.zip" "https://${APP_NAME}.scm.azurewebsites.net/api/zipdeploy" --fail
+
 
 # Get Backend URL
 API_URL="https://${APP_NAME}.azurewebsites.net"
