@@ -27,10 +27,11 @@ El objetivo es demostrar: **Destrucción Total -> Recuperación Automática (IaC
 En la misma terminal (asegúrate de estar en la carpeta correcta `cd Operation_Web`):
 
 ```bash
-sh tools/deploy_ultimate.sh
+sh tools/deploy_docker_pro.sh
 ```
 
-*   **¿Qué hace esto?** Crea red, servidores, sube el backend (.NET 8), sube el frontend y conecta todo.
+*   **¿Qué hace esto?** Conecta con **GitHub Container Registry**, descarga tu imagen Docker real y la despliega en Azure.
+*   **Requisito:** Te pedirá tu usuario de GitHub y tu Token (PAT).
 *   **Tiempo:** ~5-7 minutos.
 
 ### PASO 2: Inyectar el Alma (Base de Datos) ⚠️ CRÍTICO ⚠️
@@ -62,7 +63,7 @@ uir" (Infrastructure as Code)
 **Opción A (Recomendada - Script Todo en Uno):**
 Si tienes el script `tools/deploy_ultimate.sh` (que creamos hoy), úsalo. Es lo más rápido.
 ```bash
-sh tools/deploy_ultimate.sh
+sh tools/deploy_docker_pro.sh
 ```
 
 **Opción B (Clásica - Manual):**
@@ -83,6 +84,7 @@ sh tools/deploy_ultimate.sh
 
 Desde la raíz del proyecto:
 ```bash
+*(El script 'Pro' ya hace esto automáticamente, pero si necesitas forzarlo):*
 sh tools/deploy_frontend_manual.sh
 ```
 
@@ -129,4 +131,4 @@ sh tools/deploy_frontend_manual.sh
 *   **¿Arquitectura?** Cliente-Servidor Desacoplado (Static Frontend en Azure Storage -> Backend en App Service Linux).
 *   **¿Base de Datos?** Azure SQL serverless (Básico). Seed automático al inicio (Code-First).
 *   **¿Seguridad?** Migramos de AES a **BCrypt** ($2a$11$) para hashing robusto de contraseñas.
-*   **¿Infraestructura?** Definida en Código (Terraform) o Script CLI (`deploy_ultimate.sh`). 100% Reproducible.
+*   **¿Infraestructura?** IaC con Bash (`deploy_docker_pro.sh`) desplegando Contenedores Nativos desde GHCR.

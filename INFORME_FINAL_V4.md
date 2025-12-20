@@ -27,7 +27,7 @@ A continuación se detallan las **rutas exactas** donde se implementa cada reque
 *   **Script de Reparación/Restauración:** `final_repair_script.sql` (Raíz).
 
 ### 2.3. DevOps e Infraestructura (IaC)
-*   **Script de Despliegue Azure:** `tools/deploy_ultimate.sh` (Contiene comandos `az cli`).
+*   **Script de Despliegue Azure:** `tools/deploy_docker_pro.sh` (Despliegue Nativo Docker vía GHCR).
 *   **Pipeline CI/CD:** `.github/workflows/ci.yml`.
 *   **Definición Docker:** `Dockerfile` (Raíz del repositorio).
 
@@ -102,7 +102,7 @@ graph TD
 
 ## 6. INFRAESTRUCTURA COMO CÓDIGO (IaC)
 
-El script `tools/deploy_ultimate.sh` automatiza la creación de recursos.
+El script `tools/deploy_docker_pro.sh` automatiza la creación de recursos y la conexión con GitHub Container Registry.
 
 | Línea | Comando | Acción Técnica |
 | :--- | :--- | :--- |
@@ -110,7 +110,7 @@ El script `tools/deploy_ultimate.sh` automatiza la creación de recursos.
 | 40 | `az sql server create` | Provisiona servidor lógico SQL. |
 | 45 | `az sql firewall-rule` | Abre puerto 1433 solo a Azure. |
 | 69 | `az appservice plan` | Crea granja Linux (F1 Free Tier). |
-| 72 | `az webapp create` | Despliega contenedor Docker .NET 8. |
+| 72 | `az webapp create` | Despliega Contenedor desde `ghcr.io` (Real Docker). |
 | 82 | `config appsettings` | **Seguridad**: Inyecta ConnectionString como variable de entorno (Secret). |
 
 ---
@@ -132,7 +132,7 @@ El sistema expone los siguientes controladores documentados:
 | # | Requerimiento | Estado | Evidencia y Ruta del Archivo |
 | :--- | :--- | :---: | :--- |
 | 1 | **Instructivo BD** | ✅ | `database/scripts/README.txt` / `DEMO_CLASS_GUIDE.md` |
-| 2 | **IaC (Code)** | ✅ | `tools/deploy_ultimate.sh` (Script Bash de Azure CLI) |
+| 2 | **IaC (Code)** | ✅ | `tools/deploy_docker_pro.sh` (Script Bash Pro) |
 | 3 | **CI/CD GitHub** | ✅ | `.github/workflows/ci.yml` (Pipeline YAML) |
 | 4 | **Usuario No-Admin** | ✅ | `database/scripts/04_DCL_NonAdminUser.sql` |
 | 5 | **Objetos SQL** | ✅ | `database/scripts/01_DDL_Structure.sql` (Tablas, Indices) |

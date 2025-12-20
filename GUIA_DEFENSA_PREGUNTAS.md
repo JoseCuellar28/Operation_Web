@@ -48,12 +48,12 @@ Esta guía está diseñada para responder preguntas difíciles del profesor sobr
 > "Todo está codificado. Tenemos dos enfoques, pero para el despliegue final en producción utilizamos scripts de **Azure CLI** robustos."
 
 **¿Donde revisar?**
-*   **Archivo:** `tools/deploy_ultimate.sh`
+*   **Archivo:** `tools/deploy_docker_pro.sh`
 *   **Lógica:**
     1.  Crea el Grupo de Recursos (`az group create`).
     2.  Provisiona el Servidor SQL y la BBDD (`az sql server create`).
     3.  Configura el Firewall (`az sql server firewall-rule`).
-    4.  Despliega el App Service (`az webapp create`).
+    4.  Despliega el App Service apuntando a **GHCR** (`az webapp create --deployment-container-image-name`).
     5.  Inyecta la cadena de conexión automáticamente (`az webapp config appsettings set`).
 
 Esta automatización elimina el "error humano" de configurar servidores manualmente.
@@ -90,5 +90,5 @@ Esta automatización elimina el "error humano" de configurar servidores manualme
 **Resumen para el Examen:**
 *   **Seguridad:** BCrypt (One-way hash) > AES.
 *   **Docker:** Multi-stage build (SDK vs Runtime).
-*   **IaC:** Scripts de Azure CLI (`deploy_ultimate.sh`).
+*   **IaC:** Scripts de Azure CLI (`deploy_docker_pro.sh`).
 *   **CI/CD:** GitHub Actions que compila y dockeriza.
