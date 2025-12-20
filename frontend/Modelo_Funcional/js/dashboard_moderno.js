@@ -80,11 +80,12 @@ class ModernDashboard {
                 label: "Operaciones Diarias",
                 icon: "fa-clipboard-list",
                 children: [
-                    { label: "Gestión Operativa", icon: "fa-chart-bar", page: "datos-generales" },
+                    // { label: "Gestión Operativa", icon: "fa-chart-bar", page: "datos-generales" }, // Visual Only
                     { label: "Gestión de Cuadrillas", icon: "fa-users", page: "gestion-cuadrillas" },
-                    { label: "Gestión de Stock", icon: "fa-boxes", page: "gestion-stock" },
+                    // { label: "Gestión de Stock", icon: "fa-boxes", page: "gestion-stock" }, // Placeholder
                 ],
             },
+            /* section hidden for demo
             {
                 label: "Seguimiento",
                 icon: "fa-eye",
@@ -95,17 +96,18 @@ class ModernDashboard {
                     { label: "Reportes / Registros", icon: "fa-file-alt", page: "reportes-registros" },
                 ],
             },
+            */
             {
                 label: "Configuración",
                 icon: "fa-cog",
                 children: [
                     { label: "Crea tus Colaboradores", icon: "fa-user-plus", page: "colaboradores" },
                     { label: "Crea tus Proyectos", icon: "fa-map-marker-alt", page: "creacion-proyectos" },
-                    { label: "Crea tus Vehículos", icon: "fa-truck", page: "gestion-vehiculos" },
+                    // { label: "Crea tus Vehículos", icon: "fa-truck", page: "gestion-vehiculos" }, // Error
                     { label: "Crea tus Materiales", icon: "fa-tools", page: "gestion-materiales" },
-                    { label: "Crea tus Perfiles", icon: "fa-id-card", page: "gestion-perfiles" },
-                    { label: "Gestión de Formatos", icon: "fa-file-contract", page: "gestion-formatos" },
-                    { label: "Configuración de Sistema", icon: "fa-sliders-h", page: "configuracion-sistema" },
+                    // { label: "Crea tus Perfiles", icon: "fa-id-card", page: "gestion-perfiles" }, // Visual Only
+                    // { label: "Gestión de Formatos", icon: "fa-file-contract", page: "gestion-formatos" }, // Admin Only
+                    // { label: "Configuración de Sistema", icon: "fa-sliders-h", page: "configuracion-sistema" }, // Visual Only
                 ],
             },
         ];
