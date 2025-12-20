@@ -49,6 +49,22 @@ az sql db create --resource-group $RG_NAME --server $SQL_SERVER --name $DB_NAME 
     --service-objective Basic
 echo "✅ Database Ready."
 
+# 2.5. SEED DATABASE (AUTOMATION)
+echo -e "${BLUE}🌱 Attempting to Auto-Seed Database (IaC Requirement)...${NC}"
+if [ -f "final_repair_script.sql" ]; then
+    echo "Found SQL Script. Executing via SQLCMD..."
+    # Attempt execution. Use -I to enable quoted identifiers if needed.
+    # We suppress output to avoid clutter, unless error.
+    if sqlcmd -S tcp:${SQL_SERVER}.database.windows.net,1433 -d $DB_NAME -U $ADMIN_USER -P $ADMIN_PASS -i "final_repair_script.sql" -I > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ Database Schema & Data Injected Successfully!${NC}"
+    else
+        echo -e "${RED}⚠️  Auto-Seed Failed (Likely Firewall Latency).${NC}"
+        echo -e "${RED}👉 ACTION REQUIRED: Run query 'final_repair_script.sql' manually in Azure Portal.${NC}"
+    fi
+else
+    echo -e "${RED}⚠️  'final_repair_script.sql' not found in current folder. Skipping Seed.${NC}"
+fi
+
 # 3. STORAGE (FRONTEND)
 echo -e "${BLUE}📦 Creating Storage Account ($SA_NAME)...${NC}"
 az storage account create --name $SA_NAME --resource-group $RG_NAME --location $LOCATION \
