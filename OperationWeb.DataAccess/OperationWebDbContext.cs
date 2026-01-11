@@ -32,9 +32,24 @@ namespace OperationWeb.DataAccess
         public DbSet<HseIncident> HseIncidents { get; set; }
         public DbSet<HsePpeDelivery> HsePpeDeliveries { get; set; }
 
+        public DbSet<Vehiculo> Vehiculos { get; set; }
+        public DbSet<Material> Materiales { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configuración de Vehiculo (Mapeo a Opera_Main)
+            // Removed to avoid EF Core schema validation issues. Handled via Raw SQL in Controller.
+            modelBuilder.Entity<Vehiculo>(entity =>
+            {
+                entity.HasNoKey();
+            });
+
+            modelBuilder.Entity<Material>(entity =>
+            {
+                entity.HasNoKey();
+            });
 
             // Configuración de Cuadrilla
             modelBuilder.Entity<Cuadrilla>(entity =>

@@ -66,7 +66,7 @@ class ModernDashboard {
                 label: "Dashboard",
                 icon: "fa-tachometer-alt",
                 children: [
-                    { label: "Vista General", icon: "fa-chart-bar", page: "dashboard" }
+                    { label: "Dashboard", icon: "fa-chart-bar", page: "dashboard" }
                 ],
             },
             {
@@ -78,36 +78,42 @@ class ModernDashboard {
             },
             {
                 label: "Operaciones Diarias",
-                icon: "fa-clipboard-list",
+                icon: "fa-briefcase",
                 children: [
-                    // { label: "Gestión Operativa", icon: "fa-chart-bar", page: "datos-generales" }, // Visual Only
-                    { label: "Gestión de Cuadrillas", icon: "fa-users", page: "gestion-cuadrillas" },
-                    // { label: "Gestión de Stock", icon: "fa-boxes", page: "gestion-stock" }, // Placeholder
+                    { label: "Gestión de Cuadrillas", icon: "fa-calendar-alt", page: "gestion-cuadrillas" },
+                    { label: "Bandeja de Entrada", icon: "fa-inbox", page: "bandeja-entrada" },
+                    { label: "Tablero Maestro de OT", icon: "fa-layer-group", page: "tablero-maestro" },
+                    { label: "Gestión Operativa", icon: "fa-map", page: "datos-generales" },
+                    { label: "Gestión de Materiales", icon: "fa-id-card", page: "gestion-materiales" },
+                    { label: "Gestión de Formatos", icon: "fa-file-alt", page: "gestion-formatos" },
+                    { label: "Gestión de Stock", icon: "fa-box", page: "gestion-stock" },
+                    { label: "Gestión de Devoluciones", icon: "fa-undo", page: "gestion-devoluciones" },
                 ],
             },
-            /* section hidden for demo
             {
                 label: "Seguimiento",
-                icon: "fa-eye",
+                icon: "fa-chart-line",
                 children: [
-                    { label: "Seguimiento de Proyectos", icon: "fa-project-diagram", page: "seguimiento-proyectos" },
+                    { label: "Seguimiento de Proyectos", icon: "fa-folder", page: "seguimiento-proyectos" },
                     { label: "Asistencia", icon: "fa-user-check", page: "asistencia" },
                     { label: "Control Vehicular", icon: "fa-car", page: "control-vehicular" },
+                    { label: "Rastreo Satelital", icon: "fa-location-arrow", page: "rastreo-satelital" },
+                    { label: "Analítica de Conductores", icon: "fa-chart-pie", page: "analitica-conductores" },
                     { label: "Reportes / Registros", icon: "fa-file-alt", page: "reportes-registros" },
+                    { label: "Liquidación de Lotes", icon: "fa-briefcase", page: "liquidacion-lotes" },
+                    { label: "Supervisión en Campo", icon: "fa-shield-alt", page: "hse-monitor" },
+                    { label: "App Supervisor (Sim)", icon: "fa-user-nurse", page: "safety-audit" },
                 ],
             },
-            */
             {
                 label: "Configuración",
                 icon: "fa-cog",
                 children: [
                     { label: "Crea tus Colaboradores", icon: "fa-user-plus", page: "colaboradores" },
                     { label: "Crea tus Proyectos", icon: "fa-map-marker-alt", page: "creacion-proyectos" },
-                    // { label: "Crea tus Vehículos", icon: "fa-truck", page: "gestion-vehiculos" }, // Error
-                    { label: "Crea tus Materiales", icon: "fa-tools", page: "gestion-materiales" },
-                    // { label: "Crea tus Perfiles", icon: "fa-id-card", page: "gestion-perfiles" }, // Visual Only
-                    // { label: "Gestión de Formatos", icon: "fa-file-contract", page: "gestion-formatos" }, // Admin Only
-                    // { label: "Configuración de Sistema", icon: "fa-sliders-h", page: "configuracion-sistema" }, // Visual Only
+                    { label: "Crea tus Vehículos", icon: "fa-truck", page: "gestion-vehiculos" },
+                    { label: "Crea tus Materiales", icon: "fa-tools", page: "crea-materiales" },
+                    { label: "Configuración de Sistema", icon: "fa-sliders-h", page: "configuracion-sistema" },
                 ],
             },
         ];

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test SMTP Config</title>
+</head>
+
+<body>
+    <h1>Test de Configuración SMTP</h1>
+    <button onclick="testSave()">Guardar Config</button>
+    <button onclick="testGet()">Obtener Config</button>
+    <pre id="result"></pre>
+
+    <script>
+        const API_NET = 'http://localhost:5132';
+
+        async function testSave() {
+            const jwt = localStorage.getItem('jwt');
+            document.getElementById('result').textContent = 'JWT Token: ' + (jwt ? 'EXISTS' : 'MISSING') + '\n\n';
+
+            try {
+                const response = await fetch(`${API_NET}/api/SystemSettings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwt
+                    },
+                    body: JSON.stringify([
+                        { "Key": "SmtpHost", "Value": "smtp.gmail.com", "Description": "Test" },
+                        { "Key": "SmtpPort", "Value": "587", "Description": "Test" }
+                    ])
+                });
+
+                const text = await response.text();
+                document.getElementById('result').textContent += `Status: ${response.status}\n`;
+                document.getElementById('result').textContent += `Response: ${text}\n`;
+            } catch (error) {
+                document.getElementById('result').textContent += `Error: ${error.message}\n`;
+            }
+        }
+
+        async function testGet() {
+            const jwt = localStorage.getItem('jwt');
+            try {
+                const response = await fetch(`${API_NET}/api/SystemSettings`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + jwt
+                    }
+                });
+
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

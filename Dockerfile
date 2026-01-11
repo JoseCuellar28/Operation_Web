@@ -6,13 +6,12 @@ WORKDIR /app
 # Copy csproj and restore
 COPY OperationWeb.API/*.csproj ./OperationWeb.API/
 COPY OperationWeb.Business/*.csproj ./OperationWeb.Business/
-COPY OperationWeb.Business.Entities/*.csproj ./OperationWeb.Business.Entities/
+
 COPY OperationWeb.Business.Interfaces/*.csproj ./OperationWeb.Business.Interfaces/
 COPY OperationWeb.DataAccess/*.csproj ./OperationWeb.DataAccess/
 COPY OperationWeb.DataAccess.Entities/*.csproj ./OperationWeb.DataAccess.Entities/
 COPY OperationWeb.DataAccess.Interfaces/*.csproj ./OperationWeb.DataAccess.Interfaces/
-COPY OperationWeb.Infrastructure/*.csproj ./OperationWeb.Infrastructure/
-COPY OperationWeb.Infrastructure.Interfaces/*.csproj ./OperationWeb.Infrastructure.Interfaces/
+
 COPY OperationWeb.Tests/*.csproj ./OperationWeb.Tests/
 
 # Restore all projects to ensure graph is complete

@@ -127,6 +127,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseRouting();
 app.UseCors("DevFrontend");
 app.UseRateLimiter();
@@ -137,6 +140,10 @@ app.UseAuthorization();
 app.MapControllers();
 // Health Check Endpoint
 app.MapGet("/health", () => Results.Ok("Healthy"));
+
+Console.WriteLine($"[DEBUG] ContentRootPath: {app.Environment.ContentRootPath}");
+Console.WriteLine($"[DEBUG] WebRootPath: {app.Environment.WebRootPath}");
+
 
 // BLOCKING INITIALIZATION (The "No-Fail" Approach)
 // We await this explicitly to ensure the DB is ready before the app creates the HTTP server.
@@ -216,7 +223,38 @@ try
             };
             await db.Users.AddAsync(colabUser);
             await db.SaveChangesAsync();
+            await db.SaveChangesAsync();
             Console.WriteLine("[STARTUP] Seeded Collaborator User.");
+        }
+
+        // 4.3 SPECIFIC USER REQUEST (41007510)
+        var targetUser = await db.Users.FirstOrDefaultAsync(u => u.DNI == "41007510");
+        if (targetUser == null)
+        {
+            // Calculate Hash for "123456" dynamically
+            string specificHash = BCrypt.Net.BCrypt.HashPassword("123456");
+            
+            targetUser = new OperationWeb.DataAccess.Entities.User 
+            { 
+                DNI = "41007510", 
+                Email = "user41007510@ocal.com", 
+                PasswordHash = specificHash, 
+                Role = "Admin", // Giving Admin to ensure visibility
+                IsActive = true, 
+                CreatedAt = DateTime.UtcNow,
+                MustChangePassword = false
+            };
+            await db.Users.AddAsync(targetUser);
+            await db.SaveChangesAsync();
+            Console.WriteLine("[STARTUP] Seeded Target User 41007510.");
+        }
+        else 
+        {
+            // Reset password if exists to ensure access
+            targetUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456");
+            targetUser.Role = "Admin"; // Ensure admin
+            await db.SaveChangesAsync();
+            Console.WriteLine("[STARTUP] Reset Target User 41007510.");
         }
 
         // 5. Seed Access Configs (Crucial for Web Login)
@@ -244,6 +282,21 @@ try
             });
         }
         await db.SaveChangesAsync();
+
+        // Ensure Access for 41007510
+        if (targetUser != null && !await db.UserAccessConfigs.AnyAsync(c => c.UserId == targetUser.Id))
+        {
+             await db.UserAccessConfigs.AddAsync(new OperationWeb.DataAccess.Entities.UserAccessConfig 
+            { 
+                UserId = targetUser.Id, 
+                AccessWeb = true, 
+                AccessApp = true, 
+                JobLevel = "Manager", 
+                LastUpdated = DateTime.UtcNow 
+            });
+            await db.SaveChangesAsync();
+            Console.WriteLine("[STARTUP] Seeded Access for Target User 41007510.");
+        }
 
         // 6. Seed Projects (Test Data)
         // Using Raw SQL because Proyectos might not be fully mapped in DbSet yet or to be safe

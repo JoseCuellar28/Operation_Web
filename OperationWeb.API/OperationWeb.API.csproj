@@ -26,7 +26,7 @@
     <ProjectReference Include="../OperationWeb.Business.Interfaces/OperationWeb.Business.Interfaces.csproj" />
     <ProjectReference Include="../OperationWeb.Business/OperationWeb.Business.csproj" />
     <ProjectReference Include="../OperationWeb.DataAccess/OperationWeb.DataAccess.csproj" />
-    <ProjectReference Include="../OperationWeb.Infrastructure/OperationWeb.Infrastructure.csproj" />
+
   </ItemGroup>
 
 </Project>
