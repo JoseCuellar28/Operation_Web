@@ -5,12 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OperationSmart - Gestión Integral</title>
+    <script>
+        // Critical Fix: Force localhost if legacy Azure URL is detected
+        const currentApi = localStorage.getItem('api_net');
+        if (currentApi && currentApi.includes('azurewebsites.net')) {
+            console.warn('Legacy API detected. Resetting to localhost.');
+            localStorage.setItem('api_net', 'http://localhost:5132');
+            window.location.reload();
+        }
+    </script>
 
     <!-- Tailwind CSS -->
     <script src="js/vendor/tailwindcss.js"></script>
 
     <!-- FontAwesome (for icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -408,7 +423,7 @@
     <div class="flex h-screen">
         <!-- Sidebar -->
         <aside id="sidebar"
-            class="w-64 h-full flex flex-col border-r border-border bg-card text-card-foreground transition-all duration-300 ease-in-out">
+            class="w-80 h-full flex flex-col border-r border-border bg-card text-card-foreground transition-all duration-300 ease-in-out">
             <!-- Logo Section -->
             <div class="p-6 border-b border-border flex items-center justify-between">
                 <div class="flex items-center gap-3" id="logo-container">
@@ -494,8 +509,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- Scripts -->
-    <script src="js/ui-components.js?v=modern_v23&t=1764546048"></script>
-    <script src="js/dashboard_moderno.js?v=modern_v23&t=1764546048"></script>
+    <script src="js/ui-components.js?v=modern_v26&t=1768273000"></script>
+    <script src="js/dashboard_moderno.js?v=modern_v26&t=1768273000"></script>
 </body>
 
 </html>

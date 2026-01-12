@@ -25,6 +25,12 @@ namespace OperationWeb.DataAccess.Entities
         [StringLength(50)]
         public string? Estado { get; set; }
 
+        [StringLength(500)]
+        public string? FotoUrl { get; set; }
+
+        [StringLength(500)]
+        public string? FirmaUrl { get; set; }
+
         public DateTime? FechaInicio { get; set; }
 
         public DateTime? FechaCese { get; set; }

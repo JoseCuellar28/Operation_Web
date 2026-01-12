@@ -5,6 +5,19 @@
 
 const UIComponents = {
     /**
+     * Loading State
+     * Returns a centralized loading spinner
+     */
+    getLoadingState: function () {
+        return `
+            <div class="flex flex-col items-center justify-center p-12 h-64">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                <p class="text-muted-foreground animate-pulse">Cargando datos...</p>
+            </div>
+        `;
+    },
+
+    /**
      * Configuration Tab Content
      * Returns the HTML string for the system configuration form
      */
@@ -1842,10 +1855,721 @@ const UIComponents = {
                 </div>
             </form>
         `;
+    },
+
+    getAssignUsersTabContent: function (users, roles, allDivisions = [], pagination = { currentPage: 1, totalPages: 1, totalItems: 0 }) {
+        // Use passed allDivisions or fallback to extracting from current users (if not paginated yet)
+        const divisions = allDivisions.length > 0
+            ? ['Todas las divisiones', ...allDivisions]
+            : ['Todas las divisiones', ...new Set(users.map(u => u.division).filter(Boolean))];
+
+        const divisionsOptions = divisions.map(d => `<option value="${d}">${d}</option>`).join('');
+
+        const rows = users.map(user => {
+            const roleMeta = this.getRoleMetadata(user.roleName);
+            // Identify if user is selected/modified state is handled better in logic
+            return `
+            <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100" data-user-id="${user.userId}">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.name}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.division}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleMeta.bg || roleMeta.color} ${roleMeta.text || roleMeta.textColor}">
+                        ${user.roleName}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <select class="role-selector block w-40 pl-3 pr-10 py-1 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md" data-original-role="${user.roleId || 0}">
+                        <option value="0" ${!user.roleId ? 'selected' : ''}>Sin Rol</option>
+                        ${roles.map(r => `<option value="${r.id}" ${r.id === user.roleId ? 'selected' : ''}>${r.name}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <button class="save-role-btn hidden inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all duration-200">
+                        <i class="fas fa-check-circle mr-1.5"></i> Guardar
+                    </button>
+                </td>
+            </tr>
+            `;
+        }).join('');
+
+        return `
+            <div class="space-y-6">
+                <!-- Filters and Counts -->
+                <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <div class="flex flex-1 gap-4 w-full">
+                        <div class="flex-1 relative">
+                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                            <input type="text" id="users-search" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm shadow-sm" placeholder="Buscar usuarios...">
+                        </div>
+                        <div>
+                            <select id="division-filter" class="block w-48 pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
+                                ${divisionsOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <select id="filter-user-status" class="block w-40 pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md shadow-sm">
+                                <option value="all">Todos</option>
+                                <option value="active">Activos</option>
+                                <option value="inactive">Inactivos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Counter moved to pagination area or kept here? Kept here for global stats -->
+                    <div class="text-sm text-gray-500">
+                        <span id="user-count-display">Total: ${pagination.totalItems}</span>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Usuario</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">División</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Rol Actual</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Asignar Rol</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                                ${rows.length > 0 ? rows : `<tr><td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500">No se encontraron usuarios</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Mostrando página <span class="font-medium">${pagination.currentPage}</span> de <span class="font-medium">${pagination.totalPages}</span>
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <button onclick="window.dashboard.changeUsersPage(${pagination.currentPage - 1})" ${pagination.currentPage === 1 ? 'disabled' : ''} class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${pagination.currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}">
+                                    <span class="sr-only">Anterior</span>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+
+                                <button onclick="window.dashboard.changeUsersPage(${pagination.currentPage + 1})" ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''} class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${pagination.currentPage >= pagination.totalPages ? 'opacity-50 cursor-not-allowed' : ''}">
+                                    <span class="sr-only">Siguiente</span>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    getPermissionsTabContent: function (roles, permissionsData, viewMode = 'matrix', selectedRoleId, hasChanges) {
+        // Find selected role Name for UI context if needed
+        const selectedRole = roles.find(r => r.id == selectedRoleId);
+
+        // --- View: Header ---
+        const roleOptions = roles.map(r => `<option value="${r.id}" ${r.id == selectedRoleId ? 'selected' : ''}>${r.name}</option>`).join('');
+
+        // --- View: Alert ---
+        const alertHtml = hasChanges ? `
+            <div class="rounded-md bg-yellow-50 p-4 mb-6 border border-yellow-200 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">Cambios sin guardar</h3>
+                        <div class="mt-2 text-sm text-yellow-700">
+                            <p>Tienes cambios pendientes. Se perderán si cambias de pestaña o sales sin guardar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>` : '';
+
+        // --- View: Permissions Content ---
+        let contentHtml = '';
+        const modules = [...new Set(permissionsData.map(p => p.module))];
+
+        if (viewMode === 'matrix') {
+            const cards = modules.map(module => {
+                const modulePerms = permissionsData.filter(p => p.module === module);
+                const checks = modulePerms.map(p => `
+                    <div class="flex items-center gap-3 py-1">
+                        <input type="checkbox" 
+                            id="perm-${p.id}" 
+                            class="permission-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                            data-perm-id="${p.id}"
+                            ${p.checked ? 'checked' : ''}>
+                        <label for="perm-${p.id}" class="text-sm text-gray-700 cursor-pointer select-none">${p.name}</label>
+                    </div>
+                `).join('');
+
+                return `
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">${module}</h3>
+                    <div class="grid grid-cols-1 gap-2">
+                        ${checks}
+                    </div>
+                </div>`;
+            }).join('');
+            contentHtml = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${cards}</div>`;
+        } else {
+            // Table View
+            const rows = permissionsData.map(p => `
+                <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.module}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <input type="checkbox" 
+                            class="permission-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                            data-perm-id="${p.id}"
+                            ${p.checked ? 'checked' : ''}>
+                    </td>
+                </tr>
+            `).join('');
+
+            contentHtml = `
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Módulo</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Permiso</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-gray-900 uppercase tracking-wider">Activado</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${rows}
+                    </tbody>
+                </table>
+            </div>`;
+        }
+
+        return `
+            <div class="space-y-6 animate-in fade-in duration-500">
+                <!-- Header Controls -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <div class="w-full sm:w-64">
+                         <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Rol Seleccionado</label>
+                        <select id="permissions-role-select" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            ${roleOptions}
+                        </select>
+                    </div>
+
+                    <div class="flex bg-gray-100 p-1 rounded-lg">
+                        <button onclick="window.dashboard.setPermissionsViewMode('matrix')" class="px-4 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'matrix' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}">
+                            <i class="fas fa-th-large mr-2"></i> Matriz
+                        </button>
+                        <button onclick="window.dashboard.setPermissionsViewMode('table')" class="px-4 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'table' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}">
+                             <i class="fas fa-table mr-2"></i> Tabla
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="window.dashboard.restorePermissions()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-undo mr-2"></i> Restaurar
+                        </button>
+                        <button onclick="window.dashboard.savePermissions()" disabled id="btn-save-permissions" class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all">
+                            <i class="fas fa-save mr-2"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+
+                ${alertHtml}
+
+                ${contentHtml}
+            </div>
+        `;
+    },
+
+    getOrdenDetalleContent: function (detail) {
+        if (!detail || !detail.order) return '<div class="p-10 text-center text-red-500">Error al cargar datos</div>';
+
+        const { order, materials, evidence } = detail;
+        const matList = materials || [];
+        const evList = evidence || [];
+
+        // Colors & Badges
+        const isRentable = order.margin >= 0;
+        const marginClass = isRentable ? 'text-gray-900' : 'text-red-600';
+        const rentabilidadLabel = isRentable ? 'RENTABLE' : 'PÉRDIDA';
+        const rentabilidadBadgeClass = isRentable ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200';
+
+        const statusBadge = order.estado === 'EJECUCION' ? 'bg-blue-100 text-blue-800' :
+            order.estado === 'CERRADA_TECNICO' ? 'bg-green-100 text-green-800' : 'bg-gray-100';
+
+        // Materials Rows
+        const matRows = matList.map(m => `
+            <tr class="${m.es_excedente ? 'bg-yellow-50' : ''}">
+                <td class="px-4 py-3 font-medium text-gray-900">
+                    ${m.cod_material}
+                    ${m.es_excedente ? '<span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">EXCEDENTE</span>' : ''}
+                </td>
+                <td class="px-4 py-3 text-center">${m.cantidad}</td>
+                <td class="px-4 py-3">
+                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium ${m.tipo_kardex === 'INSTALADO' ? 'bg-green-50 text-green-700' : m.tipo_kardex === 'RETIRADO' ? 'bg-orange-50 text-orange-700' : 'bg-gray-100'}">
+                        ${m.tipo_kardex}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-gray-500 font-mono text-xs">${m.serie_retirada || '-'}</td>
+            </tr>
+        `).join('');
+
+        // Evidence Gallery (Simple Viewer + Thumbnails)
+        let evidenceHtml = '';
+        if (evList.length > 0) {
+            const activeUrl = evList[0].url_archivo;
+            evidenceHtml = `
+                <div class="flex-1 bg-black rounded-lg flex items-center justify-center relative mb-4 min-h-[400px] overflow-hidden">
+                    <img id="main-evidence-img" src="${activeUrl}" class="max-h-full max-w-full object-contain" />
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-2">
+                    ${evList.map(ev => `
+                        <button onclick="document.getElementById('main-evidence-img').src='${ev.url_archivo}'" 
+                                class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all opacity-80 hover:opacity-100">
+                            <img src="${ev.url_archivo}" class="w-full h-full object-cover" />
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            evidenceHtml = `
+                <div class="flex-1 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 rounded-lg">
+                    <i class="fas fa-exclamation-circle text-4xl mb-2"></i>
+                    <p>No hay evidencias cargadas</p>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="h-full flex flex-col bg-gray-50">
+                <!-- Header -->
+                <div class="bg-white border-b px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
+                    <button onclick="window.dashboard.cargarSeguimientoProyectos()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                         <i class="fas fa-arrow-left text-gray-600 text-lg"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Expediente: ${order.codigo_suministro}</h1>
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <span class="flex items-center gap-1"><i class="fas fa-user text-xs"></i> ${order.cliente}</span>
+                            <span class="flex items-center gap-1"><i class="fas fa-map-marker-alt text-xs"></i> ${order.direccion_fisica}</span>
+                        </div>
+                    </div>
+                    <div class="ml-auto">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${statusBadge}">${order.estado}</span>
+                    </div>
+                </div>
+
+                <!-- Split View -->
+                <div class="flex-1 flex overflow-hidden">
+                    <!-- Left Panel: Data & Kardex -->
+                    <div class="w-1/2 p-6 overflow-y-auto border-r border-gray-200 bg-white">
+                        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-box text-blue-600"></i> Kardex de Materiales
+                        </h2>
+                        
+                        <div class="border rounded-lg overflow-hidden mb-8">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Material</th>
+                                        <th class="px-4 py-3 text-center font-medium text-gray-500">Cant.</th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Tipo</th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Serie</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y">
+                                    ${matRows.length > 0 ? matRows : '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">Sin materiales</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Financial Analysis -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center justify-between">
+                                Análisis de Rentabilidad
+                                <span class="text-xs px-2 py-0.5 rounded border ${rentabilidadBadgeClass}">${rentabilidadLabel}</span>
+                            </h3>
+
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center text-gray-600">
+                                    <span>Ingreso (Venta)</span>
+                                    <span class="font-mono text-green-700 font-bold">+$${(order.price || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="h-px bg-gray-200 my-1"></div>
+                                <div class="flex justify-between items-center text-gray-500 text-xs">
+                                    <span>Materiales</span>
+                                    <span class="font-mono">-$${(order.cost_mat || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-gray-500 text-xs">
+                                    <span>Mano de Obra</span>
+                                    <span class="font-mono">-$${(order.cost_mo || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-gray-500 text-xs">
+                                    <span>Flota Asignada</span>
+                                    <span class="font-mono">-$${(order.cost_fleet || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="h-px bg-gray-300 my-1"></div>
+                                <div class="flex justify-between items-center font-bold">
+                                    <span>Margen Neto</span>
+                                    <span class="font-mono text-lg ${marginClass}">$${(order.margin || 0).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                         <!-- Times -->
+                         <div class="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-500">
+                            <div>Inicio: <span class="font-mono text-gray-700">${order.hora_inicio_real ? new Date(order.hora_inicio_real).toLocaleString() : '-'}</span></div>
+                            <div>Fin: <span class="font-mono text-gray-700">${order.hora_fin_real ? new Date(order.hora_fin_real).toLocaleString() : '-'}</span></div>
+                         </div>
+                    </div>
+
+                    <!-- Right Panel: Evidence -->
+                    <div class="w-1/2 p-6 bg-gray-100 overflow-y-auto flex flex-col">
+                        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                             <i class="fas fa-camera text-blue-600"></i> Evidencias Digitales
+                        </h2>
+                        ${evidenceHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    getConfiguracionContent: function () {
+        return `
+            <div class="w-full max-w-4xl mx-auto p-6 space-y-8">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                        <i class="fas fa-envelope text-blue-600"></i> Configuración SMTP
+                    </h2>
+                    <form onsubmit="event.preventDefault(); window.dashboard.guardarConfiguracion()" class="space-y-6">
+                        <!-- Host & Port -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label for="smtp-host" class="block text-sm font-medium text-gray-700">Servidor SMTP (Host)</label>
+                                <input type="text" id="smtp-host" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-10 px-3 border" placeholder="smtp.gmail.com">
+                            </div>
+                            <div class="space-y-2">
+                                <label for="smtp-port" class="block text-sm font-medium text-gray-700">Puerto</label>
+                                <input type="number" id="smtp-port" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-10 px-3 border" placeholder="587">
+                            </div>
+                        </div>
+
+                        <!-- Auth -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label for="smtp-user" class="block text-sm font-medium text-gray-700">Usuario / Correo</label>
+                                <input type="email" id="smtp-user" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-10 px-3 border">
+                            </div>
+                            <div class="space-y-2">
+                                <label for="smtp-password" class="block text-sm font-medium text-gray-700">Contraseña (App Password)</label>
+                                <input type="password" id="smtp-password" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-10 px-3 border" placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <!-- Sender Info -->
+                        <div class="space-y-2">
+                            <label for="smtp-from" class="block text-sm font-medium text-gray-700">Correo Remitente (From)</label>
+                            <input type="email" id="smtp-from" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-10 px-3 border">
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="pt-4 flex gap-4">
+                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-save mr-2"></i> Guardar Cambios
+                            </button>
+                            <button type="button" onclick="window.dashboard.probarEmail()" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-paper-plane mr-2"></i> Probar Email
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+    },
+
+    getSeguimientoProyectosContent: function (orders) {
+        if (!orders) orders = [];
+
+        // Helper for badges
+        const getStatusBadge = (status) => {
+            if (status === 'EJECUCION') {
+                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 animate-pulse">
+                            <i class="fas fa-clock mr-1"></i> En Ejecución
+                        </span>`;
+            } else if (status === 'CERRADA_TECNICO' || status === 'CERRADA') {
+                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <i class="fas fa-check-circle mr-1"></i> Cerrada (Técnico)
+                        </span>`;
+            } else if (status === 'FALLIDA') {
+                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Fallida
+                        </span>`;
+            }
+            return `<span class="text-gray-500">${status}</span>`;
+        };
+
+        const formatDuration = (min) => {
+            const h = Math.floor(min / 60);
+            const m = min % 60;
+            return `${h}h ${m}m`;
+        };
+
+        const rows = orders.map(order => {
+            const isOverdue = order.duracion_minutos > 120;
+            const durationClass = isOverdue ? 'text-amber-600 font-bold' : 'text-gray-900 font-bold';
+            const overdueLabel = isOverdue ? '<span class="text-[10px] text-amber-600 font-medium block">Posible Retraso</span>' : '';
+
+            return `
+                <tr onclick="window.dashboard.loadOrdenDetalle('${order.id_ot}')" class="hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">${order.codigo_suministro || order.id_ot}</div>
+                        <div class="text-xs text-gray-500">${order.cliente || 'Sin Cliente'}</div>
+                        <div class="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                            <i class="fas fa-map-marker-alt text-[10px]"></i>
+                            ${order.direccion_fisica || 'Sin Dirección'}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                             ${order.cuadrilla_codigo || 'Sin Asignar'}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        ${order.hora_inicio_real ? new Date(order.hora_inicio_real).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="${durationClass}">
+                            ${formatDuration(order.duracion_minutos)}
+                        </div>
+                        ${overdueLabel}
+                    </td>
+                    <td class="px-6 py-4">
+                        ${getStatusBadge(order.estado)}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </td>
+                </tr>
+             `;
+        }).join('');
+
+        const emptyState = `
+            <div class="flex flex-col items-center justify-center p-12 text-gray-500">
+                <i class="fas fa-clock text-4xl mb-4 text-gray-300"></i>
+                <p>No hay órdenes en ejecución activa hoy.</p>
+            </div>
+        `;
+
+        return `
+            <div class="h-full flex flex-col p-6 space-y-6">
+                <!-- Header -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Monitor de Ejecución</h1>
+                        <p class="text-sm text-gray-500">Supervisión en tiempo real de cuadrillas en campo</p>
+                    </div>
+                    <div class="w-full md:w-64 relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input
+                            type="text"
+                            oninput="window.dashboard.filtrarSeguimiento(this.value)"
+                            placeholder="Buscar OT o Cuadrilla..."
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow"
+                        />
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+                    ${orders.length === 0 ? emptyState : `
+                        <div class="overflow-x-auto flex-1">
+                            <table class="w-full">
+                                <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orden / Cliente</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuadrilla</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inicio</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duración</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="seguimiento-table-body">
+                                    ${rows}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Attendance Monitor View
+     * Faithful copy of AttendanceView.tsx layout
+     */
+    getAttendanceView: function () {
+        const today = new Date().toISOString().split('T')[0];
+        return `
+            <div class="h-full flex flex-col p-6 space-y-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Monitor de Asistencia</h1>
+                        <div class="flex items-center gap-2 mt-1">
+                            <p class="text-sm text-gray-500">Dashboard en tiempo real:</p>
+                            <input type="date" id="attendance-date" value="${today}" onchange="window.dashboard.loadAttendance()" 
+                                class="text-sm border border-gray-300 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <button onclick="window.dashboard.loadAttendance()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-sync-alt" id="btn-refresh-icon"></i>
+                        Actualizar
+                    </button>
+                </div>
+
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Total Plantilla</p>
+                                <p class="text-3xl font-bold text-blue-600" id="kpi-total">0</p>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg"><i class="fas fa-users text-blue-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Asistieron</p>
+                                <p class="text-3xl font-bold text-green-600" id="kpi-present">0</p>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg"><i class="fas fa-check-circle text-green-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Tardanzas</p>
+                                <p class="text-3xl font-bold text-yellow-600" id="kpi-late">0</p>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg"><i class="fas fa-clock text-yellow-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">Faltas</p>
+                                <p class="text-3xl font-bold text-red-600" id="kpi-absent">0</p>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded-lg"><i class="fas fa-times-circle text-red-600 text-xl"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+                    <!-- Table Section (2 cols) -->
+                    <div class="lg:col-span-2 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col h-[600px]">
+                        <div class="p-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900 mb-3">Registros de Asistencia</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                    <input type="text" id="attendance-search" placeholder="Buscar empleado..." onkeyup="window.dashboard.filterAttendance()"
+                                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <select id="attendance-filter-status" onchange="window.dashboard.filterAttendance()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Todos los estados</option>
+                                    <option value="presente">Presente</option>
+                                    <option value="tardanza">Tardanza</option>
+                                    <option value="falta">Falta</option>
+                                </select>
+                                <select id="attendance-filter-sync" onchange="window.dashboard.filterAttendance()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Sincronización</option>
+                                    <option value="synced">Sincronizado</option>
+                                    <option value="pending">Pendiente</option>
+                                </select>
+                                <div class="text-sm text-gray-600 flex items-center" id="attendance-count">
+                                    Mostrando 0 registros
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-auto bg-gray-50">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Empleado</th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Hora Marca</th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Ubicación</th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Salud</th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">Estado</th>
+                                        <th class="px-4 py-3 text-left font-medium text-gray-500">WhatsApp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendance-tbody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Rows injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Map Section (1 col) -->
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col h-[600px]">
+                        <div class="p-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt"></i> Mapa en Vivo
+                            </h2>
+                            <p class="text-xs text-gray-500 mt-1" id="map-count">0 ubicaciones marcadas</p>
+                        </div>
+                        <div class="flex-1 relative bg-gray-100 z-0">
+                            <div id="attendance-map" class="absolute inset-0 z-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ${this.getResolutionDrawer()}
+        `;
+    },
+
+    getResolutionDrawer: function () {
+        return `
+            <!-- Overlay and Drawer Container -->
+            <div id="resolution-drawer-overlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity" onclick="window.dashboard.closeDrawer()"></div>
+            <div id="resolution-drawer" class="fixed inset-y-0 right-0 w-96 bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+                <!-- Header -->
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900">Detalle de Asistencia</h3>
+                    <button onclick="window.dashboard.closeDrawer()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-6" id="drawer-content">
+                    <!-- Injected via JS -->
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3" id="drawer-actions">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        `;
     }
 };
-
-// Expose to global scope
 
 // Expose to global scope
 window.UIComponents = UIComponents;

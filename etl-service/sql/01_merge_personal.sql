@@ -38,6 +38,10 @@ USING (
         EmailPersonal,
         JefeInmediato,
         Telefono,
+        JefeInmediato,
+        Telefono,
+        FotoUrl,
+        FirmaUrl,
         Periodo
     FROM Personal_Staging
     WHERE DNI IS NOT NULL
@@ -69,7 +73,10 @@ WHEN MATCHED AND (
     ISNULL(Target.Email, '') <> ISNULL(Source.Email, '') OR
     ISNULL(Target.EmailPersonal, '') <> ISNULL(Source.EmailPersonal, '') OR
     ISNULL(Target.JefeInmediato, '') <> ISNULL(Source.JefeInmediato, '') OR
-    ISNULL(Target.Telefono, '') <> ISNULL(Source.Telefono, '')
+    ISNULL(Target.JefeInmediato, '') <> ISNULL(Source.JefeInmediato, '') OR
+    ISNULL(Target.Telefono, '') <> ISNULL(Source.Telefono, '') OR
+    ISNULL(Target.FotoUrl, '') <> ISNULL(Source.FotoUrl, '') OR
+    ISNULL(Target.FirmaUrl, '') <> ISNULL(Source.FirmaUrl, '')
 ) THEN
     UPDATE SET
         Target.Inspector = Source.Inspector,
@@ -96,6 +103,10 @@ WHEN MATCHED AND (
         Target.EmailPersonal = Source.EmailPersonal,
         Target.JefeInmediato = Source.JefeInmediato,
         Target.Telefono = Source.Telefono,
+        Target.JefeInmediato = Source.JefeInmediato,
+        Target.Telefono = Source.Telefono,
+        Target.FotoUrl = Source.FotoUrl,
+        Target.FirmaUrl = Source.FirmaUrl,
         Target.FechaModificacion = GETDATE()
 
 WHEN NOT MATCHED BY TARGET THEN
@@ -126,6 +137,10 @@ WHEN NOT MATCHED BY TARGET THEN
         JefeInmediato,
         Telefono,
         FechaCreacion,
+        Telefono,
+        FotoUrl,
+        FirmaUrl,
+        FechaCreacion,
         UsuarioCreacion
     )
     VALUES (
@@ -154,6 +169,8 @@ WHEN NOT MATCHED BY TARGET THEN
         Source.EmailPersonal,
         Source.JefeInmediato,
         Source.Telefono,
+        Source.FotoUrl,
+        Source.FirmaUrl,
         GETDATE(),
         'ETL_SERVICE'
     )
@@ -206,3 +223,39 @@ FROM #MergeOutput;
 GO
 
 DROP TABLE #MergeOutput;
+
+-- =======================================================================================
+-- SEGUNDA ETAPA: SINCRONIZACIÓN AUTOMÁTICA HACIA Opera_Main.dbo.COLABORADORES
+-- =======================================================================================
+-- NOTA: Se asume que Opera_Main está en la misma instancia o vinculado.
+-- Si hay restricciones de base de datos cruzada, esto requerirá permisos adicionales.
+
+MERGE INTO Opera_Main.dbo.COLABORADORES AS Target
+USING (
+    SELECT 
+        DNI,
+        Inspector as nombre,
+        Tipo as rol,
+        FotoUrl as photo_url,
+        Telefono as phone,
+        CASE WHEN Estado = 'Cesado' THEN 'Retirado' ELSE Estado END as estado_operativo, -- Mapeo simple
+        CASE WHEN Estado = 'Cesado' THEN 0 ELSE 1 END as active
+    FROM dbo.Personal
+    WHERE DNI IS NOT NULL
+) AS Source
+ON (Target.dni = Source.DNI)
+
+WHEN MATCHED THEN
+    UPDATE SET
+        Target.nombre = Source.nombre,
+        Target.rol = Source.rol,
+        Target.photo_url = Source.photo_url,
+        Target.phone = Source.phone,
+        Target.estado_operativo = Source.estado_operativo,
+        Target.active = Source.active,
+        Target.updated_at = GETDATE()
+
+WHEN NOT MATCHED BY TARGET THEN
+    INSERT (dni, nombre, rol, photo_url, phone, estado_operativo, active, created_at, updated_at)
+    VALUES (Source.DNI, Source.nombre, Source.rol, Source.photo_url, Source.phone, Source.estado_operativo, Source.active, GETDATE(), GETDATE());
+

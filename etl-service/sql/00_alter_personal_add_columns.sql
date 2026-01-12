@@ -52,6 +52,12 @@ IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Pe
 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Personal]') AND name = 'JefeInmediato')
     ALTER TABLE [dbo].[Personal] ADD [JefeInmediato] NVARCHAR(200) NULL;
 
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Personal]') AND name = 'FotoUrl')
+    ALTER TABLE [dbo].[Personal] ADD [FotoUrl] NVARCHAR(500) NULL;
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Personal]') AND name = 'FirmaUrl')
+    ALTER TABLE [dbo].[Personal] ADD [FirmaUrl] NVARCHAR(500) NULL;
+
 -- Tabla Personal_Staging
 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Personal_Staging]') AND name = 'CodigoEmpleado')
     ALTER TABLE [dbo].[Personal_Staging] ADD [CodigoEmpleado] NVARCHAR(20) NULL;
@@ -103,4 +109,10 @@ IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Pe
 
 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Personal_Staging]') AND name = 'JefeInmediato')
     ALTER TABLE [dbo].[Personal_Staging] ADD [JefeInmediato] NVARCHAR(200) NULL;
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Personal_Staging]') AND name = 'FotoUrl')
+    ALTER TABLE [dbo].[Personal_Staging] ADD [FotoUrl] NVARCHAR(500) NULL;
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Personal_Staging]') AND name = 'FirmaUrl')
+    ALTER TABLE [dbo].[Personal_Staging] ADD [FirmaUrl] NVARCHAR(500) NULL;
 GO

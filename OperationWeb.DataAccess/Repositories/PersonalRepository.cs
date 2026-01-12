@@ -112,5 +112,47 @@ namespace OperationWeb.DataAccess.Repositories
             await _context.SaveChangesAsync();
             return history;
         }
+
+        public async Task SyncToColaboradoresAsync(Personal personal)
+        {
+            try 
+            {
+                // NOTA: Requiere permisos de cross-database o que Opera_Main esté accesible via sinonimo/linked server
+                var sql = @"
+                    MERGE INTO Opera_Main.dbo.COLABORADORES AS Target
+                    USING (SELECT {0} as dni) AS Source
+                    ON (Target.dni = Source.dni)
+                    WHEN MATCHED THEN
+                        UPDATE SET
+                            Target.nombre = {1},
+                            Target.rol = {2},
+                            Target.phone = {3},
+                            Target.photo_url = {4},
+                            Target.estado_operativo = {5},
+                            Target.active = CASE WHEN {5} = 'Cesado' THEN 0 ELSE 1 END,
+                            Target.updated_at = GETDATE()
+                    WHEN NOT MATCHED BY TARGET THEN
+                        INSERT (dni, nombre, rol, phone, photo_url, estado_operativo, active, created_at, updated_at)
+                        VALUES ({0}, {1}, {2}, {3}, {4}, {5}, CASE WHEN {5} = 'Cesado' THEN 0 ELSE 1 END, GETDATE(), GETDATE());
+                ";
+
+                // Map 'Estado' to 'estado_operativo' logic
+                var estadoOp = personal.Estado == "Cesado" ? "Retirado" : personal.Estado;
+
+                await _context.Database.ExecuteSqlRawAsync(sql, 
+                    personal.DNI, 
+                    personal.Inspector ?? "", 
+                    personal.Tipo ?? "", 
+                    personal.Telefono ?? "", 
+                    personal.FotoUrl ?? "", 
+                    estadoOp ?? ""
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log failure but don't stop flow
+                Console.WriteLine($"[SYNC ERROR] Failed to sync {personal.DNI} to COLABORADORES: {ex.Message}");
+            }
+        }
     }
 }

@@ -62,6 +62,8 @@ namespace OperationWeb.Business.Services
             existing.FechaModificacion = DateTime.UtcNow;
             existing.UsuarioModificacion = personal.UsuarioModificacion;
             existing.Estado = personal.Estado;
+            existing.FotoUrl = personal.FotoUrl;
+            existing.FirmaUrl = personal.FirmaUrl;
             
             // Nuevos campos
             existing.CodigoEmpleado = personal.CodigoEmpleado;
@@ -193,6 +195,11 @@ namespace OperationWeb.Business.Services
                 // Silently fail logging to not disrupt main flow, but ideally log to ILogger
                 Console.WriteLine($"Error logging event for {dni}: {ex.Message}");
             }
+        }
+
+        private async Task SyncToColaboradores(Personal personal)
+        {
+            await _personalRepository.SyncToColaboradoresAsync(personal);
         }
     }
 }

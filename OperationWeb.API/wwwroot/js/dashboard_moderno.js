@@ -61,6 +61,11 @@ class ModernDashboard {
         // Chart Interaction State
         this.selectedAreaFilter = null;
 
+        // Connection Safety (Circuit Breaker)
+        this.connectionErrors = 0;
+        this.maxConnectionErrors = 3;
+        this.isPaused = false;
+
         this.menuItems = [
             {
                 label: "Dashboard",
@@ -213,7 +218,7 @@ class ModernDashboard {
         const toggleIcon = document.querySelector('#sidebar-toggle i');
 
         if (this.sidebarCollapsed) {
-            sidebar.classList.remove('w-64');
+            sidebar.classList.remove('w-80');
             sidebar.classList.add('w-20');
             logoContainer.classList.add('hidden');
             userInfoContainer.classList.add('hidden');
@@ -225,7 +230,7 @@ class ModernDashboard {
             this.renderSidebar();
         } else {
             sidebar.classList.remove('w-20');
-            sidebar.classList.add('w-64');
+            sidebar.classList.add('w-80');
             logoContainer.classList.remove('hidden');
             userInfoContainer.classList.remove('hidden');
             toggleIcon.classList.remove('fa-chevron-right');
@@ -373,6 +378,26 @@ class ModernDashboard {
 
                 setTimeout(() => {
                     this.cargarConfiguracion();
+                }, 100);
+                return;
+            } else if (pageName === 'seguimiento-proyectos') {
+                // Initial Loading State
+                mainContent.innerHTML = UIComponents.getLoadingState();
+
+                // Initialize logic
+                setTimeout(() => {
+                    this.cargarSeguimientoProyectos();
+                }, 100);
+                return;
+            } else if (pageName === 'asistencia') {
+                mainContent.innerHTML = UIComponents.getAttendanceView();
+                setTimeout(() => {
+                    this.loadAttendance();
+                    // Setup Search Listener
+                    const searchInput = document.getElementById('attendance-search');
+                    if (searchInput) {
+                        searchInput.addEventListener('keyup', () => this.filterAttendance());
+                    }
                 }, 100);
                 return;
             } else if (pageName === 'dashboard' && UIComponents.getDashboardContent) {
@@ -760,6 +785,11 @@ class ModernDashboard {
     // --- Dashboard Logic ---
 
     async cargarDashboard() {
+        if (this.isPaused) {
+            console.warn('[DASHBOARD] Fetch pausado por errores de conexión.');
+            return;
+        }
+
         console.log('[DASHBOARD] Cargando datos...');
         try {
             const jwt = localStorage.getItem('jwt') || '';
@@ -767,10 +797,14 @@ class ModernDashboard {
 
             // Fetch data in parallel
             const [colaboradores, proyectos, vehiculos] = await Promise.all([
-                fetch(`${API_NET}/api/personal`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch(`${API_NET}/api/proyectos`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch(`${API_NET}/api/vehiculos`, { headers }).then(r => r.ok ? r.json() : []).catch(() => [])
+                fetch(`${API_NET}/api/personal`, { headers }).then(r => { if (!r.ok) throw new Error('API Error'); return r.json(); }),
+                fetch(`${API_NET}/api/proyectos`, { headers }).then(r => { if (!r.ok) throw new Error('API Error'); return r.json(); }),
+                fetch(`${API_NET}/api/vehiculos`, { headers }).then(r => { if (!r.ok) throw new Error('API Error'); return r.json(); })
             ]);
+
+            // Success: Reset Error Counter
+            this.connectionErrors = 0;
+            this.updateConnectionStatus(true);
 
             // Store raw data for filtering
             this.dashboardData = { colaboradores, proyectos, vehiculos };
@@ -783,8 +817,60 @@ class ModernDashboard {
 
         } catch (error) {
             console.error('[DASHBOARD] Error cargando dashboard:', error);
+            this.handleConnectionError();
         }
     }
+
+    handleConnectionError() {
+        this.connectionErrors++;
+        if (this.connectionErrors >= this.maxConnectionErrors) {
+            this.isPaused = true;
+            this.showConnectionErrorModal();
+        }
+    }
+
+    updateConnectionStatus(online) {
+        // Optional: Update a UI indicator
+    }
+
+    showConnectionErrorModal() {
+        // Prevent stacking modals
+        if (document.getElementById('connection-error-modal')) return;
+
+        const modalHtml = `
+            <div id="connection-error-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center animate-in fade-in duration-300">
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <i class="fas fa-wifi text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Conexión Interrumpida</h3>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Se ha perdido la conexión con el servidor. Se han detenido las actualizaciones automáticas para proteger el rendimiento.
+                    </p>
+                    <div class="mt-5 sm:mt-6">
+                        <button onclick="window.dashboard.retryConnection()" class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                            Reintentar Conexión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    retryConnection() {
+        this.connectionErrors = 0;
+        this.isPaused = false;
+        const modal = document.getElementById('connection-error-modal');
+        if (modal) modal.remove();
+
+        // Retry current view
+        const currentView = this.currentSection || 'dashboard';
+        if (currentView === 'dashboard') this.cargarDashboard();
+        else if (currentView === 'perfiles') this.cargarRoles();
+        // Add other retries as needed
+    }
+
 
     cargarFiltroDivisiones(proyectos) {
         const select = document.getElementById('filtro-division-dashboard');
@@ -1445,8 +1531,12 @@ class ModernDashboard {
     async cargarConfiguracion() {
         console.log('[CONFIG] Cargando configuración...');
         try {
+            const jwt = localStorage.getItem('jwt');
             const response = await fetch(`${API_NET}/api/SystemSettings`, {
-                headers: { 'Accept': 'application/json' }
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                }
             });
 
             if (!response.ok) throw new Error('Error al cargar configuración');
@@ -1456,7 +1546,7 @@ class ModernDashboard {
 
             // Map settings to inputs
             const mapping = {
-                'SmtpHost': 'smtp-server',
+                'SmtpHost': 'smtp-host', // Fixed ID match
                 'SmtpPort': 'smtp-port',
                 'SmtpUser': 'smtp-user',
                 'SmtpPassword': 'smtp-password',
@@ -2495,6 +2585,359 @@ class ModernDashboard {
                 }
             }
         });
+
+        // Load specific tab data
+        if (tabName === 'users') {
+            this.cargarUsuariosTab();
+        } else if (tabName === 'permissions') {
+            this.cargarPermisosTab();
+        }
+    }
+
+    // --- Modal Helpers ---
+
+    openModalWithContent(title, content, modalId = 'generic-modal') {
+        let modal = document.getElementById(modalId);
+        if (!modal) {
+            // Create modal if not exists
+            modal = document.createElement('div');
+            modal.id = modalId;
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 hidden';
+            modal.innerHTML = `
+                <div class="bg-background rounded-lg shadow-lg w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center border-b pb-4">
+                        <h3 class="text-lg font-semibold" id="${modalId}-title"></h3>
+                        <button onclick="window.dashboard.closeModal('${modalId}')" class="text-muted-foreground hover:text-foreground">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="${modalId}-content"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        const titleEl = document.getElementById(`${modalId}-title`);
+        const contentEl = document.getElementById(`${modalId}-content`);
+
+        if (titleEl) titleEl.textContent = title;
+        if (contentEl) contentEl.innerHTML = content;
+
+        modal.classList.remove('hidden');
+    }
+
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // --- Assign Users Logic ---
+
+    async cargarUsuariosTab() {
+        const container = document.getElementById('content-users');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="flex justify-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>`;
+
+        try {
+            const [usersRes, rolesRes] = await Promise.all([
+                fetch(`${this.apiBaseUrl}/api/roles/users`, { headers: this.getAuthHeaders() }),
+                fetch(`${this.apiBaseUrl}/api/roles`, { headers: this.getAuthHeaders() })
+            ]);
+
+            if (!usersRes.ok || !rolesRes.ok) throw new Error("Error al cargar datos");
+
+            const users = await usersRes.json();
+            const roles = await rolesRes.json();
+
+            this.usersData = users;
+            this.rolesData = roles;
+            this.filteredUsers = users; // Init filtered list
+            this.allDivisions = [...new Set(users.map(u => u.division).filter(Boolean))];
+
+            this.usersPage = 1;
+            this.usersPerPage = 10;
+
+            this.renderUsuariosTab();
+
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="text-red-500 text-center py-12">Error: ${error.message}</div>`;
+        }
+    }
+
+    renderUsuariosTab() {
+        const container = document.getElementById('content-users');
+        if (!container) return;
+
+        const users = this.filteredUsers || this.usersData || [];
+        const roles = this.rolesData || [];
+
+        // Pagination Logic
+        const totalItems = users.length;
+        const totalPages = Math.ceil(totalItems / this.usersPerPage) || 1;
+
+        // Validate Page
+        if (this.usersPage < 1) this.usersPage = 1;
+        if (this.usersPage > totalPages) this.usersPage = totalPages;
+
+        const startIndex = (this.usersPage - 1) * this.usersPerPage;
+        const endIndex = startIndex + this.usersPerPage;
+        const pagedUsers = users.slice(startIndex, endIndex);
+
+        const pagination = {
+            currentPage: this.usersPage,
+            totalPages: totalPages,
+            totalItems: totalItems
+        };
+
+        if (window.UIComponents && window.UIComponents.getAssignUsersTabContent) {
+            container.innerHTML = window.UIComponents.getAssignUsersTabContent(pagedUsers, roles, this.allDivisions, pagination);
+        } else {
+            console.error("UIComponents.getAssignUsersTabContent is missing!");
+            container.innerHTML = '<div class="text-red-500 p-4">Error: UI Component missing</div>';
+            return;
+        }
+
+        // Add Event Listeners
+
+        // Search
+        const searchInput = document.getElementById('users-search');
+        if (searchInput) {
+            searchInput.value = this.currentSearchTerm || ''; // Restore Value
+            // Focus management logic needs to be outside re-render ideally
+            searchInput.addEventListener('keyup', (e) => {
+                this.currentSearchTerm = e.target.value;
+                this.filterLogic();
+                // Restore focus handled in filterLogic if we re-render
+            });
+            // Focus hack if we just re-rendered
+            if (this.restoreFocus) {
+                searchInput.focus();
+                const v = searchInput.value;
+                searchInput.value = '';
+                searchInput.value = v; // put cursor at end
+                this.restoreFocus = false;
+            }
+        }
+
+        // Filter Division
+        const divFilter = document.getElementById('division-filter');
+        if (divFilter) {
+            divFilter.value = this.currentDivisionFilter || 'Todas las divisiones';
+            divFilter.addEventListener('change', (e) => {
+                this.currentDivisionFilter = e.target.value;
+                this.filterLogic();
+            });
+        }
+
+        // Filter Status
+        const statusFilter = document.getElementById('filter-user-status');
+        if (statusFilter) {
+            statusFilter.value = this.currentStatusFilter || 'all';
+            statusFilter.addEventListener('change', (e) => {
+                this.currentStatusFilter = e.target.value;
+                this.filterLogic();
+            });
+        }
+
+        // Role Selectors
+        document.querySelectorAll('.role-selector').forEach(select => {
+            select.addEventListener('change', (e) => {
+                const row = e.target.closest('tr');
+                const btn = row.querySelector('.save-role-btn');
+                const originalRole = e.target.getAttribute('data-original-role');
+
+                if (e.target.value !== originalRole) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+            });
+        });
+
+        // Save Buttons
+        document.querySelectorAll('.save-role-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const row = e.target.closest('tr');
+                const userId = row.getAttribute('data-user-id');
+                const select = row.querySelector('.role-selector');
+                const newRoleId = select.value;
+
+                await this.guardarAsignacionRole(userId, newRoleId);
+            });
+        });
+    }
+
+    filterLogic() {
+        const term = (this.currentSearchTerm || '').toLowerCase();
+        const division = this.currentDivisionFilter || 'Todas las divisiones';
+        const status = this.currentStatusFilter || 'all';
+
+        let filtered = this.usersData || [];
+
+        // 1. Filter by Term
+        if (term) {
+            filtered = filtered.filter(u => u.name.toLowerCase().includes(term));
+        }
+
+        // 2. Filter by Division
+        if (division && division !== 'Todas las divisiones') {
+            filtered = filtered.filter(u => u.division === division);
+        }
+
+        // 3. Filter by Status
+        if (status === 'active') {
+            filtered = filtered.filter(u => u.isActive);
+        } else if (status === 'inactive') {
+            filtered = filtered.filter(u => !u.isActive);
+        }
+
+        // Update State
+        this.filteredUsers = filtered;
+        this.usersPage = 1; // Reset to page 1 on filter change
+
+        this.restoreFocus = true;
+        this.renderUsuariosTab();
+
+        // Update counters not needed here if renderUsuariosTab passes it to UI component
+        // But we kept the direct DOM update ability if needed, though now renderUsuariosTab renders the counters.
+    }
+
+    changeUsersPage(newPage) {
+        if (!this.filteredUsers) return;
+        const totalPages = Math.ceil(this.filteredUsers.length / this.usersPerPage) || 1;
+
+        if (newPage >= 1 && newPage <= totalPages) {
+            this.usersPage = newPage;
+            this.renderUsuariosTab();
+        }
+    }
+
+    async guardarAsignacionRole(userId, newRoleId) {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/roles/assign`, {
+                method: 'POST',
+                headers: {
+                    ...this.getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId, roleId: newRoleId == '0' ? null : newRoleId })
+            });
+
+            if (!response.ok) throw new Error("Error al guardar");
+
+            // alert("Rol asignado correctamente");
+            // Reload to refresh state without full reload
+            // Update local state and re-render to avoid spinner
+            await this.cargarUsuariosTab();
+
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+    // --- Permissions Logic ---
+
+    cargarPermisosTab() {
+        // Mock Data based on Reference
+        if (!this.permissionsData) {
+            this.permissionsData = [
+                { id: 1, module: "Usuarios", name: "Ver usuarios", checked: true },
+                { id: 2, module: "Usuarios", name: "Crear usuarios", checked: false },
+                { id: 3, module: "Usuarios", name: "Editar usuarios", checked: false },
+                { id: 4, module: "Usuarios", name: "Eliminar usuarios", checked: false },
+                { id: 5, module: "Roles", name: "Ver roles", checked: true },
+                { id: 6, module: "Roles", name: "Gestionar roles", checked: true },
+                { id: 7, module: "Inventario", name: "Ver inventario", checked: true },
+                { id: 8, module: "Inventario", name: "Gestionar stock", checked: false },
+                { id: 9, module: "Reportes", name: "Ver reportes", checked: true },
+                { id: 10, module: "Reportes", name: "Exportar data", checked: false }
+            ];
+            this.permissionsViewMode = 'matrix';
+            this.permissionsSelectedRole = 1; // Default ID
+            this.permissionsHasChanges = false;
+        }
+
+        this.renderPermisosTab();
+    }
+
+    renderPermisosTab() {
+        const container = document.getElementById('content-permissions');
+        if (!container || !window.UIComponents.getPermissionsTabContent) return;
+
+        // Ensure we rely on real roles if available, else Mock roles (which should be real by now)
+        const roles = this.roles || [];
+
+        container.innerHTML = window.UIComponents.getPermissionsTabContent(
+            roles,
+            this.permissionsData,
+            this.permissionsViewMode,
+            this.permissionsSelectedRole,
+            this.permissionsHasChanges
+        );
+
+        // Event Listeners
+
+        // Role Select
+        const roleSelect = document.getElementById('permissions-role-select');
+        if (roleSelect) {
+            roleSelect.addEventListener('change', (e) => {
+                this.permissionsSelectedRole = parseInt(e.target.value);
+                // In real app, we would fetch permissions for this role here
+                // For now we just re-render to show selector change (mock data is static)
+                // Simulate "Loading" new permissions
+                this.permissionsHasChanges = false;
+                this.renderPermisosTab();
+            });
+        }
+
+        // Permission Checkboxes
+        document.querySelectorAll('.permission-checkbox').forEach(chk => {
+            chk.addEventListener('change', (e) => {
+                const id = parseInt(e.target.dataset.permId);
+                const checked = e.target.checked;
+
+                // Update Local State
+                const perm = this.permissionsData.find(p => p.id === id);
+                if (perm) {
+                    perm.checked = checked;
+                    this.permissionsHasChanges = true;
+                    // Re-render to update UI (enable save button, show alert)
+                    // Optimization: Just update DOM elements instead of full re-render, but full render is safer for sync
+                    this.renderPermisosTab();
+                }
+            });
+        });
+
+        // Save Button listener handled by window.dashboard global export or direct attach if simple
+        // Using global export pattern for simplicity with view-generated onclicks
+    }
+
+    setPermissionsViewMode(mode) {
+        this.permissionsViewMode = mode;
+        this.renderPermisosTab();
+    }
+
+    restorePermissions() {
+        if (!confirm("¿Desea descartar los cambios?")) return;
+
+        // Reset Logic (Mock: just toggle some back or reload original)
+        // ideally we clone deep copy on load. For now, manual reset for demo
+        this.permissionsHasChanges = false;
+        // Re-fetch or simplistic reset
+        this.renderPermisosTab();
+    }
+
+    async savePermissions() {
+        // Mock Save
+        this.permissionsHasChanges = false;
+        // Show success
+        this.renderPermisosTab();
+        alert("Permisos guardados correctamente (Simulación)");
     }
 
     abrirModalCrearRol() {
@@ -3157,7 +3600,427 @@ class ModernDashboard {
         });
         this.renderTablaProyectos();
     }
+
+    // --- Seguimiento Proyectos Logic ---
+
+    async cargarSeguimientoProyectos() {
+        console.log('[SEGUIMIENTO] Iniciando monitor...');
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = UIComponents.getLoadingState();
+
+        // Clear existing polling
+        if (this.seguimientoInterval) clearInterval(this.seguimientoInterval);
+
+        try {
+            await this.fetchSeguimientoData();
+
+            // Render
+            mainContent.innerHTML = UIComponents.getSeguimientoProyectosContent(this.seguimientoData);
+
+            // Start polling (30s)
+            this.seguimientoInterval = setInterval(() => this.fetchSeguimientoData(true), 30000);
+
+        } catch (error) {
+            console.error('[SEGUIMIENTO] Error:', error);
+            mainContent.innerHTML = `<div class="p-6 text-red-600">Error al cargar datos: ${error.message}</div>`;
+        }
+    }
+
+    async fetchSeguimientoData(isUpdate = false) {
+        try {
+            const jwt = localStorage.getItem('jwt');
+            const response = await fetch(`${API_NET}/api/v1/execution/monitor`, {
+                headers: { 'Authorization': `Bearer ${jwt}` }
+            });
+
+            if (!response.ok) throw new Error('Error de conexión');
+
+            this.seguimientoData = await response.json();
+
+            if (isUpdate) {
+                const input = document.querySelector('input[placeholder="Buscar OT o Cuadrilla..."]');
+                const term = input ? input.value : '';
+                this.filtrarSeguimiento(term);
+            }
+
+        } catch (e) {
+            console.error('[SEGUIMIENTO] Fetch Error:', e);
+        }
+    }
+
+    async loadOrdenDetalle(otId) {
+        console.log('[SEGUIMIENTO] Cargando detalle:', otId);
+        // Clear polling
+        if (this.seguimientoInterval) {
+            clearInterval(this.seguimientoInterval);
+            this.seguimientoInterval = null;
+        }
+
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) mainContent.innerHTML = UIComponents.getLoadingState();
+
+        try {
+            const jwt = localStorage.getItem('jwt');
+            const response = await fetch(`${API_NET}/api/v1/execution/details/${otId}`, {
+                headers: { 'Authorization': `Bearer ${jwt}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (mainContent) mainContent.innerHTML = UIComponents.getOrdenDetalleContent(data);
+            } else {
+                if (mainContent) mainContent.innerHTML = `<div class="p-8 text-center text-red-500">Error ${response.status}: No se pudo cargar el expediente.</div>`;
+            }
+        } catch (error) {
+            console.error('[SEGUIMIENTO] Error detail:', error);
+            if (mainContent) mainContent.innerHTML = `<div class="p-8 text-center text-red-500">Error de conexión: ${error.message}</div>`;
+        }
+    }
+
+    filtrarSeguimiento(term) {
+        if (!this.seguimientoData) return;
+
+        const filtered = this.seguimientoData.filter(o =>
+            (o.codigo_suministro && o.codigo_suministro.toLowerCase().includes(term.toLowerCase())) ||
+            (o.cuadrilla_codigo && o.cuadrilla_codigo.toLowerCase().includes(term.toLowerCase())) ||
+            (o.id_ot && o.id_ot.toLowerCase().includes(term.toLowerCase()))
+        );
+
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = UIComponents.getSeguimientoProyectosContent(filtered);
+
+        const input = document.querySelector('input[placeholder="Buscar OT o Cuadrilla..."]');
+        if (input) {
+            input.value = term;
+            input.focus();
+            input.setSelectionRange(term.length, term.length);
+        }
+    }
+
+    // --- ATTENDANCE MODULE LOGIC ---
+
+    async loadAttendance() {
+        const dateInput = document.getElementById('attendance-date');
+        const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+
+        const mainContent = document.getElementById('attendance-tbody');
+        if (mainContent) mainContent.innerHTML = '<tr><td colspan="6" class="text-center p-4">Cargando...</td></tr>';
+
+        try {
+            const jwt = localStorage.getItem('jwt');
+            const headers = { 'Authorization': `Bearer ${jwt}` };
+
+            // Parallel fetch: Attendance + Employees
+            const [attRes, empRes] = await Promise.all([
+                fetch(`${API_NET}/api/v1/attendance?date=${date}`, { headers }),
+                fetch(`${API_NET}/api/v1/employees`, { headers })
+            ]);
+
+            const attendanceRecords = attRes.ok ? await attRes.json() : [];
+            const employees = empRes.ok ? await empRes.json() : [];
+
+            // Calculate Absentees (Faltas)
+            const attendedIds = new Set(attendanceRecords.map(r => r.employee_id));
+            const absentees = employees
+                .filter(e => !attendedIds.has(e.id))
+                .map(e => ({
+                    id: `absent-${e.id}`,
+                    employee: e,
+                    employee_id: e.id,
+                    check_in_time: null,
+                    location_address: null,
+                    health_status: '',
+                    system_status: 'falta',
+                    whatsapp_sync: false,
+                    alert_status: null
+                }));
+
+            // Merge and Store
+            this.allAttendanceRecords = [...attendanceRecords, ...absentees];
+            this.filterAttendance();
+
+        } catch (error) {
+            console.error('Error loading attendance:', error);
+            if (mainContent) mainContent.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-500">Error cargando datos</td></tr>';
+        }
+    }
+
+    filterAttendance() {
+        if (!this.allAttendanceRecords) return;
+
+        const search = document.getElementById('attendance-search')?.value.toLowerCase() || '';
+        const status = document.getElementById('attendance-filter-status')?.value || 'all';
+        const sync = document.getElementById('attendance-filter-sync')?.value || 'all';
+
+        const filtered = this.allAttendanceRecords.filter(r => {
+            const matchesSearch = r.employee.name.toLowerCase().includes(search);
+            const matchesStatus = status === 'all' || r.system_status.toLowerCase() === status;
+            const matchesSync = sync === 'all' ||
+                (sync === 'synced' && r.whatsapp_sync) ||
+                (sync === 'pending' && !r.whatsapp_sync && r.system_status !== 'falta' && !r.id.toString().startsWith('absent'));
+
+            return matchesSearch && matchesStatus && matchesSync;
+        });
+
+        this.renderAttendance(filtered);
+    }
+
+    renderAttendance(records) {
+        // KPIs
+        const total = this.allAttendanceRecords.length;
+        const presentCount = this.allAttendanceRecords.filter(r => r.system_status === 'presente').length;
+        const lateCount = this.allAttendanceRecords.filter(r => r.system_status === 'tardanza').length;
+        const absentCount = this.allAttendanceRecords.filter(r => r.system_status === 'falta').length;
+
+        document.getElementById('kpi-total').textContent = total;
+        document.getElementById('kpi-present').textContent = presentCount;
+        document.getElementById('kpi-late').textContent = lateCount;
+        document.getElementById('kpi-absent').textContent = absentCount;
+
+        document.getElementById('attendance-count').textContent = `Mostrando ${records.length} de ${this.allAttendanceRecords.length}`;
+
+        // Table
+        const tbody = document.getElementById('attendance-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = records.map(r => {
+            const isBlocked = r.employee.estado_operativo === 'BLOQUEADO_SALUD';
+            const checkIn = r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '-';
+
+            // Badges
+            let statusBadge = '';
+            if (r.system_status === 'APROBADA_EXC' || r.alert_status === 'exception_approved')
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">Excepción Aprobada</span>';
+            else if (r.alert_status === 'pending')
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 animate-pulse">ALERTA GPS</span>';
+            else if (r.system_status === 'presente')
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Presente</span>';
+            else if (r.system_status === 'tardanza')
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Tardanza</span>';
+            else if (r.system_status === 'falta')
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Falta</span>';
+            else
+                statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${r.system_status}</span>`;
+
+            // WhatsApp Button
+            let waButton = '<span class="text-xs text-gray-400">-</span>';
+            if (r.system_status !== 'falta' && !r.id.toString().startsWith('absent')) {
+                if (r.whatsapp_sync) {
+                    waButton = `<button onclick="event.stopPropagation(); window.dashboard.toggleSync('${r.id}', true)" class="flex items-center gap-2 group">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span class="text-xs text-green-700 font-medium group-hover:text-green-800">Sincronizado</span>
+                                </button>`;
+                } else {
+                    waButton = `<button onclick="event.stopPropagation(); window.dashboard.toggleSync('${r.id}', false)" class="flex items-center gap-2 group">
+                                    <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                    <span class="text-xs text-red-700 font-medium group-hover:text-red-800">Pendiente</span>
+                                </button>`;
+                }
+            }
+
+            return `
+                <tr class="hover:bg-gray-50 transition-colors cursor-pointer ${isBlocked ? 'bg-red-50' : ''}" onclick="window.dashboard.openDrawer('${r.id}')">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <img src="${r.employee.photo_url || 'img/placeholder-user.png'}" alt="" onerror="this.src='img/placeholder-user.png'" class="w-10 h-10 rounded-full object-cover ${isBlocked ? 'border-2 border-red-600' : ''}">
+                                ${isBlocked ? '<div class="absolute -top-1 -right-1 bg-red-600 rounded-full p-0.5 border border-white text-white text-[8px] font-bold">STOP</div>' : ''}
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 flex items-center gap-1">
+                                    ${r.employee.name}
+                                </div>
+                                <div class="text-xs text-gray-500">${r.employee.role}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900">${checkIn}</td>
+                    <td class="px-4 py-3">
+                        ${r.location_address ? '<div class="text-xs text-gray-500 truncate max-w-[150px]" title="' + r.location_address + '">' + r.location_address + '</div>' : '-'}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        ${waButton}
+                    </td>
+                </tr>`;
+        }).join('');
+
+        // Update Map
+        this.updateMap(records);
+    }
+
+    updateMap(records) {
+        if (!document.getElementById('attendance-map')) return;
+
+        // Initialize Map if needed
+        if (!this.map) {
+            this.map = L.map('attendance-map').setView([-11.9391, -77.0628], 12); // Default Lima
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(this.map);
+            this.markers = [];
+        }
+
+        // Clear existing markers
+        if (this.markers) {
+            this.markers.forEach(m => m.remove());
+            this.markers = [];
+        }
+
+        const validRecords = records.filter(r => r.location_lat && r.location_lng);
+        // Using concatenation for safety on the simple line
+        document.getElementById('map-count').textContent = validRecords.length + ' ubicaciones marcadas';
+
+        if (validRecords.length === 0) return;
+
+        const bounds = [];
+
+        validRecords.forEach(r => {
+            const lat = parseFloat(r.location_lat);
+            const lng = parseFloat(r.location_lng);
+            if (isNaN(lat) || isNaN(lng)) return;
+
+            bounds.push([lat, lng]);
+
+            const color = r.system_status === 'presente' ? 'green' : (r.system_status === 'tardanza' ? 'orange' : 'red');
+            const svgIcon =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
+                '<circle cx="16" cy="16" r="12" fill="' + color + '" stroke="white" stroke-width="3"/>' +
+                '</svg>';
+
+            const icon = L.divIcon({
+                className: 'custom-map-icon',
+                html: svgIcon,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                popupAnchor: [0, -16]
+            });
+
+            const marker = L.marker([lat, lng], { icon: icon }).addTo(this.map);
+
+            const popupContent =
+                '<div class="text-sm">' +
+                '<p class="font-bold mb-1">' + r.employee.name + '</p>' +
+                '<p class="text-gray-600 mb-1">' +
+                '<i class="fas fa-clock text-xs"></i> ' +
+                new Date(r.check_in_time).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) +
+                '</p>' +
+                '<p class="text-xs text-gray-500 mb-1">' + (r.location_address || '') + '</p>' +
+                '<span class="text-xs font-bold px-2 py-0.5 rounded ' + (color === 'green' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800') + '">' +
+                r.system_status.toUpperCase() +
+                '</span>' +
+                '</div>';
+
+            marker.bindPopup(popupContent);
+            this.markers.push(marker);
+        });
+
+        if (bounds.length > 0) {
+            this.map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    }
+
+    async toggleSync(id, currentStatus) {
+        try {
+            const jwt = localStorage.getItem('jwt');
+            await fetch(API_NET + '/api/v1/attendance/' + id + '/sync', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+                body: JSON.stringify({ whatsapp_sync: !currentStatus })
+            });
+            this.loadAttendance(); // Refresh
+        } catch (e) {
+            console.error('Sync error:', e);
+            alert('Error al sincronizar');
+        }
+    }
+
+    openDrawer(recordId) {
+        const record = this.allAttendanceRecords.find(r => r.id === recordId);
+        if (!record) return;
+
+        const drawer = document.getElementById('resolution-drawer');
+        const overlay = document.getElementById('resolution-drawer-overlay');
+        const content = document.getElementById('drawer-content');
+        const actions = document.getElementById('drawer-actions');
+
+        content.innerHTML =
+            '<div class="flex items-center gap-4 mb-4">' +
+            '<img src="' + (record.employee.photo_url || 'img/placeholder-user.png') + '" onerror="this.src=\'img/placeholder-user.png\'" class="w-16 h-16 rounded-full object-cover">' +
+            '<div>' +
+            '<h4 class="text-lg font-bold">' + record.employee.name + '</h4>' +
+            '<p class="text-sm text-gray-500">' + record.employee.role + '</p>' +
+            '</div>' +
+            '</div>' +
+
+            '<div class="space-y-4">' +
+            '<div class="bg-gray-50 p-3 rounded-lg border">' +
+            '<span class="text-xs font-medium text-gray-500 uppercase">Estado Actual</span>' +
+            '<div class="mt-1 font-bold text-gray-900">' + record.system_status + '</div>' +
+            '</div>' +
+
+            (record.gps_justification ?
+                '<div class="bg-orange-50 p-3 rounded-lg border border-orange-100">' +
+                '<span class="text-xs font-medium text-orange-600 uppercase">Justificación GPS</span>' +
+                '<p class="mt-1 text-sm text-orange-900">' + record.gps_justification + '</p>' +
+                '</div>'
+                : '') +
+
+            '<div class="grid grid-cols-2 gap-3">' +
+            '<div class="bg-white p-3 rounded border">' +
+            '<span class="text-xs text-gray-500">Hora Ingreso</span>' +
+            '<p class="font-medium">' + (record.check_in_time ? new Date(record.check_in_time).toLocaleTimeString() : '-') + '</p>' +
+            '</div>' +
+            '<div class="bg-white p-3 rounded border">' +
+            '<span class="text-xs text-gray-500">Sync WhatsApp</span>' +
+            '<p class="font-medium ' + (record.whatsapp_sync ? 'text-green-600' : 'text-orange-600') + '">' +
+            (record.whatsapp_sync ? 'Sincronizado' : 'Pendiente') +
+            '</p>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+
+        if (record.alert_status === 'pending') {
+            actions.innerHTML =
+                '<button onclick="window.dashboard.resolveAlert(\'' + record.id + '\', \'reject_exception\')" class="px-4 py-2 border border-red-300 text-red-700 rounded hover:bg-red-50">' +
+                'Rechazar' +
+                '</button>' +
+                '<button onclick="window.dashboard.resolveAlert(\'' + record.id + '\', \'approve_exception\')" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">' +
+                'Aprobar Excepción' +
+                '</button>';
+        } else {
+            actions.innerHTML = '<span class="text-sm text-gray-500 italic">No hay acciones pendientes</span>';
+        }
+
+        overlay.classList.remove('hidden');
+        drawer.classList.remove('translate-x-full');
+    }
+
+    closeDrawer() {
+        const drawer = document.getElementById('resolution-drawer');
+        const overlay = document.getElementById('resolution-drawer-overlay');
+        overlay.classList.add('hidden');
+        drawer.classList.add('translate-x-full');
+    }
+
+    async resolveAlert(id, action) {
+        try {
+            const jwt = localStorage.getItem('jwt');
+            await fetch(API_NET + '/api/v1/attendance/' + id + '/resolve', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+                body: JSON.stringify({ action: action })
+            });
+            this.closeDrawer();
+            this.loadAttendance();
+        } catch (e) {
+            console.error('Resolve error:', e);
+            alert('Error al resolver alerta');
+        }
+    }
+
 }
+
+
 
 // Global Helpers
 window.previewImage = (input, imgId, placeholderId = null) => {
@@ -3229,7 +4092,7 @@ window.confirmarCrearUsuario = async () => {
     }
 
     try {
-        const response = await fetch(`${API_NET}/api/users`, {
+        const response = await fetch(API_NET + '/api/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -3264,6 +4127,8 @@ window.confirmarCrearUsuario = async () => {
     }
 };
 
+
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new ModernDashboard();
@@ -3276,6 +4141,8 @@ window.filtrarColaboradores = () => {
         window.dashboard.filtrarColaboradores(input.value);
     }
 };
+
+
 
 window.guardarConfiguracion = () => {
     if (window.dashboard) window.dashboard.guardarConfiguracion();
@@ -3381,6 +4248,10 @@ window.limpiarFiltrosProyectos = () => window.dashboard.limpiarFiltrosProyectos(
 window.descargarPlantillaProyectos = () => window.dashboard.descargarPlantillaProyectos();
 window.procesarArchivoProyectos = (input) => window.dashboard.procesarArchivoProyectos(input);
 
+window.filtrarSeguimiento = (val) => {
+    if (window.dashboard) window.dashboard.filtrarSeguimiento(val);
+};
+
 window.filtrarCuadrillas = () => window.dashboard.filtrarCuadrillas();
 window.filtrarPorColumnaCuadrillas = (col, val) => window.dashboard.filtrarPorColumnaCuadrillas(col, val);
 window.ordenarTablaCuadrillas = (key) => window.dashboard.ordenarTablaCuadrillas(key);
@@ -3422,9 +4293,10 @@ window.logout = () => {
 
     // Redirect to index.html (main page)
     window.location.href = 'index.html';
-};
 
-// Initialize dashboard on page load
-window.addEventListener('DOMContentLoaded', () => {
-    window.dashboard = new ModernDashboard();
-});
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+        window.dashboard = new ModernDashboard();
+    });
+
+}
