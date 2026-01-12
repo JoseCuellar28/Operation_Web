@@ -165,9 +165,9 @@ namespace OperationWeb.API.Controllers
                             c.COLUMN_NAME,
                             c.DATA_TYPE,
                             c.IS_NULLABLE
-                        FROM DB_Operation.INFORMATION_SCHEMA.TABLES t
-                        JOIN DB_Operation.INFORMATION_SCHEMA.COLUMNS c ON t.TABLE_NAME = c.TABLE_NAME
-                        WHERE t.TABLE_TYPE = 'BASE TABLE'
+                        FROM Opera_Main.INFORMATION_SCHEMA.TABLES t
+                        JOIN Opera_Main.INFORMATION_SCHEMA.COLUMNS c ON t.TABLE_NAME = c.TABLE_NAME
+                        WHERE t.TABLE_TYPE = 'BASE TABLE' AND t.TABLE_NAME LIKE '%ORDEN%'
                         ORDER BY t.TABLE_NAME, c.ORDINAL_POSITION";
                     
                     _context.Database.OpenConnection();
