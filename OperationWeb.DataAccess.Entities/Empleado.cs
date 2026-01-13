@@ -3,12 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OperationWeb.DataAccess.Entities
 {
-    [Table("Empleado")]
+    [Table("COLABORADORES")]
     public class Empleado
     {
         [Key]
+        [Column("id")]
         public int IdEmpleado { get; set; }
 
+        [NotMapped]
         public int IdEmpresa { get; set; }
 
         [StringLength(50)]
@@ -24,17 +26,19 @@ namespace OperationWeb.DataAccess.Entities
         }
 
         [Required]
+        [Column("dni")]
         [StringLength(40)]
         public string DNI { get; set; } = string.Empty;
 
         [Required]
+        [Column("nombre")]
         [StringLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
-        [StringLength(100)]
+        [NotMapped]
         public string? ApellidoPaterno { get; set; }
 
-        [StringLength(100)]
+        [NotMapped]
         public string? ApellidoMaterno { get; set; }
 
         public DateTime? FechaNacimiento { get; set; }
@@ -44,6 +48,7 @@ namespace OperationWeb.DataAccess.Entities
         public string? Email { get; set; }
 
         [StringLength(20)]
+        [Column("phone")]
         public string? Telefono { get; set; }
 
         public int? IdJefeInmediato { get; set; }
@@ -56,8 +61,11 @@ namespace OperationWeb.DataAccess.Entities
 
         public bool? Administrador { get; set; }
 
-        [StringLength(1)]
-        public string? UsuarioActivo { get; set; }
+        [NotMapped]
+        public string? UsuarioActivo { get; set; } // Legacy used this
+        
+        [Column("active")]
+        public bool? Active { get; set; } // Real DB column
 
         public DateTime? FechaCreacion { get; set; }
 
@@ -69,17 +77,32 @@ namespace OperationWeb.DataAccess.Entities
         [StringLength(50)]
         public string? UsuarioModificacion { get; set; }
 
+        // New Mapped Columns based on audit
+        [Column("rol")]
+        [StringLength(50)]
+        public string? Rol { get; set; }
+
+        [Column("photo_url")]
+        public string? PhotoUrl { get; set; }
+
+        [Column("estado_operativo")]
+        public string? EstadoOperativo { get; set; }
+
         // Propiedades calculadas para compatibilidad con el frontend
         [NotMapped]
-        public string NombreCompleto => $"{Nombre} {ApellidoPaterno} {ApellidoMaterno}".Trim();
+        public string NombreCompleto => Nombre; // In legacy, 'nombre' might be full name
 
         [NotMapped]
-        public string Estado => UsuarioActivo == "S" ? "Activo" : "Inactivo";
+        public string Estado => (Active == true) ? "Activo" : "Inactivo";
 
         [NotMapped]
-        public string Cargo { get; set; } = "No definido"; // Se llenará desde IdEmpleadoPerfil
+        public string Cargo 
+        { 
+            get => Rol ?? "No definido";
+            set => Rol = value;
+        }
 
         [NotMapped]
-        public string Departamento { get; set; } = "No definido"; // Se llenará desde IdArea
+        public string Departamento { get; set; } = "No definido";
     }
 }

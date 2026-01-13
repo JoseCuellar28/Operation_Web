@@ -13,6 +13,7 @@ namespace OperationWeb.DataAccess
         public DbSet<CuadrillaColaborador> CuadrillaColaboradores { get; set; }
         public DbSet<Empleado> Empleados { get; set; }
         public DbSet<Personal> Personal { get; set; }
+        public DbSet<AsistenciaDiaria> AsistenciasDiarias { get; set; }
         public DbSet<Proyecto> Proyectos { get; set; }
 
         public DbSet<User> Users { get; set; }
@@ -66,26 +67,25 @@ namespace OperationWeb.DataAccess
                 entity.HasIndex(e => e.Nombre).IsUnique();
             });
 
-            // Configuración de Empleado
+            // Configuración de Empleado (Antes Empleado, ahora COLABORADORES)
             modelBuilder.Entity<Empleado>(entity =>
             {
                 entity.HasKey(e => e.IdEmpleado);
-                entity.ToTable("Empleado");
+                entity.ToTable("COLABORADORES"); 
                 
                 entity.Property(e => e.CodigoEmpleado).HasMaxLength(50);
                 // NumeroDocumento removed
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.ApellidoPaterno).HasMaxLength(100);
-                entity.Property(e => e.ApellidoMaterno).HasMaxLength(100);
+                // ApellidoPaterno removed map
+                // ApellidoMaterno removed map
                 entity.Property(e => e.Email).HasMaxLength(100);
                 entity.Property(e => e.Telefono).HasMaxLength(20);
-                entity.Property(e => e.UsuarioActivo).HasMaxLength(1);
+                // UsuarioActivo removed map
                 entity.Property(e => e.UsuarioCreacion).HasMaxLength(50);
                 entity.Property(e => e.UsuarioModificacion).HasMaxLength(50);
                 entity.Property(e => e.DNI).IsRequired().HasMaxLength(40);
 
                 // Índices únicos
-                // NumeroDocumento index removed
                 entity.HasIndex(e => e.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
                 entity.HasIndex(e => e.CodigoEmpleado).IsUnique().HasFilter("[CodigoEmpleado] IS NOT NULL");
                 entity.HasIndex(e => e.DNI).IsUnique();
@@ -200,6 +200,18 @@ namespace OperationWeb.DataAccess
 
             // Datos semilla
             SeedData(modelBuilder);
+
+            // DTOs (Keyless Entities for SqlQueryRaw)
+            modelBuilder.Entity<OperationWeb.DataAccess.DTOs.EmployeeDto>(e => 
+            {
+                e.HasNoKey();
+                e.ToView(null);
+            });
+            modelBuilder.Entity<OperationWeb.DataAccess.DTOs.AttendanceFlatDto>(e => 
+            {
+                e.HasNoKey();
+                e.ToView(null);
+            });
         }
 
         private void SeedData(ModelBuilder modelBuilder)
