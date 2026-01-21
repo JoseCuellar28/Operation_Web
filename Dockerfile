@@ -8,9 +8,8 @@ COPY OperationWeb.API/*.csproj ./OperationWeb.API/
 COPY OperationWeb.Business/*.csproj ./OperationWeb.Business/
 
 COPY OperationWeb.Business.Interfaces/*.csproj ./OperationWeb.Business.Interfaces/
+COPY OperationWeb.Core/*.csproj ./OperationWeb.Core/
 COPY OperationWeb.DataAccess/*.csproj ./OperationWeb.DataAccess/
-COPY OperationWeb.DataAccess.Entities/*.csproj ./OperationWeb.DataAccess.Entities/
-COPY OperationWeb.DataAccess.Interfaces/*.csproj ./OperationWeb.DataAccess.Interfaces/
 
 COPY OperationWeb.Tests/*.csproj ./OperationWeb.Tests/
 

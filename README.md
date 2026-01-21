@@ -21,8 +21,7 @@ El sistema está dividido en capas para asegurar la escalabilidad:
 - **OperationWeb.API**: Capa de presentación y endpoints REST.
 - **OperationWeb.Business**: Lógica de negocio y casos de uso.
 - **OperationWeb.DataAccess**: Persistencia y acceso a datos.
-- **ui_reference/Modelo_Web2**: Código fuente del Frontend (React).
-- **Modelo_Android**: Proyecto móvil nativo.
+- **OperationWeb.Frontend**: Código fuente del Frontend (React).
 
 ## ⚙️ Configuración Rápida (Entorno Local)
 
@@ -40,7 +39,7 @@ El sistema está dividido en capas para asegurar la escalabilidad:
      
    - **Frontend**:
      ```bash
-     cd ui_reference/Modelo_Web2
+     cd OperationWeb.Frontend
      npm run dev
      ```
      *(Escucha en http://localhost:5173)*

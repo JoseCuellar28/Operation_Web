@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import LoginPage from './pages/LoginPage';
+import LoginPage from './pages/auth/LoginPage';
 import ProtectedLayout from './layout/ProtectedLayout';
 import MainLayout from './layout/MainLayout';
 
 // Pages
 import PersonalPage from './pages/operations/PersonalPage';
-import { ProjectsView } from './pages/ProjectsView';
-import AttendanceView from './pages/AttendanceView';
-import { GPSLiveView } from './pages/GPSLiveView';
+import { ProjectsView } from './pages/operations/ProjectsView';
+import AttendanceView from './pages/tracking/AttendanceView';
+import { GPSLiveView } from './pages/tracking/GPSLiveView';
 
 // Placeholder components for routes
 const Dashboard = () => <div className="p-4 bg-white rounded shadow">Dashboard Content Placeholder</div>;
