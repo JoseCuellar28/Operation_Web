@@ -1,6 +1,6 @@
 using OperationWeb.Business.Interfaces;
-using OperationWeb.DataAccess.Entities;
-using OperationWeb.DataAccess.Interfaces;
+using OperationWeb.Core.Entities;
+using OperationWeb.Core.Interfaces;
 
 namespace OperationWeb.Business
 {

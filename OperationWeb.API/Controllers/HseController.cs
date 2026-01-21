@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OperationWeb.DataAccess;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

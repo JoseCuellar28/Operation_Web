@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OperationWeb.DataAccess;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Business.Interfaces;
+using OperationWeb.Core.Entities;
+using System;
+using System.Threading.Tasks;
 
 namespace OperationWeb.API.Controllers
 {
@@ -9,11 +10,11 @@ namespace OperationWeb.API.Controllers
     [Route("api/[controller]")]
     public class VehiculosController : ControllerBase
     {
-        private readonly OperationWebDbContext _context;
+        private readonly IVehiculoService _service;
 
-        public VehiculosController(OperationWebDbContext context)
+        public VehiculosController(IVehiculoService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
@@ -21,28 +22,28 @@ namespace OperationWeb.API.Controllers
         {
             try 
             {
-                // Raw SQL for Cross-Database Query
-                var vehicles = await _context.Vehiculos
-                    .FromSqlRaw("SELECT * FROM Opera_Main.dbo.VEHICULOS ORDER BY placa")
-                    .ToListAsync();
+                var vehicles = await _service.GetAllAsync();
                 return Ok(vehicles);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error querying external DB: {ex.Message}");
+                return StatusCode(500, $"Error querying vehicles: {ex.Message}");
             }
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            // Parameterized query for safety
-            var vehicle = await _context.Vehiculos
-                .FromSqlRaw("SELECT * FROM Opera_Main.dbo.VEHICULOS WHERE placa = {0}", id)
-                .FirstOrDefaultAsync();
-
-            if (vehicle == null) return NotFound();
-            return Ok(vehicle);
+            try
+            {
+                var vehicle = await _service.GetByIdAsync(id);
+                if (vehicle == null) return NotFound();
+                return Ok(vehicle);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error finding vehicle: {ex.Message}");
+            }
         }
 
         [HttpPost]
@@ -50,19 +51,8 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                // Manual SQL for Insert
-               var sql = @"
-                    INSERT INTO Opera_Main.dbo.VEHICULOS (placa, marca, tipo_activo, max_volumen, estado) 
-                    VALUES ({0}, {1}, {2}, {3}, {4})";
-                
-                await _context.Database.ExecuteSqlRawAsync(sql, 
-                    vehicle.Placa ?? "", 
-                    vehicle.Marca ?? "", 
-                    vehicle.TipoActivo ?? "", 
-                    vehicle.MaxVolumen ?? "BAJO", 
-                    vehicle.Estado ?? "OPERATIVO");
-
-                return CreatedAtAction(nameof(GetById), new { id = vehicle.Placa }, vehicle);
+                var created = await _service.CreateAsync(vehicle);
+                return CreatedAtAction(nameof(GetById), new { id = created.Placa }, created);
             }
             catch (Exception ex)
             {
@@ -73,32 +63,56 @@ namespace OperationWeb.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Vehiculo vehicle)
         {
-            if (id != vehicle.Placa) return BadRequest("La placa no coincide");
+            try
+            {
+                if (id != vehicle.Placa) return BadRequest("La placa no coincide");
 
-            var sql = @"
-                UPDATE Opera_Main.dbo.VEHICULOS 
-                SET marca = {0}, tipo_activo = {1}, max_volumen = {2}, estado = {3}
-                WHERE placa = {4}";
+                // Check existence implicitly or inside UpdateAsync
+                var exists = await _service.GetByIdAsync(id);
+                if (exists == null) return NotFound();
 
-            var rows = await _context.Database.ExecuteSqlRawAsync(sql,
-                vehicle.Marca,
-                vehicle.TipoActivo,
-                vehicle.MaxVolumen,
-                vehicle.Estado,
-                id);
-
-            if (rows == 0) return NotFound();
-            return NoContent();
+                await _service.UpdateAsync(vehicle);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error updating vehicle: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            var sql = "DELETE FROM Opera_Main.dbo.VEHICULOS WHERE placa = {0}";
-            var rows = await _context.Database.ExecuteSqlRawAsync(sql, id);
-            
-            if (rows == 0) return NotFound();
-            return NoContent();
+            try
+            {
+                var exists = await _service.GetByIdAsync(id);
+                if (exists == null) return NotFound();
+
+                await _service.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error deleting vehicle: {ex.Message}");
+            }
+        }
+
+        [HttpGet("operativos")]
+        public async Task<IActionResult> GetOperativos()
+        {
+            try
+            {
+                var vehicles = await _service.GetOperativosAsync();
+                // Map to Web 2.1 expected format if needed, but Service returns Entity
+                // Web 2.1 expected: { id, plate, model, status, type, volumen }
+                // We'll keep returning Entity. Frontend Mapper should handle it or we map here.
+                // Keeping clean: Return Entity.
+                return Ok(vehicles);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error querying active vehicles: {ex.Message}");
+            }
         }
     }
 }

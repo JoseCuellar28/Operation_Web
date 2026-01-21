@@ -1,0 +1,41 @@
+=========================================================
+GUÍA TÉCNICA: IMPLEMENTACIÓN BOTÓN "SINCRONIZAR"
+=========================================================
+OBJETIVO: Sincronizar Áreas desde la tabla 'Personal' hacia 'Proyectos'.
+ESTADO: Requerido para despliegue.
+
+1. DISEÑO (FRONTEND - AGENTE 3)
+---------------------------------------------------------
+- Estilo: Botón destacado en barra de herramientas.
+- Clases Tailwind: 
+    "inline-flex items-center justify-center rounded-md text-sm font-medium 
+    bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
+- Icono: fas fa-sync-alt (FontAwesome).
+
+2. LÓGICA DE INTERFAZ (FRONTEND - AGENTE 3)
+---------------------------------------------------------
+Función: sincronizarProyectos()
+- Paso 1: Confirmación de seguridad (confirm).
+- Paso 2: Feedback visual (Deshabilitar botón + Spinner de carga).
+- Paso 3: Petición Fetch (POST) a `${API_NET}/api/proyectos/sync`.
+- Paso 4: Manejo de respuesta (Alertar éxito/error y recargar vista).
+
+3. REQUISITO DE API (BACKEND - AGENTE 1)
+---------------------------------------------------------
+- Endpoint: /api/proyectos/sync
+- Método: POST
+- Respuesta: JSON con { message: string }
+- Seguridad: Validar encabezado Authorization (Bearer Token).
+
+4. LÓGICA DE BASE DE DATOS (DB-MASTER - AGENTE 2)
+---------------------------------------------------------
+Sentencia SQL de Sincronización:
+    INSERT INTO Proyectos (Nombre, Estado, FechaCreacion)
+    SELECT DISTINCT Area, 'ACTIVO', GETDATE()
+    FROM Personal
+    WHERE Area IS NOT NULL 
+    AND Area NOT IN (SELECT Nombre FROM Proyectos);
+
+Traducción: Crea proyectos nuevos basados en Áreas únicas de Personal que 
+aún no existan en la tabla Proyectos.
+=========================================================

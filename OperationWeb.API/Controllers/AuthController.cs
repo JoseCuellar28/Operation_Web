@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using OperationWeb.Business.Services;
-using OperationWeb.DataAccess;
+using OperationWeb.Business.Interfaces;
+using OperationWeb.Core.Entities;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -20,21 +20,28 @@ namespace OperationWeb.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _config;
-        private readonly OperationWeb.DataAccess.OperationWebDbContext _db;
         private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
-        private readonly OperationWeb.Business.Services.IEncryptionService _encryptionService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IUserService _userService;
+        private readonly IProyectoService _proyectoService;
+        private readonly IPersonalService _personalService;
 
-        public AuthController(IConfiguration config, OperationWeb.DataAccess.OperationWebDbContext db, Microsoft.Extensions.Caching.Memory.IMemoryCache cache, OperationWeb.Business.Services.IEncryptionService encryptionService, ILogger<AuthController> logger)
+        public AuthController(
+            IConfiguration config, 
+            Microsoft.Extensions.Caching.Memory.IMemoryCache cache, 
+            ILogger<AuthController> logger, 
+            IUserService userService, 
+            IProyectoService proyectoService,
+            IPersonalService personalService)
         {
             _config = config;
-            _db = db;
             _cache = cache;
-            _encryptionService = encryptionService;
             _logger = logger;
+            _userService = userService;
+            _proyectoService = proyectoService;
+            _personalService = personalService;
         }
 
-        // Changed DNI to Username to match frontend
         public record LoginRequest(string Username, string Password, string? CaptchaId, string? CaptchaAnswer, string? Platform);
         public record UserDto(int Id, string DNI, string? Email, bool IsActive, DateTime CreatedAt);
         public record RoleDto(int Id, string Name, string? Description);
@@ -45,7 +52,7 @@ namespace OperationWeb.API.Controllers
         [HttpPost("login")]
         [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("LoginPolicy")]
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-        public IActionResult Login([FromBody] LoginRequest req)
+        public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
             var cid = req.CaptchaId ?? string.Empty;
             var cans = req.CaptchaAnswer ?? string.Empty;
@@ -60,104 +67,99 @@ namespace OperationWeb.API.Controllers
                 _cache.Remove(cacheKey);
             }
 
-            // Standard Auth Flow
-            var user = _db.Users.FirstOrDefault(u => u.DNI == req.Username || u.Email == req.Username);
-            bool ok = false;
-            string role = "User"; 
+            // Delegate Auth Logic to Service
+            var result = await _userService.LoginAsync(req.Username, req.Password);
+            
+            if (result.User == null)
+            {
+                return Unauthorized("Credenciales incorrectas");
+            }
+
+            // Security: Fail Closed Check
+            bool canWeb = false; 
+            bool canApp = false; 
+            
+            if (result.AccessConfig != null)
+            {
+                canWeb = result.AccessConfig.AccessWeb;
+                canApp = result.AccessConfig.AccessApp;
+            }
+
+            // Security: Platform Validation
+            string normalizedPlatform = "unknown";
+            var inputPlatform = (req.Platform ?? "").ToLower();
+            
+            if (inputPlatform == "web" || inputPlatform == "webapp") normalizedPlatform = "web";
+            else if (inputPlatform == "mobile" || inputPlatform == "app") normalizedPlatform = "mobile";
+            
+            // Security: Default Deny
+            bool isAuthorized = false;
+
+            if (normalizedPlatform == "web" && canWeb) isAuthorized = true;
+            else if (normalizedPlatform == "mobile" && canApp) isAuthorized = true;
+
+            if (!isAuthorized)
+            {
+                _logger.LogWarning("[Auth] Access denied: User does not have permission for the requested platform.");
+                return Unauthorized("Acceso no habilitado para la plataforma solicitada.");
+            }
+
+            // Initialize claims
             string division = "";
             string area = "";
             string level = "Employee";
-
-            if (user != null)
+            
+            try 
             {
-                // Security: Fail Closed Check
-                bool canWeb = false; 
-                bool canApp = false; 
-                OperationWeb.DataAccess.Entities.UserAccessConfig? accessConfig = null;
-                try 
+                // Fetch Personal data for hierarchy claims if available
+                var personal = await _personalService.GetByDniAsync(result.User.DNI);
+                if (personal != null)
                 {
-                    accessConfig = _db.UserAccessConfigs.FirstOrDefault(c => c.UserId == user.Id);
-                    if (accessConfig != null)
-                    {
-                        canWeb = accessConfig.AccessWeb;
-                        canApp = accessConfig.AccessApp;
-                    }
-                    // Else: Fail Closed (default false)
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"[Auth] Security Exception reading access: {ex.Message}");
-                    canWeb = false;
-                    canApp = false;
-                }
-
-                // Security: Platform Validation
-                // Security: Platform Sanitization (Satisfies CodeQL)
-                string normalizedPlatform = "unknown";
-                var inputPlatform = (req.Platform ?? "").ToLower();
-                
-                if (inputPlatform == "web" || inputPlatform == "webapp") normalizedPlatform = "web";
-                else if (inputPlatform == "mobile" || inputPlatform == "app") normalizedPlatform = "mobile";
-                
-                // Security: Default Deny (Whitelist Pattern)
-                // We default to FALSE. We only allow if strict conditions are met.
-                bool isAuthorized = false;
-
-                if (normalizedPlatform == "web" && canWeb)
-                {
-                    isAuthorized = true;
-                }
-                else if (normalizedPlatform == "mobile" && canApp)
-                {
-                    isAuthorized = true;
-                }
-
-                if (!isAuthorized)
-                {
-                    // CWE-117 Fix: Prevent Log Forging by not logging user-controlled data (DNI/Platform) directly
-                    // without strict sanitization. Using a generic message is safest/simplest.
-                    _logger.LogWarning("[Auth] Access denied: User does not have permission for the requested platform.");
-                    return Unauthorized("Acceso no habilitado para la plataforma solicitada.");
-                }
-
-                // 1. Try BCrypt
-                try { ok = BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash); }
-                catch { ok = false; }
-
-                // 2. Try AES (Legacy/Fallback)
-                if (!ok)
-                {
-                    try { 
-                        string decrypted = _encryptionService.Decrypt(user.PasswordHash);
-                        if (decrypted == req.Password) ok = true;
-                    } 
-                    catch { ok = false; }
-                }
-
-                if (ok)
-                {
-                    // Derive Role and Data claims
-                    if (!string.IsNullOrEmpty(user.Role)) role = user.Role;
+                    division = personal.Division ?? "";
+                    area = personal.Area ?? "";
                     
-                    // Fetch Personal data for hierarchy claims if available
-                    var personal = _db.Personal.FirstOrDefault(p => p.DNI == user.DNI);
-                    if (personal != null)
+                    // Level Logic
+                    if (result.AccessConfig != null && !string.IsNullOrEmpty(result.AccessConfig.JobLevel))
                     {
-                        division = personal.Division ?? "";
-                        area = personal.Area ?? "";
-                        level = DetermineLevel(personal.Categoria ?? personal.Tipo, accessConfig, user.DNI, _db);
+                        level = result.AccessConfig.JobLevel;
                     }
-
-                    // Token Generation
-                    var tokenStr = GenerateToken(user.DNI, role, division, area, level);
-                    
-                    // Check MustChangePassword
-                    return Ok(new { token = tokenStr, role, mustChangePassword = user.MustChangePassword });
+                    else 
+                    {
+                         // Use Project Service for dynamic calculation
+                         level = await _proyectoService.GetProjectRoleLevelAsync(result.User.DNI);
+                         
+                         if (level == "Employee") 
+                            level = DetermineLevelFromTitle(personal.Categoria ?? personal.Tipo);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch Personal details for user {DNI}", result.User.DNI);
+                // Continue login without personal claims
+            }
 
-            // If we get here, login failed
-            return Unauthorized("Credenciales incorrectas");
+            // Token Generation
+            var tokenStr = GenerateToken(result.User.DNI, result.Role, division, area, level);
+            return Ok(new { token = tokenStr, role = result.Role, mustChangePassword = result.MustChangePassword });
+        }
+
+        public record RegisterUserRequest(string DNI, string Role, bool AccessWeb, bool AccessApp);
+
+        [HttpPost("register-user")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.DNI)) return BadRequest("DNI es requerido.");
+            try
+            {
+                var result = await _userService.CreateUserAsync(req.DNI, req.Role, req.AccessWeb, req.AccessApp);
+                return Ok(new { id = result.User.Id, dni = result.User.DNI, role = result.User.Role, tempPassword = result.PlainPassword });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("change-password")]
@@ -167,61 +169,29 @@ namespace OperationWeb.API.Controllers
             var dni = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
             if (string.IsNullOrEmpty(dni)) return Unauthorized();
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.DNI == dni);
-            if (user == null) return NotFound("Usuario no encontrado");
+            // We need userId, simple way is to get it from service or assume we have it. 
+            // Since DTOs don't carry ID in token usually, we might need a lookup.
+            // But verify: Authentication needs current password check.
+            
+            // The service method expects userID. Let's create a simpler method or lookup.
+            // Better: Add ChangePasswordByDniAsync to Service? Or just look up user here via Service?
+            // Cleanest: Service.ChangePasswordAsync should take DNI if ID is not available?
+            // Actually, we can just use the Service's Authenticate/Login logic to verify OLD password first.
+            
+            // Re-Implementing logic via Service purely:
+            var authCheck = await _userService.LoginAsync(dni, req.OldPassword);
+            if (authCheck.User == null) return BadRequest("La contraseña actual es incorrecta");
 
-            // Verify old password
-            bool ok = false;
-            try { ok = BCrypt.Net.BCrypt.Verify(req.OldPassword, user.PasswordHash); } catch { ok = false; }
-
-            // Fallback for AES (if applicable)
-            if (!ok)
-            {
-               try { if (_encryptionService.Decrypt(user.PasswordHash) == req.OldPassword) ok = true; } catch {}
-            }
-
-            if (!ok) return BadRequest("La contraseña actual es incorrecta");
-
-            // Update password
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
-            user.MustChangePassword = false;
-            await _db.SaveChangesAsync();
+            await _userService.ChangePasswordAsync(authCheck.User.Id, req.OldPassword, req.NewPassword);
 
             return Ok(new { message = "Contraseña actualizada correctamente" });
         }
 
         public record ChangePasswordRequest(string OldPassword, string NewPassword);
 
-        private string DetermineLevel(string? cargo, OperationWeb.DataAccess.Entities.UserAccessConfig? config, string userDni, OperationWeb.DataAccess.OperationWebDbContext db)
+        private string DetermineLevelFromTitle(string? cargo)
         {
-            // Level 1: Persistent Config (UserAccessConfigs)
-            if (config != null && !string.IsNullOrEmpty(config.JobLevel))
-            {
-                return config.JobLevel;
-            }
-
-            // Level 2: Project Assignment (Proyectos)
-            // Need to query Proyectos. Implementing simple check.
-            try 
-            {
-                // Raw SQL for speed/simplicity as Proyectos entity might not be fully mapped in context yet
-                // Or try to use DB Context if Proyectos DBSet exists. 
-                // Since I cannot see Proyectos DbSet in context code shown earlier, I'll use Raw SQL.
-                // Use parameterization to avoid SQL Injection warnings
-                var isManager = db.Database.SqlQueryRaw<int>("SELECT COUNT(1) as Value FROM Proyectos WHERE GerenteDni = {0}", userDni).AsEnumerable().FirstOrDefault();
-                if (isManager > 0) return "Manager";
-
-                var isChief = db.Database.SqlQueryRaw<int>("SELECT COUNT(1) as Value FROM Proyectos WHERE JefeDni = {0}", userDni).AsEnumerable().FirstOrDefault();
-                if (isChief > 0) return "Coordinator";
-            }
-            catch (Exception ex)
-            {
-                // Fallback to Level 3 on error
-                 _logger.LogWarning($"[Auth] Project check failed: {ex.Message}");
-            }
-
-
-            // Level 3: Legacy Excel Data (Personal)
+            // View/Presentation logic mapping titles to levels
             if (string.IsNullOrEmpty(cargo)) return "Employee";
             cargo = cargo.ToUpper();
             if (cargo.Contains("GERENTE")) return "Manager";
@@ -251,11 +221,26 @@ namespace OperationWeb.API.Controllers
 
         [HttpGet("me")]
         [Microsoft.AspNetCore.Authorization.Authorize]
-        public ActionResult<MeDto> Me()
+        public async Task<ActionResult<MeDto>> Me()
         {
             var dni = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub") ?? string.Empty;
             var role = User.FindFirstValue(ClaimTypes.Role) ?? "User";
-            var u = _db.Users.FirstOrDefault(x => x.DNI == dni);
+            
+            // Use Service to get user details if needed, or just return claims?
+            // Original code fetched from DB. let's use Service.
+            // We need a GetUserByDni in Service? Or just reuse Login/Auth?
+            // "GetAllUsers" exists. 
+            // Adding a GetByDni to Service would be best practice, but for now we can filter GetAllUsers (slow) or add method.
+            // Let's rely on standard ID/Dni lookup. I'll add GetByDni to service? 
+            // Actually, let's use the Admin method GetAllUsers for now if volume is low, or better:
+            // Just return what we have in token + maybe verify existence?
+            
+            // Ideally: _userService.GetUserByDni(dni). 
+            // I will use GetAllUsers().FirstOrDefault for now to minimize Interface changes loop, 
+            // as I already added GetAllUsers.
+            var all = await _userService.GetAllUsersAsync();
+            var u = all.FirstOrDefault(x => x.DNI == dni);
+
             if (u == null) return NotFound();
             return Ok(new MeDto(u.DNI, u.Email, role));
         }
@@ -319,35 +304,29 @@ namespace OperationWeb.API.Controllers
 
         [HttpGet("users")]
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-        public ActionResult<IEnumerable<UserDto>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
-            var users = _db.Users
-                .Select(u => new UserDto(u.Id, u.DNI, u.Email, u.IsActive, u.CreatedAt))
-                .OrderBy(u => u.DNI)
-                .ToList();
-            return Ok(users);
+            var users = await _userService.GetAllUsersAsync();
+            var dtos = users.Select(u => new UserDto(u.Id, u.DNI, u.Email, u.IsActive, u.CreatedAt));
+            return Ok(dtos);
         }
 
         [HttpGet("roles")]
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-        public ActionResult<IEnumerable<RoleDto>> GetRoles()
+        public async Task<ActionResult<IEnumerable<RoleDto>>> GetRoles()
         {
-            var roles = _db.Roles
-                .Select(r => new RoleDto(r.Id, r.Name, r.Description))
-                .OrderBy(r => r.Name)
-                .ToList();
-            return Ok(roles);
+            var roles = await _userService.GetAllRolesAsync();
+            var dtos = roles.Select(r => new RoleDto(r.Id, r.Name, r.Description));
+            return Ok(dtos);
         }
 
         [HttpGet("user-roles")]
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-        public ActionResult<IEnumerable<UserRoleDto>> GetUserRoles()
+        public async Task<ActionResult<IEnumerable<UserRoleDto>>> GetUserRoles()
         {
-            var urs = _db.UserRoles
-                .Select(ur => new UserRoleDto(ur.Id, ur.UserId, ur.RoleId))
-                .OrderBy(ur => ur.UserId)
-                .ToList();
-            return Ok(urs);
+            var urs = await _userService.GetAllUserRolesAsync();
+            var dtos = urs.Select(ur => new UserRoleDto(ur.Id, ur.UserId, ur.RoleId));
+            return Ok(dtos);
         }
 
         [HttpPost("forgot-password")]
@@ -356,8 +335,7 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                var userService = HttpContext.RequestServices.GetRequiredService<OperationWeb.Business.Interfaces.IUserService>();
-                await userService.RequestPasswordResetAsync(req.DniOrEmail);
+                await _userService.RequestPasswordResetAsync(req.DniOrEmail);
                 return Ok(new { message = "Si el DNI o correo existe, recibirás un email con instrucciones para restablecer tu contraseña." });
             }
             catch (Exception)
@@ -373,8 +351,7 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                var userService = HttpContext.RequestServices.GetRequiredService<OperationWeb.Business.Interfaces.IUserService>();
-                await userService.ResetPasswordWithTokenAsync(req.Token, req.NewPassword);
+                await _userService.ResetPasswordWithTokenAsync(req.Token, req.NewPassword);
                 return Ok(new { message = "Contraseña restablecida exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña." });
             }
             catch (InvalidOperationException ex)

@@ -1,0 +1,10 @@
+[DEBUG] Connection String: Server=100.125.169.14;Database=DB_Operation;User Id=SA;Password=***Joarcu28;MultipleActiveResultSets=true;Encrypt=True;TrustServerCertificate=True;
+[DEBUG] ContentRootPath: /Users/josearbildocuellar/Github/Operation_Web-1/OperationWeb.API
+[DEBUG] WebRootPath: /Users/josearbildocuellar/Github/Operation_Web-1/OperationWeb.API/wwwroot
+[STARTUP] Checking Database...
+[STARTUP] Database Tables Verified/Created.
+[STARTUP] UserAccessConfigs check complete.
+[STARTUP] Reset Target User 41007510 with Fresh Hash.
+[STARTUP] Updated Access for 41007510.
+[STARTUP] Initialization Complete (Users & Data Ready).
+[STARTUP CHECKS] Personal Table Count: 1442

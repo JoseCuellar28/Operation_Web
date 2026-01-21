@@ -1,37 +1,49 @@
 # OperationWeb
 
-Sistema de gestión operacional desarrollado con .NET 9 y Clean Architecture.
+Sistema de gestión operacional desarrollado con **.NET 8** y **React (Web 2.0)**.
 
-## � Descripción General
+## 🚀 Descripción General
 
-Este proyecto es una plataforma integral para la gestión de operaciones, cuadrillas y proyectos. Está construido siguiendo principios de arquitectura limpia y mejores prácticas de desarrollo moderno.
+Plataforma integral para la gestión de operaciones, cuadrillas y proyectos. Arquitectura limpia (Clean Architecture) con un **Backend API-First** y un **Frontend moderno en React**.
 
 ## 🛠️ Tecnologías Principales
 
 - **Backend**: .NET 8 (ASP.NET Core Web API)
 - **Base de Datos**: SQL Server + Entity Framework Core
-- **Frontend**: HTML5, CSS3 (Tailwind), JavaScript (Vanilla)
-- **Servicios Auxiliares**: Python (Flask) para procesamiento de datos
+- **Frontend**: React + Vite + TypeScript + Tailwind CSS
+- **Móvil**: Android Nativo (Kotlin) - *En desarrollo*
+- **Herramientas**: Python (Scripts de Mantenimiento y Generación de Datos)
 
 ## 🏗️ Estructura del Proyecto
 
-El sistema está dividido en capas para asegurar la escalabilidad y mantenibilidad:
+El sistema está dividido en capas para asegurar la escalabilidad:
 
-- **API**: Capa de presentación y endpoints REST.
-- **Business**: Lógica de negocio y casos de uso.
-- **DataAccess**: Persistencia y acceso a datos.
-- **Infrastructure**: Servicios externos y utilidades transversales.
+- **OperationWeb.API**: Capa de presentación y endpoints REST.
+- **OperationWeb.Business**: Lógica de negocio y casos de uso.
+- **OperationWeb.DataAccess**: Persistencia y acceso a datos.
+- **ui_reference/Modelo_Web2**: Código fuente del Frontend (React).
+- **Modelo_Android**: Proyecto móvil nativo.
 
 ## ⚙️ Configuración Rápida (Entorno Local)
 
 1. **Requisitos**:
-   - .NET SDK 9.0
+   - .NET SDK 8.0
+   - Node.js 18+
    - SQL Server
-   - Python 3.9+
 
 2. **Ejecución**:
-   - Backend: `dotnet run --project OperationWeb.API`
-   - Frontend: Servidor HTTP simple (ej. `python3 -m http.server 8000`)
+   - **Backend**: 
+     ```bash
+     dotnet run --project OperationWeb.API
+     ```
+     *(Escucha en http://localhost:5132)*
+     
+   - **Frontend**:
+     ```bash
+     cd ui_reference/Modelo_Web2
+     npm run dev
+     ```
+     *(Escucha en http://localhost:5173)*
 
 ## � Seguridad
 

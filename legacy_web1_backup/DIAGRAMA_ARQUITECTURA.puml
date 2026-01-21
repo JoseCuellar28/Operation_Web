@@ -1,0 +1,21 @@
+@startuml
+!theme azure
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+
+package "Usuario" {
+    [Navegador / Movil] as Browser
+}
+
+package "Azure Cloud" {
+    [Frontend (Azure Storage)] as Frontend
+    [Backend API (App Service)] as Backend
+    database "Base de Datos (SQL Hub)" as DB
+}
+
+' Flujo Simple
+Browser -> Frontend : 1. Carga Web
+Browser -> Backend : 2. Datos (JSON)
+Backend -> DB : 3. Consultas
+
+@enduml

@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OperationWeb.DataAccess;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Business.Interfaces;
+using OperationWeb.Core.Entities;
 using System;
 using System.Threading.Tasks;
 
@@ -12,11 +11,11 @@ namespace OperationWeb.API.Controllers
     [ApiController]
     public class MaterialesController : ControllerBase
     {
-        private readonly OperationWebDbContext _context;
+        private readonly IMaterialService _service;
 
-        public MaterialesController(OperationWebDbContext context)
+        public MaterialesController(IMaterialService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
@@ -24,9 +23,7 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                var materiales = await _context.Materiales
-                    .FromSqlRaw("SELECT * FROM Opera_Main.dbo.CATALOGO_MATERIALES ORDER BY nombre")
-                    .ToListAsync();
+                var materiales = await _service.GetAllAsync();
                 return Ok(materiales);
             }
             catch (Exception ex)
@@ -40,12 +37,8 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                var material = await _context.Materiales
-                    .FromSqlRaw("SELECT * FROM Opera_Main.dbo.CATALOGO_MATERIALES WHERE id_material = {0}", id)
-                    .FirstOrDefaultAsync();
-
+                var material = await _service.GetByIdAsync(id);
                 if (material == null) return NotFound("Material no encontrado");
-
                 return Ok(material);
             }
             catch (Exception ex)
@@ -59,27 +52,8 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                // Generate ID if not provided (though usually frontend shouldn't provider it for creation, backend handles it)
-                if (material.Id == Guid.Empty)
-                {
-                    material.Id = Guid.NewGuid();
-                }
-
-                var sql = @"
-                    INSERT INTO Opera_Main.dbo.CATALOGO_MATERIALES 
-                    (id_material, nombre, tipo, unidad_medida, costo_unitario, id_gesproyec, categoria) 
-                    VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6})";
-
-                await _context.Database.ExecuteSqlRawAsync(sql,
-                    material.Id,
-                    material.Nombre ?? "",
-                    material.Tipo ?? "MATERIAL",
-                    material.UnidadMedida ?? "UND",
-                    material.CostoUnitario,
-                    material.IdGesproyec ?? "",
-                    material.Categoria ?? "GENERAL");
-
-                return Ok(new { message = "Material creado exitosamente", id = material.Id });
+                var created = await _service.CreateAsync(material);
+                return Ok(new { message = "Material creado exitosamente", id = created.Id });
             }
             catch (Exception ex)
             {
@@ -92,25 +66,13 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                if (id == Guid.Empty) return BadRequest("ID inválido");
+                if (id != material.Id) return BadRequest("ID no coincide");
+                
+                // Check existence first
+                var exists = await _service.GetByIdAsync(id);
+                if (exists == null) return NotFound("Material no encontrado");
 
-                var sql = @"
-                    UPDATE Opera_Main.dbo.CATALOGO_MATERIALES 
-                    SET nombre = {0}, tipo = {1}, unidad_medida = {2}, costo_unitario = {3}, 
-                        id_gesproyec = {4}, categoria = {5}
-                    WHERE id_material = {6}";
-
-                var result = await _context.Database.ExecuteSqlRawAsync(sql,
-                    material.Nombre ?? "",
-                    material.Tipo ?? "MATERIAL",
-                    material.UnidadMedida ?? "UND",
-                    material.CostoUnitario,
-                    material.IdGesproyec ?? "",
-                    material.Categoria ?? "GENERAL",
-                    id);
-
-                if (result == 0) return NotFound("Material no encontrado");
-
+                await _service.UpdateAsync(material);
                 return Ok(new { message = "Material actualizado exitosamente" });
             }
             catch (Exception ex)
@@ -124,16 +86,11 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                // Assuming ID is passed as string in URL, but Binder handles Guid conversion
-                if (id == Guid.Empty) return BadRequest("ID inválido");
+                // Check existence first
+                var exists = await _service.GetByIdAsync(id);
+                if (exists == null) return NotFound("Material no encontrado");
 
-                // Warning: Hard Delete. Ensure this is desired logic or switch to soft delete if Activo column exists (it doesn't appear to based on schema inspection)
-                var sql = "DELETE FROM Opera_Main.dbo.CATALOGO_MATERIALES WHERE id_material = {0}";
-                
-                var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
-
-                if (result == 0) return NotFound("Material no encontrado");
-
+                await _service.DeleteAsync(id);
                 return Ok(new { message = "Material eliminado exitosamente" });
             }
             catch (Exception ex)

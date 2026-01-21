@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="../OperationWeb.DataAccess.Interfaces/OperationWeb.DataAccess.Interfaces.csproj" />
-    <ProjectReference Include="../OperationWeb.DataAccess.Entities/OperationWeb.DataAccess.Entities.csproj" />
+    <ProjectReference Include="../OperationWeb.Core/OperationWeb.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,5 @@
 using OperationWeb.Business.DTOs;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 
 namespace OperationWeb.Business.Interfaces
 {

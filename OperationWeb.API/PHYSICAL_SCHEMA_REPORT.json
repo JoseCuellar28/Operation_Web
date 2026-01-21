@@ -1,0 +1,833 @@
+{
+  "DB_Operation": {
+    "Users": [
+      {
+        "column_name": "Id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "DNI",
+        "data_type": "nvarchar",
+        "max_length": 80,
+        "is_nullable": false
+      },
+      {
+        "column_name": "PasswordHash",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Email",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "IsActive",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": false
+      },
+      {
+        "column_name": "CreatedAt",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Role",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": false
+      },
+      {
+        "column_name": "MustChangePassword",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": false
+      }
+    ],
+    "PersonalStaging": "NOT_FOUND",
+    "SystemSettings": [
+      {
+        "column_name": "Key",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Value",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Description",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "UpdatedAt",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": false
+      }
+    ],
+    "Personal": [
+      {
+        "column_name": "DNI",
+        "data_type": "nvarchar",
+        "max_length": 80,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Inspector",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Telefono",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Distrito",
+        "data_type": "nvarchar",
+        "max_length": 300,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Tipo",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Estado",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaInicio",
+        "data_type": "date",
+        "max_length": 3,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaCese",
+        "data_type": "date",
+        "max_length": 3,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaCreacion",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "UsuarioCreacion",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaModificacion",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "UsuarioModificacion",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "CodigoEmpleado",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Categoria",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Division",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "LineaNegocio",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Area",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Seccion",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "DetalleCebe",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      },
+      {
+        "column_name": "CodigoCebe",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "MotivoCeseDesc",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Comentario",
+        "data_type": "nvarchar",
+        "max_length": 1000,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaNacimiento",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Sexo",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Edad",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Permanencia",
+        "data_type": "decimal",
+        "max_length": 9,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Email",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "EmailPersonal",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "JefeInmediato",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FotoUrl",
+        "data_type": "nvarchar",
+        "max_length": 1000,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FirmaUrl",
+        "data_type": "nvarchar",
+        "max_length": 1000,
+        "is_nullable": true
+      }
+    ],
+    "PROYECTOS": [
+      {
+        "column_name": "Id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Nombre",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Cliente",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Estado",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": false
+      },
+      {
+        "column_name": "FechaInicio",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaFin",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Presupuesto",
+        "data_type": "decimal",
+        "max_length": 9,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaSincronizacion",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Division",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "GerenteDni",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": true
+      },
+      {
+        "column_name": "JefeDni",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": true
+      }
+    ],
+    "Proyectos": [
+      {
+        "column_name": "Id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Nombre",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": false
+      },
+      {
+        "column_name": "Cliente",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Estado",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": false
+      },
+      {
+        "column_name": "FechaInicio",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaFin",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Presupuesto",
+        "data_type": "decimal",
+        "max_length": 9,
+        "is_nullable": true
+      },
+      {
+        "column_name": "FechaSincronizacion",
+        "data_type": "datetime2",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Division",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "GerenteDni",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": true
+      },
+      {
+        "column_name": "JefeDni",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": true
+      }
+    ],
+    "Projects": "NOT_FOUND"
+  },
+  "Opera_Main": {
+    "ORDENES_TRABAJO": [
+      {
+        "column_name": "id_ot",
+        "data_type": "uniqueidentifier",
+        "max_length": 16,
+        "is_nullable": false
+      },
+      {
+        "column_name": "codigo_suministro",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": false
+      },
+      {
+        "column_name": "cliente",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": false
+      },
+      {
+        "column_name": "direccion_fisica",
+        "data_type": "nvarchar",
+        "max_length": 510,
+        "is_nullable": false
+      },
+      {
+        "column_name": "comuna",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "sector",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "tipo_trabajo",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": true
+      },
+      {
+        "column_name": "estado",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": false
+      },
+      {
+        "column_name": "prioridad",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": true
+      },
+      {
+        "column_name": "notas",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "id_lote_origen",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "fecha_creacion",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "fecha_programada",
+        "data_type": "date",
+        "max_length": 3,
+        "is_nullable": true
+      },
+      {
+        "column_name": "latitud",
+        "data_type": "float",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "longitud",
+        "data_type": "float",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "id_cuadrilla_asignada",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "orden_visita",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "hora_inicio_real",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "hora_fin_real",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "justificacion_geo_ot",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "motivo_fallida",
+        "data_type": "nvarchar",
+        "max_length": 510,
+        "is_nullable": true
+      },
+      {
+        "column_name": "flag_prioridad_calidad",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "id_lote_asignado",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": true
+      },
+      {
+        "column_name": "flag_extemporanea",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "justificacion_tardia",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Proyecto",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      }
+    ],
+    "LOTE_VALORIZACION": [
+      {
+        "column_name": "id_lote",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "codigo_lote",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": false
+      },
+      {
+        "column_name": "cliente",
+        "data_type": "nvarchar",
+        "max_length": 200,
+        "is_nullable": false
+      },
+      {
+        "column_name": "mes_valorizacion",
+        "data_type": "nvarchar",
+        "max_length": 40,
+        "is_nullable": false
+      },
+      {
+        "column_name": "estado",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "fecha_generacion",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "total_facturado",
+        "data_type": "decimal",
+        "max_length": 9,
+        "is_nullable": true
+      },
+      {
+        "column_name": "snapshot_precios",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "numero_hes",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": true
+      },
+      {
+        "column_name": "fecha_aprobacion_hes",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "fecha_pago_probable",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      }
+    ],
+    "ASISTENCIA_DIARIA": [
+      {
+        "column_name": "id_registro",
+        "data_type": "varchar",
+        "max_length": 50,
+        "is_nullable": false
+      },
+      {
+        "column_name": "id_colaborador",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "dni_colaborador",
+        "data_type": "nvarchar",
+        "max_length": 160,
+        "is_nullable": true
+      },
+      {
+        "column_name": "fecha_asistencia",
+        "data_type": "date",
+        "max_length": 3,
+        "is_nullable": false
+      },
+      {
+        "column_name": "hora_checkin",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "lat_checkin",
+        "data_type": "decimal",
+        "max_length": 9,
+        "is_nullable": true
+      },
+      {
+        "column_name": "long_checkin",
+        "data_type": "decimal",
+        "max_length": 9,
+        "is_nullable": true
+      },
+      {
+        "column_name": "estado_final",
+        "data_type": "varchar",
+        "max_length": 20,
+        "is_nullable": false
+      },
+      {
+        "column_name": "justificacion_geo",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "check_salud_apto",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "hora_checkout",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "flag_horas_extras",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "location_address",
+        "data_type": "nvarchar",
+        "max_length": 510,
+        "is_nullable": true
+      },
+      {
+        "column_name": "alert_status",
+        "data_type": "varchar",
+        "max_length": 20,
+        "is_nullable": true
+      },
+      {
+        "column_name": "resolved_at",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "whatsapp_sync",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "sync_date",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Proyecto",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      }
+    ],
+    "COSTOS_CIERRE": "NOT_FOUND",
+    "LIQUIDACIONES_CUADRILLA": "NOT_FOUND",
+    "COLABORADORES": [
+      {
+        "column_name": "id",
+        "data_type": "int",
+        "max_length": 4,
+        "is_nullable": false
+      },
+      {
+        "column_name": "dni",
+        "data_type": "nvarchar",
+        "max_length": 160,
+        "is_nullable": false
+      },
+      {
+        "column_name": "nombre",
+        "data_type": "nvarchar",
+        "max_length": 300,
+        "is_nullable": false
+      },
+      {
+        "column_name": "rol",
+        "data_type": "nvarchar",
+        "max_length": 100,
+        "is_nullable": false
+      },
+      {
+        "column_name": "id_pin_biometrico",
+        "data_type": "varchar",
+        "max_length": 6,
+        "is_nullable": true
+      },
+      {
+        "column_name": "estado_operativo",
+        "data_type": "varchar",
+        "max_length": 50,
+        "is_nullable": true
+      },
+      {
+        "column_name": "active",
+        "data_type": "bit",
+        "max_length": 1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "datetime",
+        "max_length": 8,
+        "is_nullable": true
+      },
+      {
+        "column_name": "photo_url",
+        "data_type": "nvarchar",
+        "max_length": -1,
+        "is_nullable": true
+      },
+      {
+        "column_name": "phone",
+        "data_type": "varchar",
+        "max_length": 20,
+        "is_nullable": true
+      },
+      {
+        "column_name": "SignatureUrl",
+        "data_type": "nvarchar",
+        "max_length": 1000,
+        "is_nullable": true
+      },
+      {
+        "column_name": "Proyecto",
+        "data_type": "nvarchar",
+        "max_length": 400,
+        "is_nullable": true
+      }
+    ],
+    "Personal": "NOT_FOUND"
+  }
+}

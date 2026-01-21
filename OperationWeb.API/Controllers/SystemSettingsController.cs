@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using OperationWeb.DataAccess;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 
 namespace OperationWeb.API.Controllers
 {

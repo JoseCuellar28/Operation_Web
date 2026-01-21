@@ -1,6 +1,6 @@
 using OperationWeb.Business.Interfaces;
 using OperationWeb.DataAccess;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
@@ -24,16 +24,57 @@ namespace OperationWeb.Business.Services
 
         public async Task<User?> AuthenticateAsync(string username, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.DNI == username);
-            if (user == null || !user.IsActive) return null;
+            var result = await LoginAsync(username, password);
+            return result.User;
+        }
 
-            // Verify password by encrypting input and comparing with stored hash
-            // Assuming deterministic encryption (same Key/IV)
-            var encryptedInput = _encryptionService.Encrypt(password);
-            if (encryptedInput != user.PasswordHash)
-                return null;
+        public async Task<(User User, string Role, bool MustChangePassword, UserAccessConfig? AccessConfig)> LoginAsync(string username, string password)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.DNI == username || u.Email == username);
+            
+            // Return null tuple if user not found or inactive
+            if (user == null || !user.IsActive) return (null, null, false, null);
 
-            return user;
+            bool ok = false;
+
+            // 1. Try BCrypt (Modern Standard)
+            try 
+            { 
+                ok = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash); 
+            }
+            catch 
+            { 
+                ok = false; 
+            }
+
+            // 2. Try AES (Legacy Fallback)
+            if (!ok)
+            {
+                try 
+                { 
+                    string decrypted = _encryptionService.Decrypt(user.PasswordHash);
+                    if (decrypted == password) 
+                    {
+                        ok = true;
+                        // Optional: Silent Upgrade to BCrypt here if desired, 
+                        // but keeping strictly read-only for now unless change-password is called to avoid side effects during login.
+                    }
+                } 
+                catch 
+                { 
+                    ok = false; 
+                }
+            }
+
+            if (!ok) return (null, null, false, null);
+
+            // Fetch Access Config
+            var accessConfig = await _context.UserAccessConfigs.FirstOrDefaultAsync(c => c.UserId == user.Id);
+            
+            // Determine Role (Default to User Role if set, else generic)
+            string role = !string.IsNullOrEmpty(user.Role) ? user.Role : "User";
+
+            return (user, role, user.MustChangePassword, accessConfig);
         }
 
         public async Task<(User User, string PlainPassword)> CreateUserAsync(string dni, string role, bool accessWeb = true, bool accessApp = true)
@@ -57,7 +98,8 @@ namespace OperationWeb.Business.Services
             }
 
             string password = GenerateRandomPassword();
-            var encryptedPassword = _encryptionService.Encrypt(password);
+            // MODERNIZATION: Use BCrypt for new users
+            var encryptedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
             var user = new User
             {
@@ -104,11 +146,24 @@ namespace OperationWeb.Business.Services
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return false;
 
-            var encryptedCurrent = _encryptionService.Encrypt(currentPassword);
-            if (encryptedCurrent != user.PasswordHash)
-                return false;
+            // Verify old password (handling both BCrypt and Legacy AES)
+            bool isOldPasswordCorrect = false;
+            try { isOldPasswordCorrect = BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash); } catch {}
+            
+            if (!isOldPasswordCorrect)
+            {
+                // Fallback check for legacy AES
+                try 
+                {
+                    if (_encryptionService.Decrypt(user.PasswordHash) == currentPassword) isOldPasswordCorrect = true;
+                }
+                catch {}
+            }
 
-            user.PasswordHash = _encryptionService.Encrypt(newPassword);
+            if (!isOldPasswordCorrect) return false;
+
+            // Enforce BCrypt for the new password
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
             user.MustChangePassword = false;
             await _context.SaveChangesAsync();
 
@@ -233,8 +288,8 @@ namespace OperationWeb.Business.Services
                 throw new InvalidOperationException("Usuario no encontrado.");
             }
 
-            // Update password
-            user.PasswordHash = _encryptionService.Encrypt(newPassword);
+            // Update password (Enforce BCrypt)
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
             user.MustChangePassword = false;
 
             // Mark token as used
@@ -243,6 +298,21 @@ namespace OperationWeb.Business.Services
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            return await _context.Users.OrderBy(u => u.DNI).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Role>> GetAllRolesAsync()
+        {
+            return await _context.Roles.OrderBy(r => r.Name).ToListAsync();
+        }
+
+        public async Task<IEnumerable<UserRole>> GetAllUserRolesAsync()
+        {
+            return await _context.UserRoles.ToListAsync();
         }
     }
 }

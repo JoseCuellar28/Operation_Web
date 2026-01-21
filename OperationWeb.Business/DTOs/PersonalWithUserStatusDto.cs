@@ -1,4 +1,4 @@
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 
 namespace OperationWeb.Business.DTOs
 {

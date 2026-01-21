@@ -12,10 +12,13 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: python:3.9-slim
-    working_dir: /app/frontend
+    image: node:18-alpine
+    working_dir: /app
     volumes:
-      - ./frontend:/app/frontend
-    command: python3 -m http.server 8000
+      - ./ui_reference/Modelo_Web2:/app
+      - /app/node_modules
     ports:
-      - "8000:8000"
+      - "5173:5173"
+    command: npm run dev -- --host
+    environment:
+      - VITE_API_URL=http://localhost:5132

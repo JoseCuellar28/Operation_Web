@@ -1,0 +1,59 @@
+
+================================================================================
+REPORTE TÉCNICO: Lógica de Carga Masiva (Excel) - Web 1 Legacy
+Fecha de Extracción: 2026-01-16
+Origen: Rama/Commit [legacy/web1_original | 6be3c82]
+================================================================================
+
+[1] ARQUITECTURA ORIGINAL
+El proceso de carga NO era monolítico en C#. Se basaba en un microservicio ETL (Python) y un procedimiento almacenado T-SQL (MERGE).
+- Frontend (Web 1): Parseaba Excel (XLXS) o enviaba archivo a ETL.
+- ETL Service: Insertaba filas crudas en tabla `Personal_Staging`.
+- Base de Datos: Ejecutaba script `01_merge_personal.sql` para sincronizar `Personal_Staging` -> `Personal`.
+
+[2] MODELO DE DATOS INTERMEDIO (Staging)
+Tabla: `Personal_Staging`
+Columnas Mapeadas desde Excel:
+- DNI (Llave de cruce)
+- Inspector (Nombre completo)
+- SedeTrabajo -> Mapeado a `Distrito`
+- TipoTrabajador -> Mapeado a `Tipo`
+- Situacion -> `Estado`
+- Fechas: `FechaIngreso` (Inicio), `FechaCese`, `FechaNacimiento`
+- Organizacional: `Division`, `Area`, `Seccion`, `LineaNegocio`
+- SAP/Cebe: `CodigoEmpleado`, `CodigoCebe`, `DetalleCebe`
+- Contacto: `Email`, `EmailPersonal`, `Telefono`, `JefeInmediato`
+
+[3] LÓGICA DE NEGOCIO (MERGE SQL)
+El script recuperado realiza las siguientes acciones atómicas:
+
+A. COMPARACIÓN (Change Detection)
+   Compara campo por campo entre Source (Staging) y Target (Personal).
+   Solo actualiza si detecta cambios reales (ISNULL check) para optimizar logs.
+
+B. OPERACIONES
+   - INSERT: Si DNI no existe en destino. (Evento: 'Alta')
+   - UPDATE: Si DNI existe y hay cambios. (Evento: 'Cambio')
+   - DELETE: No soportado implícitamente por el ETL (Las bajas se manejan por update de estado).
+
+C. AUDITORÍA (Eventos Laborales)
+   Inserta automáticamente en `Personal_EventoLaboral` basándose en la acción del MERGE.
+   - Insert -> 'Alta'
+   - Update -> 'Cambio'
+   Evita duplicados verificando existencia previa en el mismo periodo.
+
+[4] CONSECUENCIAS DE LA PURGA Y VALIDACIÓN DE AISLAMIENTO
+- El Backend Moderno (Puerto 5132) usa `PersonalService.cs` que lee directamente de la tabla final `COLABORADORES` (vía `EmpleadoRepository`).
+- NO tiene dependencias de compilación con `PersonalStaging` ni con los scripts Python.
+- La eliminación de `wwwroot` (Web 1) y `etl-service` NO impactará la operatividad de la API Web 2.0.
+
+[5] RECOMENDACIÓN PARA FASE 4 (EXPANSIÓN)
+Para restaurar esta funcionalidad en C# nativo (sin Python):
+1. Crear DTO `ExcelUploadDto` con la estructura de `PersonalStaging`.
+2. Implementar endpoint `POST /api/personal/upload`.
+3. Usar librería `NPOI` o `EPPlus` para leer el stream del Excel en memoria.
+4. Traducir la lógica SQL MERGE a EF Core (`BulkMerge`) o Stored Procedure nativo.
+
+================================================================================
+FIN DEL REPORTE
+================================================================================

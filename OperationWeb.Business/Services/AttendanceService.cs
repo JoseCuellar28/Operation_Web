@@ -5,6 +5,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using OperationWeb.Business.Interfaces;
 using OperationWeb.DataAccess;
+using OperationWeb.Core.Entities;
 using OperationWeb.Business.Interfaces.DTOs;
 // using OperationWeb.DataAccess.DTOs; // Removed to avoid ambiguity
 using System.Linq;
@@ -28,187 +29,125 @@ namespace OperationWeb.Business.Services
         {
             try
             {
-                // 1. Find Employee ID by DNI
-                var empIdSql = "SELECT TOP 1 id AS Value FROM Opera_Main.dbo.COLABORADORES WHERE dni = @dni";
-                var pDni = new SqlParameter("@dni", dni);
+                // 1. Find Employee ID by DNI using LINQ
+                var employee = await _context.Set<Empleado>()
+                    .Where(e => e.DNI == dni)
+                    .Select(e => new { e.IdEmpleado })
+                    .FirstOrDefaultAsync();
                 
-                // Using SqlQueryRaw checking for DNI
-                var empIds = await _context.Database.SqlQueryRaw<int>(empIdSql, pDni).ToListAsync();
-                
-                if (empIds.Count == 0) 
+                if (employee == null) 
                     return (false, $"Colaborador con DNI {dni} no encontrado en sistema Operativo.", null);
                 
-                var empId = empIds[0];
+                var empId = employee.IdEmpleado;
                 var today = DateTime.Now.Date;
                 var now = DateTime.Now;
-                var todayStr = today.ToString("yyyyMMdd");
                 
                 // 2. Check if already checked in
-                var pEmpIdCheck = new SqlParameter("@empIdCheck", empId);
-                var pTodayCheck = new SqlParameter("@todayCheck", today);
-                
-                var existsSql = "SELECT COUNT(1) AS Value FROM Opera_Main.dbo.ASISTENCIA_DIARIA WHERE id_colaborador = @empIdCheck AND fecha_asistencia = @todayCheck";
-                
-                var count = await _context.Database.SqlQueryRaw<int>(existsSql, pEmpIdCheck, pTodayCheck).FirstOrDefaultAsync();
+                var exists = await _context.Set<AsistenciaDiaria>()
+                    .AnyAsync(a => a.IdColaborador == empId && a.FechaAsistencia == today);
 
-                if (count > 0) 
+                if (exists) 
                     return (false, "Ya marcaste asistencia el día de hoy.", null);
 
                 // 3. Determine Status (Simple Rule: Late after 08:00 AM)
-                var limitTime = DateTime.ParseExact($"{now:yyyy-MM-dd} 08:00:00", "yyyy-MM-dd HH:mm:ss", null);
+                var limitTime = today.AddHours(8); // 08:00 AM of today
                 var status = now > limitTime ? "tardanza" : "presente";
 
-                // 4. Insert
-                var pId = new SqlParameter("@id", Guid.NewGuid().ToString());
-                var pEmpId = new SqlParameter("@empId", empId);
-                var pToday = new SqlParameter("@today", DateTime.ParseExact(todayStr, "yyyyMMdd", null)); 
-                var pNow = new SqlParameter("@now", now);
-                var pLat = new SqlParameter("@lat", lat);
-                var pLng = new SqlParameter("@lng", lng);
-                var pAddr = new SqlParameter("@addr", !string.IsNullOrEmpty(address) ? address : "Ubicación Móvil");
-                var pHealth = new SqlParameter("@health", isHealthOk ? 1 : 0);
-                var pStatus = new SqlParameter("@status", status);
-                
-                var insertSql = @"
-                    INSERT INTO Opera_Main.dbo.ASISTENCIA_DIARIA (
-                        id_registro, id_colaborador, fecha_asistencia, hora_checkin, 
-                        lat_checkin, long_checkin, location_address, 
-                        check_salud_apto, estado_final, whatsapp_sync
-                    ) VALUES (
-                        @id, @empId, @today, @now, 
-                        @lat, @lng, @addr, 
-                        @health, @status, 0
-                    )";
+                // 4. Insert using Entity
+                var record = new AsistenciaDiaria
+                {
+                    IdRegistro = Guid.NewGuid().ToString(),
+                    IdColaborador = empId,
+                    FechaAsistencia = today,
+                    HoraCheckIn = now,
+                    LatCheckIn = (decimal)lat, 
+                    LongCheckIn = (decimal)lng,
+                    LocationAddress = !string.IsNullOrEmpty(address) ? address : "Ubicación Móvil",
+                    CheckSaludApto = isHealthOk ? 1 : 0, // Entity uses int?
+                    EstadoFinal = status,
+                    WhatsappSync = false,
+                    SyncDate = null,
+                    AlertStatus = null
+                };
 
-                await _context.Database.ExecuteSqlRawAsync(insertSql, pId, pEmpId, pToday, pNow, pLat, pLng, pAddr, pHealth, pStatus);
+                _context.Set<AsistenciaDiaria>().Add(record);
+                await _context.SaveChangesAsync();
 
                 return (true, "Asistencia registrada correctamente", status);
             }
             catch (Exception ex)
             {
                 // Log exception here if Logger was injected
+                // throw new Exception($"Error en CheckIn: {ex.Message}", ex); 
+                // Better to rethrow or return error tuple? Keeping exception for now to match interface contract generic-ness or Controller handling
                 throw new Exception($"Error en CheckIn: {ex.Message}", ex);
             }
         }
 
-        // Define Flat DTO locally or use if available in DataAccess
-        private class AttendanceFlatDto
-        {
-            public string id { get; set; }
-            public int employee_id { get; set; }
-            public string date { get; set; }
-            public string? check_in_time { get; set; }
-            public decimal? location_lat { get; set; }
-            public decimal? location_lng { get; set; }
-            public string? location_address { get; set; }
-            public string health_status { get; set; }
-            public string system_status { get; set; }
-            public bool whatsapp_sync { get; set; }
-            public string? sync_date { get; set; }
-            public string? alert_status { get; set; }
-            public string? gps_justification { get; set; }
-            public string? resolved_at { get; set; }
-            
-            public string emp_name { get; set; }
-            public string emp_role { get; set; }
-            public string? emp_photo { get; set; }
-            public string? emp_phone { get; set; }
-            public string emp_status { get; set; }
-            public bool emp_active { get; set; }
-        }
+        // AttendanceFlatDto removed as it is no longer needed with EF Core Entities
 
         public async Task<List<AttendanceRecordDto>> GetAttendanceAsync(string date)
         {
             var queryDate = string.IsNullOrEmpty(date) ? DateTime.Now.Date : DateTime.Parse(date).Date;
-            var sqlDate = queryDate.ToString("yyyy-MM-dd");
 
-            var sql = @$"
-                SELECT 
-                    CAST(ad.id_registro AS NVARCHAR(50)) as id,
-                    ad.id_colaborador as employee_id,
-                    CONVERT(varchar, ad.fecha_asistencia, 23) as date,
-                    CONVERT(varchar, ad.hora_checkin, 126) as check_in_time,
-                    ad.lat_checkin as location_lat,
-                    ad.long_checkin as location_lng,
-                    ad.location_address as location_address,
-                    CASE WHEN ad.check_salud_apto = 1 THEN 'saludable' ELSE 'con_sintomas' END as health_status,
-                    ad.estado_final as system_status,
-                    ad.whatsapp_sync as whatsapp_sync,
-                    CONVERT(varchar, ad.sync_date, 126) as sync_date,
-                    ad.alert_status as alert_status,
-                    ad.justificacion_geo as gps_justification,
-                    CONVERT(varchar, ad.resolved_at, 126) as resolved_at,
-                    
-                    c.nombre as emp_name,
-                    c.rol as emp_role,
-                    c.photo_url as emp_photo,
-                    c.phone as emp_phone,
-                    c.estado_operativo as emp_status,
-                    CAST(c.active AS BIT) as emp_active
+            // LINQ Join equivalent
+            // Assuming we have Navigation Properties? 
+            // If not, we do manual join. User said "Empleado.cs refactorizado... AsistenciaDiaria.cs nueva entidad".
+            // Typically navigation properties like `AsistenciaDiaria.Colaborador` might exist if properly mapped.
+            // But to be safe (and strict per user request "cambia SqlQueryRaw por consultas EF Core"), I will use Join or Nav Prop.
+            
+            // Let's try explicit Join for safety if Nav Prop names are unknown.
+            
+            var query = from ad in _context.Set<AsistenciaDiaria>()
+                        join c in _context.Set<Empleado>() on ad.IdColaborador equals c.IdEmpleado into empGroup
+                        from emp in empGroup.DefaultIfEmpty() // Left Join
+                        where ad.FechaAsistencia == queryDate
+                        orderby ad.HoraCheckIn
+                        select new { ad, emp };
 
-                FROM Opera_Main.dbo.ASISTENCIA_DIARIA ad
-                LEFT JOIN Opera_Main.dbo.COLABORADORES c ON ad.id_colaborador = c.id
-                WHERE ad.fecha_asistencia = '{sqlDate}'
-                ORDER BY ad.hora_checkin ASC
-            ";
-            
-            // Note: Since we don't have implicit mapping for custom types in raw SQL easily without Keyless Entity,
-            // we will try to use the private class. EF Core require it to be registered in DbContext as Keyless to work with SqlQuery
-            // OR we use a manual reader or simple dynamic.
-            
-            // However, the previous controller code used `_context.Database.SqlQueryRaw<AttendanceFlatDto>(sql)`. 
-            // This implies `AttendanceFlatDto` WAS registered or mapped.
-            // If it fails, we should wrap in try-catch or use a safer approach.
-            // But let's assume it works as it was in the controller.
-            
-            try 
+            var results = await query.ToListAsync();
+
+            return results.Select(x => new AttendanceRecordDto
             {
-               var rawData = await _context.Database.SqlQueryRaw<AttendanceFlatDto>(sql).ToListAsync();
-
-               var records = rawData.Select(r => new AttendanceRecordDto
-               {
-                   id = r.id,
-                   employee_id = r.employee_id,
-                   date = r.date,
-                   check_in_time = r.check_in_time,
-                   location_lat = r.location_lat,
-                   location_lng = r.location_lng,
-                   location_address = r.location_address,
-                   health_status = r.health_status,
-                   system_status = r.system_status,
-                   whatsapp_sync = r.whatsapp_sync,
-                   sync_date = r.sync_date,
-                   alert_status = r.alert_status,
-                   gps_justification = r.gps_justification,
-                   resolved_at = r.resolved_at,
-                   employee = new EmployeeDto
-                   {
-                       id = r.employee_id,
-                       name = r.emp_name,
-                       role = r.emp_role,
-                       photo_url = r.emp_photo,
-                       phone = r.emp_phone,
-                       estado_operativo = r.emp_status,
-                       active = r.emp_active
-                   }
-               }).ToList();
-
-               return records;
-            }
-            catch (InvalidOperationException)
-            {
-                // Fallback if DTO is not registered: return empty or throw clear error
-                // In a real scenario we'd add the Keyless Entity config to OnModelCreating
-                throw new Exception("EF Core Mapping Error: AttendanceFlatDto likely not registered.");
-            }
+                id = x.ad.IdRegistro,
+                employee_id = x.ad.IdColaborador,
+                date = x.ad.FechaAsistencia.ToString("yyyy-MM-dd"), 
+                check_in_time = x.ad.HoraCheckIn?.ToString("yyyy-MM-ddTHH:mm:ss"), // Nullable DateTime
+                location_lat = x.ad.LatCheckIn,
+                location_lng = x.ad.LongCheckIn,
+                location_address = x.ad.LocationAddress,
+                health_status = (x.ad.CheckSaludApto == 1) ? "saludable" : "con_sintomas", // int? check
+                
+                system_status = x.ad.EstadoFinal,
+                whatsapp_sync = x.ad.WhatsappSync,
+                sync_date = x.ad.SyncDate?.ToString("yyyy-MM-ddTHH:mm:ss"),
+                alert_status = x.ad.AlertStatus,
+                gps_justification = x.ad.JustificacionGeo,
+                resolved_at = x.ad.ResolvedAt?.ToString("yyyy-MM-ddTHH:mm:ss"),
+                
+                employee = x.emp != null ? new EmployeeDto
+                {
+                   id = x.emp.IdEmpleado,
+                   name = x.emp.Nombre,
+                   role = x.emp.Rol,
+                   photo_url = x.emp.PhotoUrl,
+                   phone = x.emp.Telefono, // Phone prop name in Entity map
+                   estado_operativo = x.emp.EstadoOperativo,
+                   active = x.emp.Active == true // Nullable bool check
+                } : null
+            }).ToList();
         }
         public async Task<bool> SyncWhatsappAsync(string id, bool sync, string? syncDate)
         {
             try
             {
-                var syncBit = sync ? 1 : 0;
-                var sql = $"UPDATE Opera_Main.dbo.ASISTENCIA_DIARIA SET whatsapp_sync = {syncBit}, sync_date = {(sync ? $"'{syncDate}'" : "NULL")} WHERE id_registro = '{id}'";
-                await _context.Database.ExecuteSqlRawAsync(sql);
+                var record = await _context.Set<AsistenciaDiaria>().FirstOrDefaultAsync(a => a.IdRegistro == id);
+                if (record == null) return false;
+
+                record.WhatsappSync = sync;
+                record.SyncDate = sync ? (string.IsNullOrEmpty(syncDate) ? DateTime.Now : DateTime.Parse(syncDate)) : null;
+
+                await _context.SaveChangesAsync();
                 return true;
             }
             catch
@@ -221,30 +160,36 @@ namespace OperationWeb.Business.Services
         {
             try
             {
-                var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                string sql = "";
+                var record = await _context.Set<AsistenciaDiaria>().FirstOrDefaultAsync(a => a.IdRegistro == id);
+                if (record == null) return false;
+
+                var now = DateTime.Now;
 
                 if (action == "approve_exception")
                 {
-                    sql = $"UPDATE Opera_Main.dbo.ASISTENCIA_DIARIA SET estado_final = 'APROBADA_EXC', alert_status = 'exception_approved', resolved_at = '{now}' WHERE id_registro = '{id}'";
+                    record.EstadoFinal = "APROBADA_EXC";
+                    record.AlertStatus = "exception_approved";
+                    record.ResolvedAt = now;
                 }
                 else if (action == "reject_exception")
                 {
-                    sql = $"UPDATE Opera_Main.dbo.ASISTENCIA_DIARIA SET estado_final = 'RECHAZADA', alert_status = 'exception_rejected', resolved_at = '{now}' WHERE id_registro = '{id}'";
+                     record.EstadoFinal = "RECHAZADA";
+                     record.AlertStatus = "exception_rejected";
+                     record.ResolvedAt = now;
                 }
                 else if (action == "accept")
                 {
-                    sql = $"UPDATE Opera_Main.dbo.ASISTENCIA_DIARIA SET alert_status = 'resolved', resolved_at = '{now}' WHERE id_registro = '{id}'";
+                    record.AlertStatus = "resolved";
+                    record.ResolvedAt = now;
                 }
                 else if (action == "reject")
                 {
-                    sql = $"UPDATE Opera_Main.dbo.ASISTENCIA_DIARIA SET estado_final = 'FALTA', alert_status = 'rejected', resolved_at = '{now}' WHERE id_registro = '{id}'";
+                    record.EstadoFinal = "FALTA";
+                    record.AlertStatus = "rejected";
+                    record.ResolvedAt = now;
                 }
 
-                if (!string.IsNullOrEmpty(sql))
-                {
-                    await _context.Database.ExecuteSqlRawAsync(sql);
-                }
+                await _context.SaveChangesAsync();
                 return true;
             }
             catch
@@ -257,15 +202,16 @@ namespace OperationWeb.Business.Services
         {
              try
             {
-                var today = DateTime.Now.ToString("yyyy-MM-dd");
+                var today = DateTime.Now.Date;
                 
-                // 1. Clean existing records for today
-                await _context.Database.ExecuteSqlRawAsync($"DELETE FROM Opera_Main.dbo.ASISTENCIA_DIARIA WHERE fecha_asistencia = '{today}'");
+                // 1. Clean existing records for today (EF Core Bulk Delete or Iterate)
+                // For simplicity and to stick to LINQ:
+                var exisiting = await _context.Set<AsistenciaDiaria>().Where(a => a.FechaAsistencia == today).ToListAsync();
+                _context.Set<AsistenciaDiaria>().RemoveRange(exisiting);
+                await _context.SaveChangesAsync();
 
                 // 2. Get active employees
-                var employees = await _context.Database.SqlQueryRaw<EmployeeDto>(
-                    "SELECT id, nombre as name, rol as role, photo_url, phone, estado_operativo, CAST(active AS BIT) as active FROM Opera_Main.dbo.COLABORADORES WHERE active = 1"
-                ).ToListAsync();
+                var employees = await _context.Set<Empleado>().Where(e => e.Active == true).ToListAsync();
 
                 if (!employees.Any()) return (false, "No active employees found to seed.");
 
@@ -284,41 +230,43 @@ namespace OperationWeb.Business.Services
                     if (index >= 20) break;
 
                     string status;
-                    string checkInTime;
+                    DateTime checkInTime;
                     
                     if (index % 3 != 0) 
                     {
                         status = "presente";
                         int min = random.Next(0, 59);
-                        checkInTime = $"{today} 07:{min:D2}:00";
+                        checkInTime = today.AddHours(7).AddMinutes(min); // 07:MM
                     }
                     else
                     {
                         status = "tardanza";
                         int hour = random.Next(8, 9);
                         int min = random.Next(15, 59);
-                        checkInTime = $"{today} {hour:D2}:{min:D2}:00";
+                        checkInTime = today.AddHours(hour).AddMinutes(min); // 08:MM or 09:MM
                     }
 
                     var loc = locations[random.Next(locations.Count)];
                     var id = Guid.NewGuid().ToString();
-                    var latStr = loc.Lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    var lngStr = loc.Lng.ToString(System.Globalization.CultureInfo.InvariantCulture);
                     
-                    var sql = $@"
-                        INSERT INTO Opera_Main.dbo.ASISTENCIA_DIARIA (
-                            id_registro, id_colaborador, fecha_asistencia, hora_checkin, 
-                            lat_checkin, long_checkin, location_address, 
-                            check_salud_apto, estado_final, whatsapp_sync
-                        ) VALUES (
-                            '{id}', {emp.id}, '{today}', '{checkInTime}', 
-                            {latStr}, {lngStr}, '{loc.Address}', 
-                            1, '{status}', 0
-                        )";
-
-                    await _context.Database.ExecuteSqlRawAsync(sql);
+                    var record = new AsistenciaDiaria
+                    {
+                        IdRegistro = id,
+                        IdColaborador = emp.IdEmpleado,
+                        FechaAsistencia = today,
+                        HoraCheckIn = checkInTime,
+                        LatCheckIn = (decimal)loc.Lat,
+                        LongCheckIn = (decimal)loc.Lng,
+                        LocationAddress = loc.Address,
+                        CheckSaludApto = 1, // int? 1=true
+                        EstadoFinal = status,
+                        WhatsappSync = false
+                    };
+                    
+                    _context.Set<AsistenciaDiaria>().Add(record);
                 }
 
+                await _context.SaveChangesAsync();
                 return (true, "Attendance seeded successfully");
             }
             catch (Exception ex)
@@ -331,8 +279,8 @@ namespace OperationWeb.Business.Services
         {
             try
             {
-                var today = DateTime.Now.ToString("yyyy-MM-dd");
-                var ids = await _context.Database.SqlQueryRaw<string>($"SELECT CAST(id_registro AS NVARCHAR(50)) as Value FROM Opera_Main.dbo.ASISTENCIA_DIARIA WHERE fecha_asistencia = '{today}'").ToListAsync();
+                var today = DateTime.Now.Date;
+                var records = await _context.Set<AsistenciaDiaria>().Where(a => a.FechaAsistencia == today).ToListAsync();
 
                 var random = new Random();
                 int updated = 0;
@@ -345,15 +293,16 @@ namespace OperationWeb.Business.Services
                     (-11.995000, -77.075000, "Av. Universitaria 5500, San Martin de Porres")
                 };
 
-                foreach (var id in ids)
+                foreach (var record in records)
                 {
                     var loc = locations[random.Next(locations.Count)];
-                    var latStr = loc.Lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    var lngStr = loc.Lng.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    var sql = $"UPDATE Opera_Main.dbo.ASISTENCIA_DIARIA SET lat_checkin = {latStr}, long_checkin = {lngStr}, location_address = '{loc.Address}' WHERE id_registro = '{id}'";
-                    await _context.Database.ExecuteSqlRawAsync(sql);
+                    record.LatCheckIn = (decimal)loc.Lat;
+                    record.LongCheckIn = (decimal)loc.Lng;
+                    record.LocationAddress = loc.Address;
                     updated++;
                 }
+
+                await _context.SaveChangesAsync();
 
                 return (true, "Addresses fixed", updated);
             }

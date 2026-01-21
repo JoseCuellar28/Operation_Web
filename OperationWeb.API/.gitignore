@@ -1,0 +1,9 @@
+# Ignorar variables de entorno
+.env
+
+# Ignorar binarios y objetos de compilación
+bin/
+obj/
+
+# Ignorar logs locales
+*.log

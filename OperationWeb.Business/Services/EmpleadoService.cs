@@ -1,7 +1,7 @@
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 using OperationWeb.DataAccess.Repositories;
 using OperationWeb.Business.Interfaces;
-using OperationWeb.DataAccess.Interfaces;
+using OperationWeb.Core.Interfaces;
 
 namespace OperationWeb.Business.Services
 {

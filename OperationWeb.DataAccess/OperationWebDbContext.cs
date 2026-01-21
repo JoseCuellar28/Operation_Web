@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 
 namespace OperationWeb.DataAccess
 {
@@ -127,7 +127,7 @@ namespace OperationWeb.DataAccess
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.DNI).IsRequired().HasMaxLength(40);
+                entity.Property(e => e.DNI).IsRequired().HasMaxLength(80);
                 entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Email).HasMaxLength(100);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
@@ -221,7 +221,9 @@ namespace OperationWeb.DataAccess
                 new Personal { DNI = "12345678", Inspector = "Juan Pérez", Telefono = "555-0001", Distrito = "Lima", Tipo = "Técnico", Division = "DG Div EHS", Area = "Area 1", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
                 new Personal { DNI = "87654321", Inspector = "María González", Telefono = "555-0002", Distrito = "Miraflores", Tipo = "Supervisor", Division = "DG Div EHS", Area = "Area 1", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
                 new Personal { DNI = "11223344", Inspector = "Carlos Rodríguez", Telefono = "555-0003", Distrito = "San Isidro", Tipo = "Operario", Division = "Division Norte", Area = "Area 2", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
-                new Personal { DNI = "44332211", Inspector = "Ana López", Telefono = "555-0004", Distrito = "Surco", Tipo = "Técnico", Division = "Division Norte", Area = "Area 2", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow }
+                new Personal { DNI = "44332211", Inspector = "Ana López", Telefono = "555-0004", Distrito = "Surco", Tipo = "Técnico", Division = "Division Norte", Area = "Area 2", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow },
+                // Parche de Integridad: Super Usuario de Prueba (Crucial para Login 200 OK y carga de Perfil)
+                new Personal { DNI = "41007510", Inspector = "Admin Sistema", Telefono = "999-999-999", Distrito = "Central", Tipo = "Administrador", Division = "Sistemas", Area = "TI", FechaInicio = DateTime.UtcNow, FechaCreacion = DateTime.UtcNow, Estado = "Activo" }
             );
 
             // Empleados semilla (Modelo Operativo)

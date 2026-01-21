@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using OperationWeb.DataAccess.Entities;
-using OperationWeb.DataAccess.Interfaces;
+using OperationWeb.Core.Entities;
+using OperationWeb.Core.Interfaces;
 
 namespace OperationWeb.DataAccess.Repositories
 {
@@ -88,8 +88,6 @@ namespace OperationWeb.DataAccess.Repositories
             return true;
         }
 
-
-
         public async Task<bool> ExistsEmailAsync(string email, int? excludeId = null)
         {
             var query = _context.Empleados.Where(e => e.Email == email);
@@ -126,6 +124,47 @@ namespace OperationWeb.DataAccess.Repositories
                 .OrderBy(e => e.Nombre)
                 .ThenBy(e => e.ApellidoPaterno)
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<(Empleado Empleado, User? User)>> GetAllWithUserStatusAsync()
+        {
+             var query = from e in _context.Empleados
+                        join u in _context.Users on e.DNI equals u.DNI into userGroup
+                        from u in userGroup.DefaultIfEmpty()
+                        orderby e.Nombre
+                        select new { Empleado = e, User = u };
+
+            var result = await query.ToListAsync();
+            return result.Select(x => (x.Empleado, x.User));
+        }
+
+        public async Task<(IEnumerable<string> Divisions, IEnumerable<string> Areas, IEnumerable<string> Roles)> GetMetadataAsync()
+        {
+            // UI 'Unidad' maps to Empleado 'Division' (string)
+            var divisions = await _context.Empleados
+                .Where(p => !string.IsNullOrEmpty(p.Division))
+                .Select(p => p.Division!)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+
+            // UI 'Area' maps to Empleado 'Area' (string)
+            var areas = await _context.Empleados
+                .Where(p => !string.IsNullOrEmpty(p.Area))
+                .Select(p => p.Area!)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+
+            // UI 'Puesto/Posicion' maps to Empleado 'Rol' (string)
+            var roles = await _context.Empleados
+                .Where(p => !string.IsNullOrEmpty(p.Rol))
+                .Select(p => p.Rol!)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+
+            return (divisions, areas, roles);
         }
     }
 }

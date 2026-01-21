@@ -5,9 +5,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="EPPlus" Version="7.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../OperationWeb.Business.Interfaces/OperationWeb.Business.Interfaces.csproj" />
 
-    <ProjectReference Include="../OperationWeb.DataAccess.Interfaces/OperationWeb.DataAccess.Interfaces.csproj" />
+    <ProjectReference Include="../OperationWeb.Core/OperationWeb.Core.csproj" />
     <ProjectReference Include="../OperationWeb.DataAccess/OperationWeb.DataAccess.csproj" />
   </ItemGroup>
 

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using OperationWeb.DataAccess.Interfaces;
+using OperationWeb.Core.Interfaces;
 using System.Linq.Expressions;
 
 namespace OperationWeb.DataAccess

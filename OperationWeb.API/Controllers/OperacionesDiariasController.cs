@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OperationWeb.Business.Interfaces;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 
 namespace OperationWeb.API.Controllers
 {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OperationWeb.Business.Interfaces;
-using OperationWeb.DataAccess.Entities;
+using OperationWeb.Core.Entities;
 using OperationWeb.Business.DTOs;
 
 namespace OperationWeb.API.Controllers
@@ -13,12 +13,14 @@ namespace OperationWeb.API.Controllers
         private readonly IPersonalService _personalService;
         private readonly ILogger<PersonalController> _logger;
         private readonly IUserContextService _userContext;
+        private readonly IWebHostEnvironment _env;
 
-        public PersonalController(IPersonalService personalService, ILogger<PersonalController> logger, IUserContextService userContext)
+        public PersonalController(IPersonalService personalService, ILogger<PersonalController> logger, IUserContextService userContext, IWebHostEnvironment env)
         {
             _personalService = personalService;
             _logger = logger;
             _userContext = userContext;
+            _env = env;
         }
 
         [HttpGet]
@@ -26,13 +28,15 @@ namespace OperationWeb.API.Controllers
         {
             try
             {
-                var personal = await _personalService.GetAllWithUserStatusAsync();
-
                 // Apply Data Scoping
                 var role = _userContext.GetUserRole();
                 var level = _userContext.GetUserLevel();
                 var division = _userContext.GetUserDivision();
                 var area = _userContext.GetUserArea();
+
+                _logger.LogInformation($"[DEBUG] User Context - Role: '{role}', Level: '{level}', Division: '{division}', Area: '{area}'");
+                // Fetch data first
+                var personal = await _personalService.GetAllWithUserStatusAsync();
 
                 _logger.LogInformation($"[DEBUG] User Context - Role: '{role}', Level: '{level}', Division: '{division}', Area: '{area}'");
                 _logger.LogInformation($"[DEBUG] Total Personal records before filter: {personal.Count()}");
@@ -144,6 +148,13 @@ namespace OperationWeb.API.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                // Handle Images
+                if (!string.IsNullOrEmpty(personal.Foto))
+                    personal.FotoUrl = await SaveBase64Image(personal.Foto, personal.DNI, "foto");
+                
+                if (!string.IsNullOrEmpty(personal.Firma))
+                    personal.FirmaUrl = await SaveBase64Image(personal.Firma, personal.DNI, "firma");
+
                 var nuevo = await _personalService.CreateAsync(personal);
                 return CreatedAtAction(nameof(GetByDni), new { dni = nuevo.DNI }, nuevo);
             }
@@ -168,6 +179,13 @@ namespace OperationWeb.API.Controllers
 
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
+
+                // Handle Images
+                if (!string.IsNullOrEmpty(personal.Foto))
+                    personal.FotoUrl = await SaveBase64Image(personal.Foto, personal.DNI, "foto");
+                
+                if (!string.IsNullOrEmpty(personal.Firma))
+                    personal.FirmaUrl = await SaveBase64Image(personal.Firma, personal.DNI, "firma");
 
                 var actualizado = await _personalService.UpdateAsync(personal);
                 return Ok(actualizado);
@@ -221,6 +239,32 @@ namespace OperationWeb.API.Controllers
             {
                 _logger.LogError(ex, "Error al registrar historial de carga");
                 return StatusCode(500, "Error interno del servidor");
+            }
+        }
+        private async Task<string> SaveBase64Image(string base64, string dni, string type)
+        {
+            try 
+            {
+                if (string.IsNullOrEmpty(base64)) return null;
+
+                // Strip prefix if present (data:image/png;base64,)
+                var data = base64.Contains(",") ? base64.Split(',')[1] : base64;
+                var bytes = Convert.FromBase64String(data);
+                
+                var folder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", type);
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                var fileName = $"{dni}_{DateTime.UtcNow.Ticks}.jpg"; // Force jpg or detect? Simple for now
+                var path = Path.Combine(folder, fileName);
+                
+                await System.IO.File.WriteAllBytesAsync(path, bytes);
+                
+                return $"/uploads/{type}/{fileName}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"[IMAGE SAVE ERROR] Failed to save {type} for {dni}");
+                return null;
             }
         }
     }
