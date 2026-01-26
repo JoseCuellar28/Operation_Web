@@ -1650,3 +1650,5 @@ El sistema Web 2.0 es funcionalmente idéntico a la Web 1, con arquitectura supe
     *   Borrado `tests/test_personal.xlsx` y logs.
 
 **Resultado:** El repositorio está ahora 100% alineado con la documentación.
+
+| 2026-01-26 | Agente 3 | dev-frontend-fase5 | Inicialización de Workspace Frontend y entorno Vite | ✅ LISTO |
