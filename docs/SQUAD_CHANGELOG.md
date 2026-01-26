@@ -4,6 +4,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | 2026-01-26 | QA | main | Setup de ramas y protocolo de control | ✅ COMPLETADO |
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Inicialización de Workspace DB y mapeo de tablas en Toshiba | ✅ LISTO |
+| 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
 
 ---
 
