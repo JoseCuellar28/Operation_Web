@@ -1,3 +1,11 @@
+# 📝 BITÁCORA DE CONTROL - FASE 5: MÓDULO DE PROYECTOS
+
+| Fecha | Agente | Rama | Cambio Realizado | Estado |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-01-26 | QA | main | Setup de ramas y protocolo de control | ✅ COMPLETADO |
+
+---
+
 # SQUAD CHANGELOG - Operation Web
 
 ## [2026-01-13] - Inicialización y Alineación
