@@ -1657,3 +1657,4 @@ El sistema Web 2.0 es funcionalmente idéntico a la Web 1, con arquitectura supe
 [2026-01-26] [dev-db-fase5] [Agente 2 Online - Conexión a Toshiba verificada] [LISTO].
 | 2026-01-26 | Agente 3 | dev-frontend-fase5 | Inicialización de Workspace Frontend y entorno Vite | ✅ LISTO |
 | 2026-01-27 | Agente 3 | dev-frontend-fase5 | Refactorización de ProjectsView con datos reales y limpieza de UI | ✅ LISTO |
+| 2026-01-27 | Agente 3 | dev-frontend-fase5 | UI/UX Refinada: Sticky Header, Buscador y Filtro Activo | ✅ LISTO |

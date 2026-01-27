@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { projectsService, Project } from '../../services/projectsService';
 import { squadService, Squad } from '../../services/squadService';
 import { personalService, Employee } from '../../services/personalService';
-import { Plus, MapPin, Briefcase, Calendar, Shield, Truck, Edit, Trash2, X, Save, Search } from 'lucide-react';
+import { Plus, Briefcase, Calendar, Shield, Truck, Edit, X, Save, Search, Filter } from 'lucide-react';
 
 export const ProjectsView: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -12,6 +12,7 @@ export const ProjectsView: React.FC = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [hideInactive, setHideInactive] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState<Partial<Project>>({});
@@ -66,53 +67,78 @@ export const ProjectsView: React.FC = () => {
         }
     };
 
-    const filteredProjects = projects.filter(p =>
-        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.cliente && p.cliente.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const filteredProjects = projects.filter(p => {
+        const matchesSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.cliente && p.cliente.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesStatus = hideInactive ? (p.estado === 'Activo' || p.estado === 'ACTIVO' || p.estado === 'En Curso') : true;
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="p-6 space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Gestión de Proyectos</h1>
-                    <p className="text-gray-500 mt-1">Control de obras, asignación de cuadrillas y efectivos.</p>
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={async () => {
-                            if (confirm('¿Seguro que desea sincronizar Áreas de Personal a Proyectos?')) {
-                                try {
-                                    // Visual Feedback: Disable/Spinner could be handled by state, but alert is instant per spec.
-                                    // Spec says: "Paso 2: Feedback visual (Deshabilitar botón + Spinner de carga)"
-                                    // I'll use a temporary loading state logic if possible or just blocking alert flow as React updates state async.
-                                    // For simplicity and adherence to "Función: sincronizarProyectos", I'll inline it or define it outside.
-                                    // Defining inline for now to access state.
-                                    setLoading(true);
-                                    await projectsService.sync();
-                                    alert('Sincronización Completada Correctamente');
-                                    fetchData();
-                                } catch (e) {
-                                    alert('Error al sincronizar');
-                                    console.error(e);
-                                    setLoading(false);
+            {/* Header / Toolbar */}
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm shadow-md py-4 px-6 -mx-6 mb-6 flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Gestión de Proyectos</h1>
+                        <p className="text-gray-500 mt-1">Control de obras, asignación de cuadrillas y efectivos.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={async () => {
+                                if (confirm('¿Seguro que desea sincronizar Áreas de Personal a Proyectos?')) {
+                                    try {
+                                        setLoading(true);
+                                        await projectsService.sync();
+                                        alert('Sincronización Completada Correctamente');
+                                        fetchData();
+                                    } catch (e) {
+                                        alert('Error al sincronizar');
+                                        console.error(e);
+                                        setLoading(false);
+                                    }
                                 }
-                            }
-                        }}
-                        className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2 disabled:opacity-50"
-                        disabled={loading}
-                    >
-                        {loading ? <i className="fas fa-spinner fa-spin mr-2"></i> : <i className="fas fa-sync-alt mr-2"></i>}
-                        Sincronizar
-                    </button>
-                    <button
-                        onClick={() => handleOpenModal()}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow-md hover:bg-primary/90 transition-colors font-medium"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Nuevo Proyecto
-                    </button>
+                            }}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2 disabled:opacity-50"
+                            disabled={loading}
+                        >
+                            {loading ? <i className="fas fa-spinner fa-spin mr-2"></i> : <i className="fas fa-sync-alt mr-2"></i>}
+                            Sincronizar
+                        </button>
+                        <button
+                            onClick={() => handleOpenModal()}
+                            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow-md hover:bg-primary/90 transition-colors font-medium"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Nuevo Proyecto
+                        </button>
+                    </div>
+                </div>
+
+                {/* Search & Filter Controls */}
+                <div className="flex flex-col sm:flex-row gap-4 items-center bg-gray-50/50 p-2 rounded-lg border border-gray-100">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o cliente..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none px-2">
+                        <input
+                            type="checkbox"
+                            checked={hideInactive}
+                            onChange={(e) => setHideInactive(e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="flex items-center gap-1.5">
+                            <Filter className="w-4 h-4 text-gray-400" />
+                            Ocultar Inactivos (Solo Activos/En Curso)
+                        </span>
+                    </label>
                 </div>
             </div>
 

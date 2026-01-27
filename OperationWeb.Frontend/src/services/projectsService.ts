@@ -1,5 +1,5 @@
 import api from './api';
-import { Project, ProjectParams } from '../types/project';
+import { Project } from '../types/project';
 
 export type { Project };
 
