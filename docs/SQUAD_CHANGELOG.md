@@ -2,8 +2,10 @@
 
 | Fecha | Agente | Rama | Cambio Realizado | Estado |
 | :--- | :--- | :--- | :--- | :--- |
-| 2026-01-26 | QA | main | Setup de ramas y protocolo de control | ✅ COMPLETADO |
 | 2026-01-27 | Agent 1 (Backend) | dev-backend-fase5 | Implementación del Módulo Proyectos y Assignments | ✅ COMPLETADO |
+| 2026-01-27 | Agent 3 (Frontend) | dev-frontend-fase5 | Implementación de Servicio y Vista de Proyectos | ✅ COMPLETADO |
+| 2026-01-27 | QA Inspector | dev-frontend-fase5 | Auditoría de Escalabilidad y UX (Sticky Header, Filtros) | ✅ APROBADO |
+| 2026-01-27 | QA Inspector | main | Certificación Final de Fase 5 (Merge & Polish) | ✅ CERTIFICADO |
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Inicialización de Workspace DB y mapeo de tablas en Toshiba | ✅ LISTO |
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
 
