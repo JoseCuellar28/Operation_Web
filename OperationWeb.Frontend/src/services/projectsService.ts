@@ -24,6 +24,11 @@ export const projectsService = {
         return response.data;
     },
 
+    // Alias requirement for "updateProject"
+    updateProject: async (id: number, data: Partial<Project>): Promise<Project> => {
+        return projectsService.update(id, data);
+    },
+
     // Endpoint específico para sincronizar con ERP (Futuro)
     sync: async (): Promise<void> => {
         await api.post('/api/proyectos/sync');
