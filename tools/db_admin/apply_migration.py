@@ -1,7 +1,7 @@
 import pymssql
 import os
 
-server = '100.112.55.58'
+server = '100.125.169.14'
 user = 'sa'
 password = 'Joarcu28'
 database = 'DB_Operation'
