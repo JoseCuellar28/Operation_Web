@@ -1,35 +1,31 @@
 import api from './api';
+import { Project, ProjectParams } from '../types/project';
 
-export interface Project {
-    id: number;
-    nombre: string;
-    division?: string; // Optional
-    estado: string;
-    fechaInicio?: string; // Optional
-    cliente?: string; // Optional
-    // Assignment fields from legacy
-    id_cuadrilla?: string;
-    id_efectivo?: string;
-}
-
-export const projectsService = {
+const projectsService = {
     getAll: async (): Promise<Project[]> => {
         const response = await api.get('/api/proyectos');
         return response.data;
     },
 
-    create: async (data: Partial<Project>) => {
+    getById: async (id: number): Promise<Project> => {
+        const response = await api.get(`/api/proyectos/${id}`);
+        return response.data;
+    },
+
+    create: async (data: ProjectParams): Promise<Project> => {
         const response = await api.post('/api/proyectos', data);
         return response.data;
     },
 
-    update: async (id: number, data: Partial<Project>) => {
+    update: async (id: number, data: ProjectParams): Promise<Project> => {
         const response = await api.put(`/api/proyectos/${id}`, data);
         return response.data;
     },
 
-    sync: async () => {
-        const response = await api.post('/api/proyectos/sync');
-        return response.data;
+    // Endpoint específico para sincronizar con ERP (Futuro)
+    sync: async (): Promise<void> => {
+        await api.post('/api/proyectos/sync');
     }
 };
+
+export default projectsService;
