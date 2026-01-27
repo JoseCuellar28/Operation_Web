@@ -125,7 +125,10 @@ export const ProjectsView: React.FC = () => {
                         <div className="p-6 flex-1">
                             <div className="flex justify-between items-start mb-4">
                                 <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium border
-                  ${project.estado === 'Activo' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200'}
+                  ${project.estado === 'ACTIVO' || project.estado === 'Activo' ? 'bg-green-50 text-green-700 border-green-200' :
+                                        project.estado === 'En Curso' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                            project.estado === 'FINALIZADO' || project.estado === 'Finalizado' ? 'bg-gray-100 text-gray-600 border-gray-200' :
+                                                'bg-red-50 text-red-700 border-red-200'}
                 `}>
                                     {project.estado}
                                 </div>
@@ -138,7 +141,7 @@ export const ProjectsView: React.FC = () => {
 
                             <h3 className="text-lg font-bold text-gray-900 mb-1">{project.nombre}</h3>
                             <p className="text-sm text-gray-500 flex items-center gap-2 mb-4">
-                                <Briefcase className="w-4 h-4" /> {project.cliente || 'Sin cliente'}
+                                <Briefcase className="w-4 h-4" /> {project.cliente || 'Sin Cliente Asignado'}
                             </p>
 
                             <div className="space-y-3 pt-4 border-t border-gray-100">
@@ -155,9 +158,11 @@ export const ProjectsView: React.FC = () => {
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="text-gray-500 flex items-center gap-2"><Calendar className="w-4 h-4" /> Inicio:</span>
-                                    <span className="text-gray-900">
-                                        {project.fechaInicio ? new Date(project.fechaInicio).toLocaleDateString() : 'No definido'}
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-500 flex items-center gap-2"><Calendar className="w-4 h-4" /> Vigencia:</span>
+                                    <span className="text-gray-900 text-xs">
+                                        {project.fechaInicio ? new Date(project.fechaInicio).toLocaleDateString() : '??'} - {project.fechaFin ? new Date(project.fechaFin).toLocaleDateString() : '??'}
                                     </span>
                                 </div>
                             </div>

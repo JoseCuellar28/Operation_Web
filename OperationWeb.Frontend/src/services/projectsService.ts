@@ -5,8 +5,9 @@ export interface Project {
     nombre: string;
     division?: string; // Optional
     estado: string;
-    fechaInicio?: string; // Optional
-    cliente?: string; // Optional
+    fechaInicio?: string;
+    fechaFin?: string;
+    cliente?: string;
     // Assignment fields from legacy
     id_cuadrilla?: string;
     id_efectivo?: string;
