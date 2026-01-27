@@ -8,7 +8,7 @@ ADMIN_DNI = "99887766"
 ADMIN_PASS = "123456"
 
 # DB Config
-DB_SERVER = '100.112.55.58'
+DB_SERVER = '100.125.169.14'
 DB_USER = 'sa'
 DB_PASS = 'Joarcu28'
 DB_NAME = 'DB_Operation'

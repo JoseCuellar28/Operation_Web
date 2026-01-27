@@ -69,7 +69,7 @@ DB_PORT=1433
 Puedes configurarlas en un archivo `.env` o exportarlas directamente:
 
 ```bash
-export DB_SERVER=100.112.55.58
+export DB_SERVER=100.125.169.14
 export DB_NAME=DB_Operation
 export DB_USER=sa
 export DB_PASSWORD=your_password
