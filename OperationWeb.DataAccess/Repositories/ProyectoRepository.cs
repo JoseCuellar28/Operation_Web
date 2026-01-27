@@ -24,17 +24,18 @@ namespace OperationWeb.DataAccess.Repositories
                 .ToListAsync();
         }
 
-         public async Task<int> SyncFromPersonalAsync()
+        public async Task<int> SyncFromPersonalAsync()
         {
             // Logic: Insert distinctive Areas from Personal as new Projects
-            // ADAPTIVE SQL: Physical table only has Nombre, Estado (No Codigo, No FechaInicio/Creacion)
+            // ADAPTIVE SQL: Capture Division and CodigoCebe (taking MAX to ensure 1:1 if duplicates exist)
             var sql = @"
-                INSERT INTO Proyectos (Nombre, Estado)
-                SELECT DISTINCT Area, 'ACTIVO'
+                INSERT INTO Proyectos (Nombre, Estado, Division, CodigoCebe)
+                SELECT Area, 'ACTIVO', MAX(Division), MAX(CodigoCebe)
                 FROM Personal
                 WHERE Area IS NOT NULL 
                 AND Area != ''
-                AND Area NOT IN (SELECT Nombre FROM Proyectos)";
+                AND Area NOT IN (SELECT Nombre FROM Proyectos)
+                GROUP BY Area";
                 
             return await _dbContext.Database.ExecuteSqlRawAsync(sql);
         }
@@ -52,7 +53,8 @@ namespace OperationWeb.DataAccess.Repositories
                     FechaFin = p.FechaFin,
                     Division = p.Division,
                     GerenteDni = p.GerenteDni,
-                    JefeDni = p.JefeDni
+                    JefeDni = p.JefeDni,
+                    CodigoCebe = p.CodigoCebe
                 })
                 .ToListAsync();
         }

@@ -15,5 +15,6 @@ namespace OperationWeb.Core.DTOs
         public string? Division { get; set; }
         public string? GerenteDni { get; set; }
         public string? JefeDni { get; set; }
+        public string? CodigoCebe { get; set; }
     }
 }

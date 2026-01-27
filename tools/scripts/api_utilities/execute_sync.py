@@ -18,11 +18,12 @@ def execute_sync():
         # Using GETUTCDATE() for standard UTC time instead of local GETDATE() if preferred, 
         # but manual said GETDATE(). Sticking to GETDATE() or SYSDATETIME().
         query = """
-        INSERT INTO Proyectos (Nombre, Estado, FechaSincronizacion)
-        SELECT DISTINCT Area, 'ACTIVO', GETDATE()
+        INSERT INTO Proyectos (Nombre, Estado, FechaSincronizacion, Division, CodigoCebe)
+        SELECT Area, 'ACTIVO', GETDATE(), MAX(Division), MAX(CodigoCebe)
         FROM Personal
         WHERE Area IS NOT NULL 
         AND Area NOT IN (SELECT Nombre FROM Proyectos)
+        GROUP BY Area
         """
         # Note: Manual said FechaCreacion, but schema audit showed FechaSincronizacion might be more appropriate or checking if FechaCreacion exists.
         # Let's check physical schema of Proyectos again from report?

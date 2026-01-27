@@ -34,5 +34,8 @@ namespace OperationWeb.Core.Entities
 
         [StringLength(80)]
         public string? JefeDni { get; set; }
+
+        [StringLength(50)]
+        public string? CodigoCebe { get; set; }
     }
 }
