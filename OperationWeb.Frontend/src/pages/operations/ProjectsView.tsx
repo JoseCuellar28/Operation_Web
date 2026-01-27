@@ -131,35 +131,66 @@ export const ProjectsView: React.FC = () => {
             </div>
 
             {/* Filters Bar - Sticky */}
-            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm p-4 rounded-xl border shadow-md flex flex-col md:flex-row gap-4 items-center justify-between mb-4 mt-2">
-                <div className="relative w-full md:w-96">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre o cliente..."
-                        className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+            <div className="sticky top-0 z-10 space-y-4 mb-6 mt-2">
+                {/* Stats Counters */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Total</p>
+                        <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Activos</p>
+                        <p className="text-2xl font-bold text-green-600">{projects.filter(p => p.estado === 'Activo').length}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Industrial</p>
+                        <p className="text-2xl font-bold text-blue-600">{projects.filter(p => p.division === 'Industrial').length}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Residencial</p>
+                        <p className="text-2xl font-bold text-orange-600">{projects.filter(p => p.division === 'Residencial').length}</p>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600 font-medium cursor-pointer flex items-center gap-2">
+                {/* Search & Filter Controls */}
+                <div className="bg-white/95 backdrop-blur-sm p-4 rounded-xl border shadow-md flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="relative w-full md:w-96">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <input
-                            type="checkbox"
-                            className="rounded text-blue-600 focus:ring-blue-500"
+                            type="text"
+                            placeholder="Buscar por nombre o cliente..."
+                            className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <select
+                            className="w-full md:w-48 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white font-medium text-gray-700"
                             onChange={(e) => {
-                                if (e.target.checked) {
-                                    setProjects(prev => prev.filter(p => p.estado === 'Activo'));
+                                const val = e.target.value;
+                                if (val === 'Todos') {
+                                    fetchData();
                                 } else {
-                                    fetchData(); // Reload to reset
+                                    setProjects(prev => {
+                                        fetchData().then(() => {
+                                            setProjects(current => current.filter(p => p.estado === val));
+                                        });
+                                        return prev;
+                                    });
                                 }
                             }}
-                        />
-                        Ocultar Inactivos
-                    </label>
+                        >
+                            <option value="Todos">Todos los Estados</option>
+                            <option value="Activo">Solo Activos</option>
+                            <option value="Inactivo">Inactivos / Cesados</option>
+                            <option value="En Curso">En Curso</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+
 
             {/* Projects Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -216,130 +247,132 @@ export const ProjectsView: React.FC = () => {
             </div>
 
             {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-                        <div className="flex justify-between items-center p-6 border-b">
-                            <h2 className="text-xl font-bold">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
-                            <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400 hover:text-gray-600" /></button>
-                        </div>
-
-                        <form onSubmit={handleSave} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
-                                <input
-                                    required
-                                    type="text"
-                                    value={formData.nombre || ''}
-                                    onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                />
+            {
+                showModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+                            <div className="flex justify-between items-center p-6 border-b">
+                                <h2 className="text-xl font-bold">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
+                                <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400 hover:text-gray-600" /></button>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <form onSubmit={handleSave} className="p-6 space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
                                     <input
                                         required
                                         type="text"
-                                        value={formData.cliente || ''}
-                                        onChange={e => setFormData({ ...formData, cliente: e.target.value })}
+                                        value={formData.nombre || ''}
+                                        onChange={e => setFormData({ ...formData, nombre: e.target.value })}
                                         className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">División</label>
-                                    <select
-                                        value={formData.division || ''}
-                                        onChange={e => setFormData({ ...formData, division: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                    >
-                                        <option value="">Seleccionar</option>
-                                        <option value="Industrial">Industrial</option>
-                                        <option value="Residencial">Residencial</option>
-                                        <option value="Mantenimiento">Mantenimiento</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
-                                    <input
-                                        type="date"
-                                        value={formData.fechaInicio ? formData.fechaInicio.split('T')[0] : ''}
-                                        onChange={e => setFormData({ ...formData, fechaInicio: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                                    <select
-                                        value={formData.estado || 'Activo'}
-                                        onChange={e => setFormData({ ...formData, estado: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                    >
-                                        <option value="Activo">Activo</option>
-                                        <option value="En Curso">En Curso</option>
-                                        <option value="Finalizado">Finalizado</option>
-                                        <option value="Suspendido">Suspendido</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Legacy Assignment Section */}
-                            <div className="pt-4 border-t mt-4">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Asignación de Recursos (Legacy)</h3>
-                                <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Asignar Cuadrilla</label>
-                                        <select
-                                            value={formData.id_cuadrilla || ''}
-                                            onChange={e => setFormData({ ...formData, id_cuadrilla: e.target.value })}
-                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors outline-none"
-                                        >
-                                            <option value="">-- Sin Asignar --</option>
-                                            {squads.map(s => (
-                                                <option key={s.id} value={s.id}>{s.nombre} ({s.zona})</option>
-                                            ))}
-                                        </select>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            value={formData.cliente || ''}
+                                            onChange={e => setFormData({ ...formData, cliente: e.target.value })}
+                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                        />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Asignar Efectivo Policial</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">División</label>
                                         <select
-                                            value={formData.id_efectivo || ''}
-                                            onChange={e => setFormData({ ...formData, id_efectivo: e.target.value })}
-                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors outline-none"
+                                            value={formData.division || ''}
+                                            onChange={e => setFormData({ ...formData, division: e.target.value })}
+                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
                                         >
-                                            <option value="">-- Sin Asignar --</option>
-                                            {officers.map(o => (
-                                                <option key={o.dni} value={o.dni}>{o.inspector} (DNI: {o.dni})</option>
-                                            ))}
+                                            <option value="">Seleccionar</option>
+                                            <option value="Industrial">Industrial</option>
+                                            <option value="Residencial">Residencial</option>
+                                            <option value="Mantenimiento">Mantenimiento</option>
                                         </select>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex justify-end gap-3 pt-4 border-t">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium text-sm flex items-center gap-2"
-                                >
-                                    <Save className="w-4 h-4" />
-                                    Guardar Proyecto
-                                </button>
-                            </div>
-                        </form>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                                        <input
+                                            type="date"
+                                            value={formData.fechaInicio ? formData.fechaInicio.split('T')[0] : ''}
+                                            onChange={e => setFormData({ ...formData, fechaInicio: e.target.value })}
+                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                                        <select
+                                            value={formData.estado || 'Activo'}
+                                            onChange={e => setFormData({ ...formData, estado: e.target.value })}
+                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                        >
+                                            <option value="Activo">Activo</option>
+                                            <option value="En Curso">En Curso</option>
+                                            <option value="Finalizado">Finalizado</option>
+                                            <option value="Suspendido">Suspendido</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Legacy Assignment Section */}
+                                <div className="pt-4 border-t mt-4">
+                                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Asignación de Recursos (Legacy)</h3>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Asignar Cuadrilla</label>
+                                            <select
+                                                value={formData.id_cuadrilla || ''}
+                                                onChange={e => setFormData({ ...formData, id_cuadrilla: e.target.value })}
+                                                className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors outline-none"
+                                            >
+                                                <option value="">-- Sin Asignar --</option>
+                                                {squads.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.nombre} ({s.zona})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Asignar Efectivo Policial</label>
+                                            <select
+                                                value={formData.id_efectivo || ''}
+                                                onChange={e => setFormData({ ...formData, id_efectivo: e.target.value })}
+                                                className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors outline-none"
+                                            >
+                                                <option value="">-- Sin Asignar --</option>
+                                                {officers.map(o => (
+                                                    <option key={o.dni} value={o.dni}>{o.inspector} (DNI: {o.dni})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium text-sm flex items-center gap-2"
+                                    >
+                                        <Save className="w-4 h-4" />
+                                        Guardar Proyecto
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };

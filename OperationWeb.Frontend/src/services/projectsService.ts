@@ -1,7 +1,7 @@
 import api from './api';
 import { Project, ProjectParams } from '../types/project';
 
-const projectsService = {
+export const projectsService = {
     getAll: async (): Promise<Project[]> => {
         const response = await api.get('/api/proyectos');
         return response.data;
