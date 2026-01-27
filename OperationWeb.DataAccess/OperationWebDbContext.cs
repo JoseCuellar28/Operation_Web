@@ -15,6 +15,7 @@ namespace OperationWeb.DataAccess
         public DbSet<Personal> Personal { get; set; }
         public DbSet<AsistenciaDiaria> AsistenciasDiarias { get; set; }
         public DbSet<Proyecto> Proyectos { get; set; }
+        public DbSet<PersonalProyecto> PersonalProyectos { get; set; }
 
         public DbSet<User> Users { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
@@ -96,6 +97,34 @@ namespace OperationWeb.DataAccess
             {
                 entity.HasKey(e => e.DNI);
                 entity.ToTable("Personal");
+            });
+
+            // Configuración de Proyectos (TOSHIBA)
+            modelBuilder.Entity<Proyecto>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.Nombre).IsUnique(); // Constraint explícito
+                
+                // Relaciones blandas (DNI)
+                // Se asume que Gerente/Jefe son DNIs válidos en Personal, pero sin FK dura por ahora
+            });
+
+            // Configuración de PersonalProyectos
+            modelBuilder.Entity<PersonalProyecto>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                // Relación con Proyecto
+                entity.HasOne(e => e.Proyecto)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProyectoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Unique Constraint: Un colaborador no puede estar asignado 2 veces al mismo proyecto activo
+                entity.HasIndex(e => new { e.DNI, e.ProyectoId, e.EsActivo })
+                      .IsUnique()
+                      .HasFilter("[EsActivo] = 1");
             });
 
             // Configuración de CuadrillaColaborador
