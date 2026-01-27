@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { projectsService, Project } from '../../services/projectsService';
 import { squadService, Squad } from '../../services/squadService';
 import { personalService, Employee } from '../../services/personalService';
-import { Plus, MapPin, Briefcase, Calendar, Shield, Truck, Edit, Trash2, X, Save, Search } from 'lucide-react';
+import { Plus, Briefcase, Calendar, Shield, Truck, Edit, X, Save, Search } from 'lucide-react';
 
 export const ProjectsView: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -84,11 +84,6 @@ export const ProjectsView: React.FC = () => {
                         onClick={async () => {
                             if (confirm('¿Seguro que desea sincronizar Áreas de Personal a Proyectos?')) {
                                 try {
-                                    // Visual Feedback: Disable/Spinner could be handled by state, but alert is instant per spec.
-                                    // Spec says: "Paso 2: Feedback visual (Deshabilitar botón + Spinner de carga)"
-                                    // I'll use a temporary loading state logic if possible or just blocking alert flow as React updates state async.
-                                    // For simplicity and adherence to "Función: sincronizarProyectos", I'll inline it or define it outside.
-                                    // Defining inline for now to access state.
                                     setLoading(true);
                                     await projectsService.sync();
                                     alert('Sincronización Completada Correctamente');
@@ -113,6 +108,56 @@ export const ProjectsView: React.FC = () => {
                         <Plus className="w-4 h-4" />
                         Nuevo Proyecto
                     </button>
+                    {/* Audit Tool: Mock Data Injection */}
+                    <button
+                        onClick={() => {
+                            const mockProjects: Project[] = Array.from({ length: 100 }).map((_, i) => ({
+                                id: 1000 + i,
+                                nombre: `Proyecto Mock ${i + 1}`,
+                                cliente: `Cliente Simulado ${i % 5}`,
+                                estado: i % 3 === 0 ? 'Inactivo' : 'Activo',
+                                division: i % 2 === 0 ? 'Industrial' : 'Residencial',
+                                fechaInicio: new Date().toISOString(),
+                                presupuesto: 10000 + (i * 100)
+                            }));
+                            setProjects(prev => [...prev, ...mockProjects]);
+                        }}
+                        className="px-3 py-2 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                        title="Debug: Inyectar 100 Proyectos"
+                    >
+                        🚀 Stress Test
+                    </button>
+                </div>
+            </div>
+
+            {/* Filters Bar - Sticky */}
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm p-4 rounded-xl border shadow-md flex flex-col md:flex-row gap-4 items-center justify-between mb-4 mt-2">
+                <div className="relative w-full md:w-96">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre o cliente..."
+                        className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600 font-medium cursor-pointer flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            className="rounded text-blue-600 focus:ring-blue-500"
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    setProjects(prev => prev.filter(p => p.estado === 'Activo'));
+                                } else {
+                                    fetchData(); // Reload to reset
+                                }
+                            }}
+                        />
+                        Ocultar Inactivos
+                    </label>
                 </div>
             </div>
 
