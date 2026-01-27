@@ -38,5 +38,17 @@ namespace OperationWeb.DataAccess.Repositories
                 
             return await _dbContext.Database.ExecuteSqlRawAsync(sql);
         }
+
+        public async Task<IEnumerable<OperationWeb.Core.DTOs.ProyectoDTO>> GetAllProyectosAsync()
+        {
+            return await _context.Proyectos
+                .Select(p => new OperationWeb.Core.DTOs.ProyectoDTO
+                {
+                    Id = p.Id,
+                    Nombre = p.Nombre,
+                    Estado = p.Estado
+                })
+                .ToListAsync();
+        }
     }
 }

@@ -4,6 +4,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | 2026-01-26 | QA | main | Setup de ramas y protocolo de control | ✅ COMPLETADO |
 | 2026-01-26 | Agente 1 | dev-backend-fase5 | Inicialización de Workspace Backend y conexión a Toshiba | ✅ LISTO |
+| 2026-01-27 | Agente 1 | dev-backend-fase5 | ORDEN 1: Estructura Proyectos (DTO + Repo) implementada | ✅ LISTO |
 
 ---
 

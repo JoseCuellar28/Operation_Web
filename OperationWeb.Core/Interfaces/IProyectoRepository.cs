@@ -7,6 +7,7 @@ namespace OperationWeb.Core.Interfaces
     public interface IProyectoRepository : IRepository<Proyecto>
     {
         Task<IEnumerable<Proyecto>> GetActiveProjectsAsync();
+        Task<IEnumerable<OperationWeb.Core.DTOs.ProyectoDTO>> GetAllProyectosAsync();
         Task<int> SyncFromPersonalAsync();
     }
 }
