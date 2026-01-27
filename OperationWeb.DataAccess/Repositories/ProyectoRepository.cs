@@ -46,7 +46,13 @@ namespace OperationWeb.DataAccess.Repositories
                 {
                     Id = p.Id,
                     Nombre = p.Nombre,
-                    Estado = p.Estado
+                    Estado = p.Estado,
+                    Cliente = p.Cliente,
+                    FechaInicio = p.FechaInicio,
+                    FechaFin = p.FechaFin,
+                    Division = p.Division,
+                    GerenteDni = p.GerenteDni,
+                    JefeDni = p.JefeDni
                 })
                 .ToListAsync();
         }

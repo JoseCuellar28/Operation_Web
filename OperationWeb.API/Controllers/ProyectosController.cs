@@ -1,62 +1,29 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OperationWeb.Business.Interfaces;
-using System;
+using OperationWeb.Core.DTOs;
+using OperationWeb.Core.Interfaces;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace OperationWeb.API.Controllers
 {
-    [Route("api/proyectos")]
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize] // Protected by default
     public class ProyectosController : ControllerBase
     {
-        private readonly IProyectoService _service;
+        private readonly IProyectoRepository _proyectoRepository;
 
-        public ProyectosController(IProyectoService service)
+        public ProyectosController(IProyectoRepository proyectoRepository)
         {
-            _service = service;
+            _proyectoRepository = proyectoRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<ProyectoDTO>>> GetAll()
         {
-            try
-            {
-                var result = await _service.GetAllAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error retrieving projects", error = ex.Message });
-            }
-        }
-
-        [HttpGet("active")]
-        public async Task<IActionResult> GetActive()
-        {
-             try
-            {
-                var result = await _service.GetActiveAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error retrieving active projects", error = ex.Message });
-            }
-        }
-
-        [HttpPost("sync")]
-        [Microsoft.AspNetCore.Authorization.Authorize]
-        public async Task<IActionResult> Sync()
-        {
-            try
-            {
-                var count = await _service.SyncProjectsAsync();
-                return Ok(new { message = $"Sincronización completada. {count} nuevos proyectos creados." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error sincronizando proyectos", error = ex.Message });
-            }
+            var proyectos = await _proyectoRepository.GetAllProyectosAsync();
+            return Ok(proyectos);
         }
     }
 }

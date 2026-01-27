@@ -7,6 +7,7 @@
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
 | 2026-01-26 | Agente 1 | dev-backend-fase5 | Inicialización de Workspace Backend y conexión a Toshiba | ✅ LISTO |
 | 2026-01-27 | Agente 1 | dev-backend-fase5 | ORDEN 1: Estructura Proyectos (DTO + Repo) implementada | ✅ LISTO |
+| 2026-01-27 | Agente 1 | dev-backend-fase5 | ORDEN 2: Endpoint /api/proyectos expuesto y alineado con Master Data | ✅ LISTO |
 
 ---
 
