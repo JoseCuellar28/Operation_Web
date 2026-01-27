@@ -56,3 +56,10 @@ El sistema implementa estándares de seguridad modernos, incluyendo:
 ## 🤝 Contribución
 
 Este es un repositorio privado/interno. El acceso y contribución están restringidos al equipo de desarrollo autorizado.
+
+## ⚖️ Código de Conducta de los Agentes (Fase 5)
+1. **Paso 1:** Antes de trabajar, hacer `git pull origin main` para tener lo último.
+2. **Paso 2:** Realizar el cambio técnico en su rama respectiva.
+3. **Paso 3:** Registrar el cambio en `docs/SQUAD_CHANGELOG.md`.
+4. **Paso 4:** Subir la rama y crear un **Pull Request (PR)** hacia `main`.
+5. **Paso 5:** Esperar la aprobación del Master para el merge.

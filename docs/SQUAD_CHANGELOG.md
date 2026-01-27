@@ -3,6 +3,8 @@
 | Fecha | Agente | Rama | Cambio Realizado | Estado |
 | :--- | :--- | :--- | :--- | :--- |
 | 2026-01-26 | QA | main | Setup de ramas y protocolo de control | ✅ COMPLETADO |
+| 2026-01-26 | Agente 2 | dev-db-fase5 | Inicialización de Workspace DB y mapeo de tablas en Toshiba | ✅ LISTO |
+| 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
 
 ---
 
@@ -1650,3 +1652,5 @@ El sistema Web 2.0 es funcionalmente idéntico a la Web 1, con arquitectura supe
     *   Borrado `tests/test_personal.xlsx` y logs.
 
 **Resultado:** El repositorio está ahora 100% alineado con la documentación.
+
+[2026-01-26] [dev-db-fase5] [Agente 2 Online - Conexión a Toshiba verificada] [LISTO].
