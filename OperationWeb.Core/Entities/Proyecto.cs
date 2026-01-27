@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System;
 
 namespace OperationWeb.Core.Entities
 {
@@ -8,34 +7,39 @@ namespace OperationWeb.Core.Entities
     public class Proyecto
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [StringLength(100)]
-        public string Nombre { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(100)]
+        public required string Nombre { get; set; }
 
-        [StringLength(20)] // Note: Map says 50, but let's be safe or update to 50? Map says 50.
-        public string? Estado { get; set; }
-
-        [StringLength(200)]
+        [MaxLength(200)]
         public string? Cliente { get; set; }
 
+        [Required]
+        [MaxLength(50)]
+        public required string Estado { get; set; }
+
         public DateTime? FechaInicio { get; set; }
+
         public DateTime? FechaFin { get; set; }
-        
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? Presupuesto { get; set; }
 
         public DateTime? FechaSincronizacion { get; set; }
 
-        [StringLength(100)]
+        [MaxLength(100)]
         public string? Division { get; set; }
 
-        [StringLength(80)]
+        [MaxLength(80)]
         public string? GerenteDni { get; set; }
 
-        [StringLength(80)]
+        [MaxLength(80)]
         public string? JefeDni { get; set; }
 
-        [StringLength(50)]
+        [MaxLength(50)]
         public string? CodigoCebe { get; set; }
     }
 }

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { projectsService, Project } from '../../services/projectsService';
 import { squadService, Squad } from '../../services/squadService';
 import { personalService, Employee } from '../../services/personalService';
-import { Plus, MapPin, Briefcase, Calendar, Shield, Truck, Edit, Trash2, X, Save, Search } from 'lucide-react';
+import { Plus, Briefcase, Calendar, Shield, Truck, Edit, Search, Eye } from 'lucide-react';
+import { ProjectModal } from './components/ProjectModal';
 
 export const ProjectsView: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -11,10 +12,8 @@ export const ProjectsView: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
+    const [isReadOnly, setIsReadOnly] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-
-    // Form State
-    const [formData, setFormData] = useState<Partial<Project>>({});
 
     const fetchData = async () => {
         setLoading(true);
@@ -39,24 +38,22 @@ export const ProjectsView: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleOpenModal = (project?: Project) => {
+    const handleOpenModal = (project?: Project, readOnly: boolean = false) => {
+        setIsReadOnly(readOnly);
         if (project) {
             setEditingProject(project);
-            setFormData({ ...project });
         } else {
             setEditingProject(null);
-            setFormData({ estado: 'Activo', fechaInicio: new Date().toISOString().split('T')[0] });
         }
         setShowModal(true);
     };
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSave = async (data: Partial<Project>) => {
         try {
             if (editingProject) {
-                await projectsService.update(editingProject.id, formData);
+                await projectsService.update(editingProject.id, data);
             } else {
-                await projectsService.create(formData);
+                await projectsService.create(data);
             }
             setShowModal(false);
             fetchData();
@@ -84,11 +81,6 @@ export const ProjectsView: React.FC = () => {
                         onClick={async () => {
                             if (confirm('¿Seguro que desea sincronizar Áreas de Personal a Proyectos?')) {
                                 try {
-                                    // Visual Feedback: Disable/Spinner could be handled by state, but alert is instant per spec.
-                                    // Spec says: "Paso 2: Feedback visual (Deshabilitar botón + Spinner de carga)"
-                                    // I'll use a temporary loading state logic if possible or just blocking alert flow as React updates state async.
-                                    // For simplicity and adherence to "Función: sincronizarProyectos", I'll inline it or define it outside.
-                                    // Defining inline for now to access state.
                                     setLoading(true);
                                     await projectsService.sync();
                                     alert('Sincronización Completada Correctamente');
@@ -113,8 +105,89 @@ export const ProjectsView: React.FC = () => {
                         <Plus className="w-4 h-4" />
                         Nuevo Proyecto
                     </button>
+                    {/* Audit Tool: Mock Data Injection */}
+                    <button
+                        onClick={() => {
+                            const mockProjects: Project[] = Array.from({ length: 100 }).map((_, i) => ({
+                                id: 1000 + i,
+                                nombre: `Proyecto Mock ${i + 1}`,
+                                cliente: `Cliente Simulado ${i % 5}`,
+                                estado: i % 3 === 0 ? 'Inactivo' : 'Activo',
+                                division: i % 2 === 0 ? 'Industrial' : 'Residencial',
+                                fechaInicio: new Date().toISOString(),
+                                presupuesto: 10000 + (i * 100)
+                            }));
+                            setProjects(prev => [...prev, ...mockProjects]);
+                        }}
+                        className="px-3 py-2 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                        title="Debug: Inyectar 100 Proyectos"
+                    >
+                        🚀 Stress Test
+                    </button>
                 </div>
             </div>
+
+            {/* Filters Bar - Sticky */}
+            <div className="sticky top-0 z-10 space-y-4 mb-6 mt-2">
+                {/* Stats Counters */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Total</p>
+                        <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Activos</p>
+                        <p className="text-2xl font-bold text-green-600">{projects.filter(p => p.estado === 'Activo').length}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Industrial</p>
+                        <p className="text-2xl font-bold text-blue-600">{projects.filter(p => p.division === 'Industrial').length}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border shadow-sm">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Residencial</p>
+                        <p className="text-2xl font-bold text-orange-600">{projects.filter(p => p.division === 'Residencial').length}</p>
+                    </div>
+                </div>
+
+                {/* Search & Filter Controls */}
+                <div className="bg-white/95 backdrop-blur-sm p-4 rounded-xl border shadow-md flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="relative w-full md:w-96">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o cliente..."
+                            className="w-full pl-9 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <select
+                            className="w-full md:w-48 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white font-medium text-gray-700"
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === 'Todos') {
+                                    fetchData();
+                                } else {
+                                    setProjects(prev => {
+                                        fetchData().then(() => {
+                                            setProjects(current => current.filter(p => p.estado === val));
+                                        });
+                                        return prev;
+                                    });
+                                }
+                            }}
+                        >
+                            <option value="Todos">Todos los Estados</option>
+                            <option value="Activo">Solo Activos</option>
+                            <option value="Inactivo">Inactivos / Cesados</option>
+                            <option value="En Curso">En Curso</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
 
             {/* Projects Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -164,137 +237,27 @@ export const ProjectsView: React.FC = () => {
                         </div>
                         <div className="bg-gray-50 px-6 py-3 border-t rounded-b-xl text-xs text-gray-500 flex justify-between items-center">
                             <span>División: {project.division || 'General'}</span>
-                            <button className="text-primary hover:underline">Ver Detalle &rarr;</button>
+                            <button
+                                onClick={() => handleOpenModal(project, true)}
+                                className="text-primary hover:underline flex items-center gap-1"
+                            >
+                                <Eye className="w-3 h-3" /> Ver Detalle
+                            </button>
                         </div>
                     </div>
                 ))}
             </div>
 
             {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-                        <div className="flex justify-between items-center p-6 border-b">
-                            <h2 className="text-xl font-bold">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
-                            <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400 hover:text-gray-600" /></button>
-                        </div>
-
-                        <form onSubmit={handleSave} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
-                                <input
-                                    required
-                                    type="text"
-                                    value={formData.nombre || ''}
-                                    onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
-                                    <input
-                                        required
-                                        type="text"
-                                        value={formData.cliente || ''}
-                                        onChange={e => setFormData({ ...formData, cliente: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">División</label>
-                                    <select
-                                        value={formData.division || ''}
-                                        onChange={e => setFormData({ ...formData, division: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                    >
-                                        <option value="">Seleccionar</option>
-                                        <option value="Industrial">Industrial</option>
-                                        <option value="Residencial">Residencial</option>
-                                        <option value="Mantenimiento">Mantenimiento</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
-                                    <input
-                                        type="date"
-                                        value={formData.fechaInicio ? formData.fechaInicio.split('T')[0] : ''}
-                                        onChange={e => setFormData({ ...formData, fechaInicio: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                                    <select
-                                        value={formData.estado || 'Activo'}
-                                        onChange={e => setFormData({ ...formData, estado: e.target.value })}
-                                        className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                    >
-                                        <option value="Activo">Activo</option>
-                                        <option value="En Curso">En Curso</option>
-                                        <option value="Finalizado">Finalizado</option>
-                                        <option value="Suspendido">Suspendido</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Legacy Assignment Section */}
-                            <div className="pt-4 border-t mt-4">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Asignación de Recursos (Legacy)</h3>
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Asignar Cuadrilla</label>
-                                        <select
-                                            value={formData.id_cuadrilla || ''}
-                                            onChange={e => setFormData({ ...formData, id_cuadrilla: e.target.value })}
-                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors outline-none"
-                                        >
-                                            <option value="">-- Sin Asignar --</option>
-                                            {squads.map(s => (
-                                                <option key={s.id} value={s.id}>{s.nombre} ({s.zona})</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Asignar Efectivo Policial</label>
-                                        <select
-                                            value={formData.id_efectivo || ''}
-                                            onChange={e => setFormData({ ...formData, id_efectivo: e.target.value })}
-                                            className="w-full rounded-lg border-gray-300 border px-3 py-2 text-sm bg-gray-50 focus:bg-white transition-colors outline-none"
-                                        >
-                                            <option value="">-- Sin Asignar --</option>
-                                            {officers.map(o => (
-                                                <option key={o.dni} value={o.dni}>{o.inspector} (DNI: {o.dni})</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4 border-t">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium text-sm flex items-center gap-2"
-                                >
-                                    <Save className="w-4 h-4" />
-                                    Guardar Proyecto
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
+            <ProjectModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                project={editingProject}
+                readOnly={isReadOnly}
+                onSave={handleSave}
+                squads={squads}
+                officers={officers}
+            />
+        </div >
     );
 };
