@@ -5,7 +5,8 @@
 | 2026-01-26 | QA | main | Setup de ramas y protocolo de control | ✅ COMPLETADO |
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Inicialización de Workspace DB y mapeo de tablas en Toshiba | ✅ LISTO |
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
-| 2026-01-27 | dev-db-fase5 | Auditoría integral de BD_Operation y Opera_Main completada. Mapa maestro generado. | [PENDIENTE REVISIÓN] |
+| 2026-01-27 | Agente 2 | dev-db-fase5 | Auditoría integral de BD_Operation y Opera_Main completada. Mapa maestro generado. | [PENDIENTE REVISIÓN] |
+| 2026-02-05 | Agente 2 | main | Validación de conexión remota a Toshiba (100.125.169.14): Ping exitoso (0% pérdida), esquema de tablas Proyectos y PersonalProyectos inspeccionado, herramientas db_admin consolidadas (11 scripts). Opera_Main.dbo.Proyectos NO EXISTE. | [PENDIENTE REVISIÓN QA] |
 
 ---
 
