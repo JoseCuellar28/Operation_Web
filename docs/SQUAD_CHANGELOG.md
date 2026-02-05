@@ -2,6 +2,11 @@
 
 | Fecha | Agente | Rama | Cambio Realizado | Estado |
 | :--- | :--- | :--- | :--- | :--- |
+| 2026-02-05 | QA Agent | main | 🐛 BUG REPORT: Error 500 en Carga de Fotos/Firmas - Bloqueante | 🔴 CRÍTICO |
+| 2026-02-05 | Agent 2 (BD) | main | 📋 TAREA URGENTE: Verificación de Esquema para Imágenes | ⏳ PENDIENTE |
+| 2026-02-05 | Agent 3 (Frontend) | dev-frontend-fase5 | Fix Crítico: Bucle Infinito en EmployeeModal (useMemo stabilization) | ✅ COMPLETADO |
+| 2026-02-05 | Agent 3 (Frontend) | dev-frontend-fase5 | Expansión de Catálogo de Puestos (8 tipos) | ✅ COMPLETADO |
+| 2026-02-05 | Agent 3 (Frontend) | dev-frontend-fase5 | Fix Crítico: Refactorización de UI de Cese (CessationModal.tsx) | ✅ COMPLETADO |
 | 2026-01-27 | Agent 1 (Backend) | dev-backend-fase5 | Implementación del Módulo Proyectos y Assignments | ✅ COMPLETADO |
 | 2026-01-27 | Agent 3 (Frontend) | dev-frontend-fase5 | Implementación de Servicio y Vista de Proyectos | ✅ COMPLETADO |
 | 2026-01-27 | Agent 3 (Frontend) | dev-frontend-fase5 | Implementación de Modal de Edición y Acciones (Eye/Pencil) | ✅ COMPLETADO |
@@ -1656,5 +1661,179 @@ El sistema Web 2.0 es funcionalmente idéntico a la Web 1, con arquitectura supe
     *   Borrado `tests/test_personal.xlsx` y logs.
 
 **Resultado:** El repositorio está ahora 100% alineado con la documentación.
+
+---
+
+## [2026-02-05] - 🐛 BUG CRÍTICO: Error 500 en Carga de Fotos/Firmas
+**Agente:** QA Agent  
+**Fecha:** 2026-02-05 15:15  
+**Estado:** 🔴 **BLOQUEANTE - REQUIERE VERIFICACIÓN DE BD**
+
+### Resumen del Bug
+La funcionalidad de carga de fotos y firmas de colaboradores está **completamente rota**. Al intentar crear o editar un colaborador con foto/firma, el servidor responde con **Error 500 (Internal Server Error)** y los archivos **NO se guardan** en el servidor.
+
+### Evidencia
+- **Test 1:** Crear colaborador con foto → ❌ Error 500
+- **Test 2:** Editar colaborador - actualizar foto → ❌ Error 500
+- **Test 3:** Verificar archivos en servidor → ❌ 404 Not Found
+- **Carpeta:** `/wwwroot/imagenes/fotos/` está VACÍA (no se crearon subcarpetas)
+
+### Causa Raíz Identificada
+El método `SaveBase64Image` en `PersonalController.cs` está recibiendo `personal.Inspector` como parámetro `employeeName`, pero:
+1. Durante la creación: `personal.Inspector` está **NULL** porque el frontend envía nombres separados
+2. El campo `Inspector` se construye **DESPUÉS** en el backend
+3. Resultado: Error 500 al intentar crear carpetas con nombre null
+
+### Documentación Generada
+- **Bug Report Completo:** `brain/BUG_REPORT_PHOTO_UPLOAD.md`
+- **Instrucciones para Backend:** Incluidas en el bug report
+- **Instrucciones para BD:** Ver sección siguiente ⬇️
+
+---
+
+## [2026-02-05] - 📋 TAREA URGENTE PARA AGENTE 2 (BD)
+**Agente Responsable:** Agent 2 (Database/BD)  
+**Prioridad:** 🔴 **CRÍTICA - BLOQUEANTE**  
+**Fecha Límite:** ANTES de implementar fix de Backend  
+**Estado:** ⏳ **PENDIENTE**
+
+### 🎯 Objetivo
+Verificar y documentar la estructura de la base de datos ANTES de implementar el fix para el Error 500 en carga de fotos.
+
+### 📋 Tareas Asignadas
+
+#### ✅ Tarea 1: Verificar Estructura de Tabla `Personal`
+**Base de Datos:** `DB_Operation.dbo.Personal`
+
+Ejecutar y documentar resultados:
+```sql
+-- Verificar campos relacionados con imágenes
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'Personal' 
+  AND COLUMN_NAME IN ('Inspector', 'Foto', 'Firma', 'FotoUrl', 'FirmaUrl', 'Nombres', 'ApellidoPaterno', 'ApellidoMaterno', 'DNI')
+ORDER BY COLUMN_NAME;
+```
+
+**Verificar:**
+- [ ] ¿Existen los campos `Foto` y `Firma`?
+- [ ] ¿Existen los campos `FotoUrl` y `FirmaUrl`?
+- [ ] ¿El campo `Inspector` existe y tiene suficiente longitud (200+)?
+- [ ] ¿Los campos `Foto` y `Firma` son `nvarchar(MAX)` para almacenar Base64?
+
+#### ✅ Tarea 2: Verificar Relación con `Opera_Main.dbo.COLABORADORES`
+```sql
+-- Verificar estructura de COLABORADORES
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE
+FROM Opera_Main.INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'COLABORADORES' 
+  AND COLUMN_NAME IN ('DNI', 'NOMBRE', 'FOTO', 'FIRMA', 'FOTO_URL', 'FIRMA_URL')
+ORDER BY COLUMN_NAME;
+```
+
+**Verificar:**
+- [ ] ¿La tabla `COLABORADORES` tiene campos para fotos/firmas?
+- [ ] ¿Los nombres de campos coinciden con `Personal`?
+- [ ] ¿Existe sincronización entre ambas tablas?
+
+#### ✅ Tarea 3: Verificar Relación con `Opera_Main.dbo.ASISTENCIA_DIARIA`
+```sql
+-- Verificar si ASISTENCIA_DIARIA necesita acceso a fotos
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE
+FROM Opera_Main.INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'ASISTENCIA_DIARIA' 
+  AND COLUMN_NAME IN ('DNI', 'NOMBRE', 'FOTO_URL')
+ORDER BY COLUMN_NAME;
+```
+
+#### ✅ Tarea 4: Verificar Datos Existentes
+```sql
+-- Verificar cuántos registros tienen fotos/firmas
+SELECT 
+    COUNT(*) AS TotalRegistros,
+    SUM(CASE WHEN FotoUrl IS NOT NULL THEN 1 ELSE 0 END) AS ConFotoUrl,
+    SUM(CASE WHEN FirmaUrl IS NOT NULL THEN 1 ELSE 0 END) AS ConFirmaUrl,
+    SUM(CASE WHEN Foto IS NOT NULL THEN 1 ELSE 0 END) AS ConFotoBase64,
+    SUM(CASE WHEN Firma IS NOT NULL THEN 1 ELSE 0 END) AS ConFirmaBase64
+FROM DB_Operation.dbo.Personal;
+```
+
+#### ✅ Tarea 5: Verificar Constraints y Triggers
+```sql
+-- Verificar constraints en tabla Personal
+SELECT 
+    tc.CONSTRAINT_NAME,
+    tc.CONSTRAINT_TYPE,
+    kcu.COLUMN_NAME
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
+JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS kcu
+    ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+WHERE tc.TABLE_NAME = 'Personal'
+ORDER BY tc.CONSTRAINT_TYPE, kcu.COLUMN_NAME;
+```
+
+### 📊 Formato de Reporte Requerido
+**Crear archivo:** `docs/DB_VERIFICATION_REPORT_IMAGES.md`
+
+**Estructura:**
+```markdown
+# Reporte de Verificación de Esquema - Imágenes de Personal
+
+**Fecha:** [FECHA]
+**Agente:** Agent 2 (BD)
+**Base de Datos:** DB_Operation / Opera_Main
+
+## Resumen Ejecutivo
+[Breve resumen de hallazgos principales]
+
+## Tarea 1: Estructura de Tabla Personal
+- ✅/❌ Campo `Inspector`: [TIPO, LONGITUD]
+- ✅/❌ Campo `Foto`: [TIPO, LONGITUD]
+- ✅/❌ Campo `Firma`: [TIPO, LONGITUD]
+- ✅/❌ Campo `FotoUrl`: [TIPO, LONGITUD]
+- ✅/❌ Campo `FirmaUrl`: [TIPO, LONGITUD]
+
+**Observaciones:** [Detalles]
+
+## Tarea 2-5: [Similar para cada tarea]
+
+## ⚠️ Problemas Identificados
+[Lista de problemas que puedan bloquear la implementación]
+
+## ✅ Recomendaciones
+[Cambios necesarios en el esquema, si los hay]
+
+## 🔄 Migraciones Necesarias
+[Scripts SQL para crear/modificar campos, si es necesario]
+```
+
+### 📁 Referencias Completas
+- **Instrucciones Detalladas:** `brain/DB_VERIFICATION_INSTRUCTIONS.md`
+- **Bug Report Completo:** `brain/BUG_REPORT_PHOTO_UPLOAD.md`
+- **Código Backend:** `OperationWeb.API/Controllers/PersonalController.cs`
+- **Entidad:** `OperationWeb.Core/Entities/Personal.cs`
+
+### ⏰ Tiempo Estimado
+**2-3 horas** para completar todas las verificaciones y generar el reporte.
+
+### 🚨 IMPORTANTE
+**Una vez completado el reporte:**
+1. ✅ Crear el archivo `docs/DB_VERIFICATION_REPORT_IMAGES.md`
+2. ✅ Hacer commit de los cambios
+3. ✅ Hacer push a GitHub con mensaje: `[Agent 2] DB Verification Report - Image Schema`
+4. ✅ Notificar al QA Agent para revisión
+
+**El Backend Agent NO PUEDE implementar el fix hasta que este reporte esté completo y aprobado.**
+
 
 [2026-01-26] [dev-db-fase5] [Agente 2 Online - Conexión a Toshiba verificada] [LISTO].
