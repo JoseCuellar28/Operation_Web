@@ -7,6 +7,7 @@
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
 | 2026-01-27 | Agente 2 | dev-db-fase5 | Auditoría integral de BD_Operation y Opera_Main completada. Mapa maestro generado. | [PENDIENTE REVISIÓN] |
 | 2026-02-05 | Agente 2 | main | Validación de conexión remota a Toshiba (100.125.169.14): Ping exitoso (0% pérdida), esquema de tablas Proyectos y PersonalProyectos inspeccionado, herramientas db_admin consolidadas (11 scripts). Opera_Main.dbo.Proyectos NO EXISTE. | [PENDIENTE REVISIÓN QA] |
+| 2026-02-05 | Agente 2 | dev-db-fase5 | 🔴 BLOQUEANTE: Verificación de esquema de imágenes completada. photo_url NO EXISTE en DB_Operation.COLABORADORES, SÍ EXISTE en Opera_Main.COLABORADORES (NVARCHAR MAX). Solo 0.28% registros con foto. Reporte: docs/DB_VERIFICATION_REPORT_IMAGES.md | ✅ LISTO PARA BACKEND AGENT |
 
 ---
 
