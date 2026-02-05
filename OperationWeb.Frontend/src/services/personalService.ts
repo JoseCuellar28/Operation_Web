@@ -17,6 +17,7 @@ export interface Employee {
     foto?: string; // Base64
     firma?: string; // Base64
     fechaNacimiento?: string; // YYYY-MM-DD
+    motivoCese?: string;
     id?: number; // legacy id if any
 }
 
