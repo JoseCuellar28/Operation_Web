@@ -1,0 +1,787 @@
+{
+  "timestamp": "2026-02-05T15:42:10.257321",
+  "server": "100.125.169.14",
+  "databases": {
+    "DB_Operation": {
+      "tables": [
+        {
+          "schema": "dbo",
+          "name": "__EFMigrationsHistory",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "CuadrillaColaboradores",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Cuadrillas",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Empleado",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Historial_Cargas_Personal",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "HSE_Incidents",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "HSE_InspectionItems",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "HSE_Inspections",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "HSE_PPE_Delivery",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "MotivosCese",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "PasswordResetTokens",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Permissions",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Personal",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Personal_EventoLaboral",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Personal_Staging",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "PersonalProyectos",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Proyectos",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "RolePermissions",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Roles",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "sysdiagrams",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "SystemSettings",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "UserAccessConfigs",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "UserActivations",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "UserRoles",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "Users",
+          "type": "BASE TABLE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "fk_name": "FK_CuadrillaColaboradores_Personal_PersonalDNI",
+          "parent_table": "CuadrillaColaboradores",
+          "parent_column": "PersonalDNI",
+          "referenced_table": "Personal",
+          "referenced_column": "DNI"
+        },
+        {
+          "fk_name": "FK_Empleado_Personal_DNI",
+          "parent_table": "Empleado",
+          "parent_column": "DNI",
+          "referenced_table": "Personal",
+          "referenced_column": "DNI"
+        },
+        {
+          "fk_name": "FK__HSE_Inspe__Inspe__690797E6",
+          "parent_table": "HSE_InspectionItems",
+          "parent_column": "InspectionId",
+          "referenced_table": "HSE_Inspections",
+          "referenced_column": "Id"
+        },
+        {
+          "fk_name": "FK_Evento_Personal_DNI",
+          "parent_table": "Personal_EventoLaboral",
+          "parent_column": "DNI",
+          "referenced_table": "Personal",
+          "referenced_column": "DNI"
+        },
+        {
+          "fk_name": "FK_PersonalProyectos_Personal",
+          "parent_table": "PersonalProyectos",
+          "parent_column": "DNI",
+          "referenced_table": "Personal",
+          "referenced_column": "DNI"
+        },
+        {
+          "fk_name": "FK_PersonalProyectos_Proyectos",
+          "parent_table": "PersonalProyectos",
+          "parent_column": "ProyectoId",
+          "referenced_table": "Proyectos",
+          "referenced_column": "Id"
+        },
+        {
+          "fk_name": "FK__RolePermi__Permi__1209AD79",
+          "parent_table": "RolePermissions",
+          "parent_column": "PermissionId",
+          "referenced_table": "Permissions",
+          "referenced_column": "Id"
+        },
+        {
+          "fk_name": "FK__RolePermi__RoleI__11158940",
+          "parent_table": "RolePermissions",
+          "parent_column": "RoleId",
+          "referenced_table": "Roles",
+          "referenced_column": "Id"
+        },
+        {
+          "fk_name": "FK_Users_Personal_DNI",
+          "parent_table": "Users",
+          "parent_column": "DNI",
+          "referenced_table": "Personal",
+          "referenced_column": "DNI"
+        }
+      ],
+      "personal_references": [
+        {
+          "table": "CuadrillaColaboradores",
+          "column": "PersonalDNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "Empleado",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "HSE_Incidents",
+          "column": "ReporterDNI",
+          "data_type": "nvarchar",
+          "length": 20
+        },
+        {
+          "table": "HSE_Inspections",
+          "column": "InspectorDNI",
+          "data_type": "nvarchar",
+          "length": 20
+        },
+        {
+          "table": "HSE_PPE_Delivery",
+          "column": "DelivererDNI",
+          "data_type": "nvarchar",
+          "length": 20
+        },
+        {
+          "table": "HSE_PPE_Delivery",
+          "column": "WorkerDNI",
+          "data_type": "nvarchar",
+          "length": 20
+        },
+        {
+          "table": "PasswordResetTokens",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "Personal",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "Personal",
+          "column": "EmailPersonal",
+          "data_type": "nvarchar",
+          "length": 100
+        },
+        {
+          "table": "Personal",
+          "column": "Inspector",
+          "data_type": "nvarchar",
+          "length": 200
+        },
+        {
+          "table": "Personal_EventoLaboral",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "Personal_Staging",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "Personal_Staging",
+          "column": "EmailPersonal",
+          "data_type": "nvarchar",
+          "length": 100
+        },
+        {
+          "table": "Personal_Staging",
+          "column": "Inspector",
+          "data_type": "nvarchar",
+          "length": 200
+        },
+        {
+          "table": "PersonalProyectos",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "Proyectos",
+          "column": "GerenteDni",
+          "data_type": "nvarchar",
+          "length": 80
+        },
+        {
+          "table": "Proyectos",
+          "column": "JefeDni",
+          "data_type": "nvarchar",
+          "length": 80
+        },
+        {
+          "table": "UserActivations",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        },
+        {
+          "table": "Users",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        }
+      ],
+      "row_counts": [
+        {
+          "table": "__EFMigrationsHistory",
+          "count": 7
+        },
+        {
+          "table": "CuadrillaColaboradores",
+          "count": 0
+        },
+        {
+          "table": "Cuadrillas",
+          "count": 0
+        },
+        {
+          "table": "Empleado",
+          "count": 0
+        },
+        {
+          "table": "Historial_Cargas_Personal",
+          "count": 16
+        },
+        {
+          "table": "HSE_Incidents",
+          "count": 0
+        },
+        {
+          "table": "HSE_InspectionItems",
+          "count": 0
+        },
+        {
+          "table": "HSE_Inspections",
+          "count": 0
+        },
+        {
+          "table": "HSE_PPE_Delivery",
+          "count": 0
+        },
+        {
+          "table": "MotivosCese",
+          "count": 0
+        },
+        {
+          "table": "PasswordResetTokens",
+          "count": 19
+        },
+        {
+          "table": "Permissions",
+          "count": 42
+        },
+        {
+          "table": "Personal",
+          "count": 1445
+        },
+        {
+          "table": "Personal_EventoLaboral",
+          "count": 0
+        },
+        {
+          "table": "Personal_Staging",
+          "count": 0
+        },
+        {
+          "table": "PersonalProyectos",
+          "count": 693
+        },
+        {
+          "table": "Proyectos",
+          "count": 94
+        },
+        {
+          "table": "RolePermissions",
+          "count": 129
+        },
+        {
+          "table": "Roles",
+          "count": 13
+        },
+        {
+          "table": "sysdiagrams",
+          "count": 0
+        },
+        {
+          "table": "SystemSettings",
+          "count": 5
+        },
+        {
+          "table": "UserAccessConfigs",
+          "count": 30
+        },
+        {
+          "table": "UserActivations",
+          "count": 0
+        },
+        {
+          "table": "UserRoles",
+          "count": 3
+        },
+        {
+          "table": "Users",
+          "count": 30
+        }
+      ]
+    },
+    "Opera_Main": {
+      "tables": [
+        {
+          "schema": "dbo",
+          "name": "ASISTENCIA_DIARIA",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "AUDITORIA_LOG",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "AUDITORIA_SEGURIDAD",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "CATALOGO_KITS",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "CATALOGO_MATERIALES",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "COLABORADORES",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "COLABORADORES_BACKUP_20251223",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "CONSUMO_MATERIALES",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "CUADRILLA_DIARIA",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "EVIDENCIAS",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "FORMATOS_PAPELERIA",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "INCIDENTES",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "LOTE_IMPORTACION",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "LOTE_VALORIZACION",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "MOVIMIENTOS_ALMACEN",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "ORDENES_TRABAJO",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "PERFILES_TRABAJO",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "REGISTRO_VEHICULAR",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "STOCK_ALMACEN",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "STOCK_CUSTODIA",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "sysdiagrams",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "VEHICLE_TRACKING_LOGS",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "VEHICULOS",
+          "type": "BASE TABLE"
+        },
+        {
+          "schema": "dbo",
+          "name": "ZONAS",
+          "type": "BASE TABLE"
+        }
+      ],
+      "foreign_keys": [
+        {
+          "fk_name": "FK_Asistencia_Colaborador",
+          "parent_table": "ASISTENCIA_DIARIA",
+          "parent_column": "id_colaborador",
+          "referenced_table": "COLABORADORES",
+          "referenced_column": "id"
+        },
+        {
+          "fk_name": "FK_Auditoria_OT",
+          "parent_table": "AUDITORIA_LOG",
+          "parent_column": "id_ot",
+          "referenced_table": "ORDENES_TRABAJO",
+          "referenced_column": "id_ot"
+        },
+        {
+          "fk_name": "FK_AUDITORIA_COLABORADOR",
+          "parent_table": "AUDITORIA_SEGURIDAD",
+          "parent_column": "id_colaborador",
+          "referenced_table": "COLABORADORES",
+          "referenced_column": "id"
+        },
+        {
+          "fk_name": "FK_AUDITORIA_SUPERVISOR",
+          "parent_table": "AUDITORIA_SEGURIDAD",
+          "parent_column": "id_supervisor",
+          "referenced_table": "COLABORADORES",
+          "referenced_column": "id"
+        },
+        {
+          "fk_name": "FK_Consumo_OT",
+          "parent_table": "CONSUMO_MATERIALES",
+          "parent_column": "id_ot",
+          "referenced_table": "ORDENES_TRABAJO",
+          "referenced_column": "id_ot"
+        },
+        {
+          "fk_name": "FK_CUADRILLA_AUXILIAR",
+          "parent_table": "CUADRILLA_DIARIA",
+          "parent_column": "id_auxiliar",
+          "referenced_table": "COLABORADORES",
+          "referenced_column": "id"
+        },
+        {
+          "fk_name": "FK_CUADRILLA_LIDER",
+          "parent_table": "CUADRILLA_DIARIA",
+          "parent_column": "id_lider",
+          "referenced_table": "COLABORADORES",
+          "referenced_column": "id"
+        },
+        {
+          "fk_name": "FK_CUADRILLA_PERFIL",
+          "parent_table": "CUADRILLA_DIARIA",
+          "parent_column": "id_perfil",
+          "referenced_table": "PERFILES_TRABAJO",
+          "referenced_column": "id_perfil"
+        },
+        {
+          "fk_name": "FK_CUADRILLA_VEHICULO",
+          "parent_table": "CUADRILLA_DIARIA",
+          "parent_column": "placa_vehiculo",
+          "referenced_table": "VEHICULOS",
+          "referenced_column": "placa"
+        },
+        {
+          "fk_name": "FK_CUADRILLA_ZONA",
+          "parent_table": "CUADRILLA_DIARIA",
+          "parent_column": "id_zona",
+          "referenced_table": "ZONAS",
+          "referenced_column": "id_zona"
+        },
+        {
+          "fk_name": "FK_Evidencia_OT",
+          "parent_table": "EVIDENCIAS",
+          "parent_column": "id_ot",
+          "referenced_table": "ORDENES_TRABAJO",
+          "referenced_column": "id_ot"
+        },
+        {
+          "fk_name": "FK__MOVIMIENT__id_ma__3587F3E0",
+          "parent_table": "MOVIMIENTOS_ALMACEN",
+          "parent_column": "id_material",
+          "referenced_table": "CATALOGO_MATERIALES",
+          "referenced_column": "id_material"
+        },
+        {
+          "fk_name": "FK_OT_LOTE",
+          "parent_table": "ORDENES_TRABAJO",
+          "parent_column": "id_lote_origen",
+          "referenced_table": "LOTE_IMPORTACION",
+          "referenced_column": "id_lote"
+        },
+        {
+          "fk_name": "FK_PERFIL_KIT_DOCUMENTO",
+          "parent_table": "PERFILES_TRABAJO",
+          "parent_column": "id_kit_documento",
+          "referenced_table": "FORMATOS_PAPELERIA",
+          "referenced_column": "id_formato"
+        },
+        {
+          "fk_name": "FK_PERFIL_KIT_MATERIAL",
+          "parent_table": "PERFILES_TRABAJO",
+          "parent_column": "id_kit_material",
+          "referenced_table": "CATALOGO_KITS",
+          "referenced_column": "id_kit"
+        },
+        {
+          "fk_name": "FK__STOCK_ALM__id_ma__2739D489",
+          "parent_table": "STOCK_ALMACEN",
+          "parent_column": "id_material",
+          "referenced_table": "CATALOGO_MATERIALES",
+          "referenced_column": "id_material"
+        },
+        {
+          "fk_name": "FK__STOCK_CUS__id_ma__30C33EC3",
+          "parent_table": "STOCK_CUSTODIA",
+          "parent_column": "id_material",
+          "referenced_table": "CATALOGO_MATERIALES",
+          "referenced_column": "id_material"
+        }
+      ],
+      "personal_references": [
+        {
+          "table": "ASISTENCIA_DIARIA",
+          "column": "dni_colaborador",
+          "data_type": "nvarchar",
+          "length": 80
+        },
+        {
+          "table": "COLABORADORES",
+          "column": "dni",
+          "data_type": "nvarchar",
+          "length": 80
+        },
+        {
+          "table": "COLABORADORES_BACKUP_20251223",
+          "column": "dni",
+          "data_type": "varchar",
+          "length": 20
+        },
+        {
+          "table": "v_Global_Personal",
+          "column": "DNI",
+          "data_type": "nvarchar",
+          "length": 40
+        }
+      ],
+      "row_counts": [
+        {
+          "table": "ASISTENCIA_DIARIA",
+          "count": 53
+        },
+        {
+          "table": "AUDITORIA_LOG",
+          "count": 0
+        },
+        {
+          "table": "AUDITORIA_SEGURIDAD",
+          "count": 0
+        },
+        {
+          "table": "CATALOGO_KITS",
+          "count": 5
+        },
+        {
+          "table": "CATALOGO_MATERIALES",
+          "count": 44
+        },
+        {
+          "table": "COLABORADORES",
+          "count": 1411
+        },
+        {
+          "table": "COLABORADORES_BACKUP_20251223",
+          "count": 21
+        },
+        {
+          "table": "CONSUMO_MATERIALES",
+          "count": 8
+        },
+        {
+          "table": "CUADRILLA_DIARIA",
+          "count": 3
+        },
+        {
+          "table": "EVIDENCIAS",
+          "count": 0
+        },
+        {
+          "table": "FORMATOS_PAPELERIA",
+          "count": 3
+        },
+        {
+          "table": "INCIDENTES",
+          "count": 15
+        },
+        {
+          "table": "LOTE_IMPORTACION",
+          "count": 5
+        },
+        {
+          "table": "LOTE_VALORIZACION",
+          "count": 4
+        },
+        {
+          "table": "MOVIMIENTOS_ALMACEN",
+          "count": 147
+        },
+        {
+          "table": "ORDENES_TRABAJO",
+          "count": 17
+        },
+        {
+          "table": "PERFILES_TRABAJO",
+          "count": 6
+        },
+        {
+          "table": "REGISTRO_VEHICULAR",
+          "count": 0
+        },
+        {
+          "table": "STOCK_ALMACEN",
+          "count": 44
+        },
+        {
+          "table": "STOCK_CUSTODIA",
+          "count": 9
+        },
+        {
+          "table": "sysdiagrams",
+          "count": 0
+        },
+        {
+          "table": "VEHICLE_TRACKING_LOGS",
+          "count": 14
+        },
+        {
+          "table": "VEHICULOS",
+          "count": 10
+        },
+        {
+          "table": "ZONAS",
+          "count": 5
+        }
+      ]
+    }
+  }
+}
