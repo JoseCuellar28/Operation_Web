@@ -148,12 +148,18 @@ namespace OperationWeb.API.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                // Ensure Inspector field is populated (needed for image folder naming)
+                if (string.IsNullOrWhiteSpace(personal.Inspector))
+                {
+                    personal.Inspector = personal.DNI; // Fallback to DNI if name not provided
+                }
+
                 // Handle Images
                 if (!string.IsNullOrEmpty(personal.Foto))
-                    personal.FotoUrl = await SaveBase64Image(personal.Foto, personal.DNI, "foto");
+                    personal.FotoUrl = await SaveBase64Image(personal.Foto, personal.Inspector, personal.DNI, "foto");
                 
                 if (!string.IsNullOrEmpty(personal.Firma))
-                    personal.FirmaUrl = await SaveBase64Image(personal.Firma, personal.DNI, "firma");
+                    personal.FirmaUrl = await SaveBase64Image(personal.Firma, personal.Inspector, personal.DNI, "firma");
 
                 var nuevo = await _personalService.CreateAsync(personal);
                 return CreatedAtAction(nameof(GetByDni), new { dni = nuevo.DNI }, nuevo);
@@ -180,12 +186,18 @@ namespace OperationWeb.API.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                // Ensure Inspector field is populated (needed for image folder naming)
+                if (string.IsNullOrWhiteSpace(personal.Inspector))
+                {
+                    personal.Inspector = personal.DNI; // Fallback to DNI if name not provided
+                }
+
                 // Handle Images
                 if (!string.IsNullOrEmpty(personal.Foto))
-                    personal.FotoUrl = await SaveBase64Image(personal.Foto, personal.DNI, "foto");
+                    personal.FotoUrl = await SaveBase64Image(personal.Foto, personal.Inspector, personal.DNI, "foto");
                 
                 if (!string.IsNullOrEmpty(personal.Firma))
-                    personal.FirmaUrl = await SaveBase64Image(personal.Firma, personal.DNI, "firma");
+                    personal.FirmaUrl = await SaveBase64Image(personal.Firma, personal.Inspector, personal.DNI, "firma");
 
                 var actualizado = await _personalService.UpdateAsync(personal);
                 return Ok(actualizado);
@@ -241,7 +253,7 @@ namespace OperationWeb.API.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
-        private async Task<string> SaveBase64Image(string base64, string dni, string type)
+        private async Task<string> SaveBase64Image(string base64, string employeeName, string dni, string type)
         {
             try 
             {
@@ -251,21 +263,49 @@ namespace OperationWeb.API.Controllers
                 var data = base64.Contains(",") ? base64.Split(',')[1] : base64;
                 var bytes = Convert.FromBase64String(data);
                 
-                var folder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", type);
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                // Sanitize employee name for folder (remove special chars)
+                var safeName = SanitizeFolderName(employeeName);
+                
+                // New structure: /imagenes/fotos/{EMPLOYEE_NAME}/
+                var folder = Path.Combine(
+                    _env.WebRootPath ?? "wwwroot", 
+                    "imagenes", 
+                    "fotos", 
+                    safeName
+                );
+                
+                if (!Directory.Exists(folder)) 
+                    Directory.CreateDirectory(folder);
 
-                var fileName = $"{dni}_{DateTime.UtcNow.Ticks}.jpg"; // Force jpg or detect? Simple for now
+                // Simple filename: foto.jpg or firma.jpg
+                var fileName = $"{type}.jpg";
                 var path = Path.Combine(folder, fileName);
                 
+                // Overwrite if exists
                 await System.IO.File.WriteAllBytesAsync(path, bytes);
                 
-                return $"/uploads/{type}/{fileName}";
+                return $"/imagenes/fotos/{safeName}/{fileName}";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"[IMAGE SAVE ERROR] Failed to save {type} for {dni}");
+                _logger.LogError(ex, $"[IMAGE SAVE ERROR] Failed to save {type} for {employeeName} (DNI: {dni})");
                 return null;
             }
+        }
+
+        private string SanitizeFolderName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "UNKNOWN";
+            
+            // Remove invalid path characters
+            var invalid = Path.GetInvalidFileNameChars();
+            var sanitized = string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
+            
+            // Replace spaces with underscores
+            sanitized = sanitized.Replace(" ", "_");
+            
+            // Convert to uppercase for consistency
+            return sanitized.ToUpperInvariant();
         }
     }
 }

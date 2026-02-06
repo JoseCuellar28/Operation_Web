@@ -4,6 +4,7 @@ import { Search, Download, Upload, Plus, RefreshCw, FilterX, Eye, Edit, Trash2, 
 import * as XLSX from 'xlsx';
 import { excelDateToJSDate } from '../../utils/excelUtils';
 import { EmployeeModal } from './components/EmployeeModal';
+import { CessationModal } from './components/CessationModal';
 
 export default function PersonalPage() {
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -27,6 +28,11 @@ export default function PersonalPage() {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>(undefined);
     const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+
+    // Cessation Modal State
+    const [isCessationModalOpen, setIsCessationModalOpen] = useState(false);
+    const [employeeToCease, setEmployeeToCease] = useState<Employee | null>(null);
 
     // Handlers
     const handleOpenModal = (employee?: Employee, mode: 'create' | 'edit' | 'view' = 'create') => {
@@ -53,23 +59,28 @@ export default function PersonalPage() {
         }
     };
 
-    const handleCesar = async (employee: Employee) => {
-        const fecha = prompt("Ingrese Fecha de Cese (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-        if (!fecha) return;
+    const handleCesar = (employee: Employee) => {
+        setEmployeeToCease(employee);
+        setIsCessationModalOpen(true);
+    };
 
-        if (confirm(`¿Seguro que desea CESAR al colaborador ${employee.inspector}?`)) {
-            try {
-                await personalService.update(employee.dni, {
-                    ...employee,
-                    estado: 'CESADO',
-                    fechaCese: fecha
-                });
-                alert('Colaborador cesado correctamente');
-                fetchEmployees();
-            } catch (e) {
-                console.error(e);
-                alert('Error al cesar colaborador');
-            }
+    const handleConfirmCessation = async (date: string, reason: string) => {
+        if (!employeeToCease) return;
+
+        try {
+            await personalService.update(employeeToCease.dni, {
+                ...employeeToCease,
+                estado: 'CESADO',
+                fechaCese: date,
+                motivoCese: reason
+            });
+            alert('Colaborador cesado correctamente');
+            fetchEmployees();
+            setIsCessationModalOpen(false);
+            setEmployeeToCease(null);
+        } catch (e) {
+            console.error(e);
+            alert('Error al cesar colaborador: ' + (e as any).message);
         }
     };
 
@@ -505,12 +516,20 @@ export default function PersonalPage() {
             </div>
 
             <EmployeeModal
+                key={`${modalMode}-${selectedEmployee?.dni || 'new'}-${isModalOpen}`}
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveEmployee}
                 initialData={selectedEmployee}
                 mode={modalMode}
                 onUserUpdate={fetchEmployees}
+            />
+
+            <CessationModal
+                isOpen={isCessationModalOpen}
+                onClose={() => setIsCessationModalOpen(false)}
+                onConfirm={handleConfirmCessation}
+                employeeName={employeeToCease?.inspector || ''}
             />
         </div>
     );

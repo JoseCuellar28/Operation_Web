@@ -9,15 +9,24 @@ export interface Employee {
     estado?: string; // 'ACTIVO' | 'CESADO'
     fechaInicio?: string;
     fechaCese?: string;
+    motivoCese?: string;
     area?: string;
     division?: string;
     email?: string;
     hasUser?: boolean;
     userIsActive?: boolean;
-    foto?: string; // Base64
-    firma?: string; // Base64
+    foto?: string; // Base64 (legacy)
+    firma?: string; // Base64 (legacy)
+    fotoUrl?: string; // File path URL
+    firmaUrl?: string; // File path URL
     fechaNacimiento?: string; // YYYY-MM-DD
     id?: number; // legacy id if any
+}
+
+export interface PersonalMetadata {
+    divisiones: string[];
+    areas: string[];
+    cargos: string[];
 }
 
 export const personalService = {
@@ -43,6 +52,11 @@ export const personalService = {
 
     sync: async () => {
         const response = await api.post('/api/sync/personal');
+        return response.data;
+    },
+
+    getMetadata: async (): Promise<PersonalMetadata> => {
+        const response = await api.get('/api/personal/metadata');
         return response.data;
     }
 };

@@ -17,7 +17,75 @@
 
 ---
 
-# SQUAD CHANGELOG - Operation Web
+## 2026-02-05
+
+## [2026-02-05] Error 500 - Carga de Fotos de Colaboradores - RESUELTO ✅
+
+### Problema
+Al intentar cargar fotos y firmas de colaboradores, el sistema devolvía Error 500 y las imágenes no se mostraban en el frontend.
+
+### Causa Raíz
+1. **Backend:** El campo `Personal.Inspector` era null/vacío cuando se llamaba `SaveBase64Image`, impidiendo la creación del directorio para guardar imágenes.
+2. **Servicio de Archivos Estáticos:** `Program.cs` no tenía configurado `app.UseStaticFiles()` y el middleware de seguridad bloqueaba el acceso a `/imagenes/`.
+3. **Proxy Frontend:** Vite no estaba configurado para proxy de `/imagenes/` hacia el backend.
+4. **Frontend:** El componente `EmployeeModal` usaba campos `foto`/`firma` (base64) en lugar de `fotoUrl`/`firmaUrl` (rutas de archivos).
+
+### Solución Implementada
+
+#### Backend (`OperationWeb.API`)
+1. **PersonalController.cs:**
+   - Agregado fallback: Si `Inspector` es null/vacío, usar `DNI`
+   - Actualizado `SaveBase64Image` para estructura `/imagenes/fotos/{NOMBRE_SANITIZADO}/`
+   - Nombres estandarizados: `foto.jpg`, `firma.jpg`
+
+2. **Program.cs:**
+   - Agregado `app.UseStaticFiles()` para servir archivos estáticos
+   - Actualizado middleware de seguridad para permitir rutas `/imagenes/` y `/uploads/`
+
+#### Frontend (`OperationWeb.Frontend`)
+3. **vite.config.ts:**
+   - Agregado proxy para `/imagenes` y `/uploads` hacia `http://localhost:5132`
+
+4. **personalService.ts:**
+   - Agregados campos `fotoUrl?: string` y `firmaUrl?: string` a interfaz `Employee`
+
+5. **EmployeeModal.tsx:**
+   - Actualizado para usar `fotoUrl`/`firmaUrl` con fallback a `foto`/`firma` (compatibilidad legacy)
+
+### Verificación
+- ✅ Fotos se guardan en `/wwwroot/imagenes/fotos/{NOMBRE}/foto.jpg`
+- ✅ Firmas se guardan en `/wwwroot/imagenes/fotos/{NOMBRE}/firma.jpg`
+- ✅ URLs correctas en base de datos (`FotoUrl`, `FirmaUrl`)
+- ✅ Archivos estáticos accesibles vía HTTP
+- ✅ Fotos y firmas se muestran correctamente en el modal del frontend
+
+### Archivos Modificados
+- `OperationWeb.API/Controllers/PersonalController.cs`
+- `OperationWeb.API/Program.cs`
+- `OperationWeb.Frontend/vite.config.ts`
+- `OperationWeb.Frontend/src/services/personalService.ts`
+- `OperationWeb.Frontend/src/pages/operations/components/EmployeeModal.tsx`
+
+## [2026-02-05] Feature - Lista Dinámica de Cargos (Puestos) - IMPLEMENTADO ✅
+
+### Problema
+El dropdown de "Puesto" en el modal de colaboradores tenía una lista estática (hardcoded) que no incluía varios cargos legítimos existentes en la base de datos (Ej: `GERENTE`, `PRACTICANTE`, `AUXILIAR`), causando que estos empleados se mostraran incorrectamente o no se pudiera seleccionar su cargo real.
+
+### Solución Implementada
+1.  **Backend:** Se verificó la existencia del método `GetMetadataAsync` en `PersonalService` y su exposición en `PersonalController` (`GET /api/personal/metadata`).
+2.  **Frontend (`personalService.ts`):** Se agregó el método `getMetadata()` para consumir el endpoint.
+3.  **Frontend (`EmployeeModal.tsx`):** 
+    - Se reemplazó la lista estática `<option>` por un renderizado dinámico basado en los datos del backend.
+    - Se implementó un fallback a una lista básica en caso de error de red.
+
+### Verificación
+- ✅ El dropdown ahora muestra los 14 tipos de cargo distintos encontrados en la base de datos.
+- ✅ Cargos como `GERENTE` y `PRACTICANTE` son ahora seleccionables.
+- ✅ La opción seleccionada por defecto respeta el valor real del empleado (ej. `COORDINADOR`).
+
+---
+
+## SQUAD CHANGELOG - Operation Web
 
 ## [2026-01-13] - Inicialización y Alineación
 **Agente:** Backend-Lead  

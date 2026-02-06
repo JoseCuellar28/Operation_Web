@@ -165,6 +165,9 @@ app.UseRouting();
 app.UseCors("DevFrontend");
 app.UseRateLimiter();
 
+// Enable static file serving for images
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -175,12 +178,13 @@ app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLower() ?? "";
     
-    // Whitelist: API, Health, Swagger (Dev Only)
+    // Whitelist: API, Health, Swagger (Dev Only), Static Images
     bool isApi = path.StartsWith("/api/");
     bool isHealth = path.Equals("/health");
     bool isSwagger = path.StartsWith("/swagger");
+    bool isStaticImage = path.StartsWith("/imagenes/") || path.StartsWith("/uploads/");
 
-    if (!isApi && !isHealth && !isSwagger && path != "/") 
+    if (!isApi && !isHealth && !isSwagger && !isStaticImage && path != "/") 
     {
         // Force 404 JSON for any other path (prevents file sniffing or UI loading)
         context.Response.ContentType = "application/json";

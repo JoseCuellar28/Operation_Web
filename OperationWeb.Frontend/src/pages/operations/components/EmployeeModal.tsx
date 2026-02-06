@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Employee } from '../../../services/personalService';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { personalService, Employee } from '../../../services/personalService';
 import { userService } from '../../../services/userService';
 import { X, Save, Camera, Upload, UserCog } from 'lucide-react';
+
+// Constant to prevent re-evaluation of placeholder path
+const PLACEHOLDER_IMAGE = '/img/placeholder-user.png';
 
 interface EmployeeModalProps {
     isOpen: boolean;
@@ -22,47 +25,84 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({ isOpen, onClose, o
     const [photoPreview, setPhotoPreview] = useState<string>('');
     const [signaturePreview, setSignaturePreview] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const [cargos, setCargos] = useState<string[]>([]);
+
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            try {
+                const meta = await personalService.getMetadata();
+                if (meta && meta.cargos) {
+                    setCargos(meta.cargos);
+                }
+            } catch (error) {
+                console.error('Error loading metadata:', error);
+                // Fallback options
+                setCargos(['OPERARIO', 'SUPERVISOR', 'INSPECTOR', 'JEFE', 'ANALISTA', 'ASISTENTE', 'COORDINADOR']);
+            }
+        };
+        fetchMetadata();
+    }, []);
+
+    // Memoize image sources to prevent unnecessary re-renders
+    const profileImageSrc = useMemo(() => photoPreview || PLACEHOLDER_IMAGE, [photoPreview]);
+    const signatureImageSrc = useMemo(() => signaturePreview || PLACEHOLDER_IMAGE, [signaturePreview]);
+
+    // Use ref to track if we've already initialized with this data
+    const initializedRef = useRef<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
-            if (initialData && (mode === 'edit' || mode === 'view')) {
-                setFormData({ ...initialData });
-                setPhotoPreview(initialData.foto || '');
-                setSignaturePreview(initialData.firma || '');
+            // Create a unique key for this modal instance
+            const instanceKey = `${mode}-${initialData?.dni || 'new'}`;
 
-                // Name splitting logic
-                const parts = (initialData.inspector || '').split(' ');
-                if (parts.length >= 3) {
-                    setSplitName({
-                        paterno: parts[0],
-                        materno: parts[1],
-                        nombres: parts.slice(2).join(' ')
-                    });
-                } else if (parts.length === 2) {
-                    setSplitName({
-                        paterno: parts[0],
-                        materno: parts[1],
-                        nombres: ''
-                    });
+            // Only initialize if this is a new instance
+            if (initializedRef.current !== instanceKey) {
+                initializedRef.current = instanceKey;
+
+                if (initialData && (mode === 'edit' || mode === 'view')) {
+                    setFormData({ ...initialData });
+
+                    // Use fotoUrl/firmaUrl from backend if available, otherwise fall back to base64 foto/firma
+                    setPhotoPreview(initialData.fotoUrl || initialData.foto || '');
+                    setSignaturePreview(initialData.firmaUrl || initialData.firma || '');
+
+                    // Name splitting logic
+                    const parts = (initialData.inspector || '').split(' ');
+                    if (parts.length >= 3) {
+                        setSplitName({
+                            paterno: parts[0],
+                            materno: parts[1],
+                            nombres: parts.slice(2).join(' ')
+                        });
+                    } else if (parts.length === 2) {
+                        setSplitName({
+                            paterno: parts[0],
+                            materno: parts[1],
+                            nombres: ''
+                        });
+                    } else {
+                        setSplitName({
+                            nombres: initialData.inspector || '',
+                            paterno: '',
+                            materno: ''
+                        });
+                    }
                 } else {
-                    setSplitName({
-                        nombres: initialData.inspector || '',
-                        paterno: '',
-                        materno: ''
+                    setFormData({
+                        estado: 'ACTIVO',
+                        fechaInicio: new Date().toISOString().split('T')[0],
+                        tipo: 'OPERARIO'
                     });
+                    setSplitName({ nombres: '', paterno: '', materno: '' });
+                    setPhotoPreview('');
+                    setSignaturePreview('');
                 }
-            } else {
-                setFormData({
-                    estado: 'ACTIVO',
-                    fechaInicio: new Date().toISOString().split('T')[0],
-                    tipo: 'OPERARIO'
-                });
-                setSplitName({ nombres: '', paterno: '', materno: '' });
-                setPhotoPreview('');
-                setSignaturePreview('');
             }
+        } else {
+            // Reset when modal closes
+            initializedRef.current = null;
         }
-    }, [isOpen, initialData, mode]);
+    }, [isOpen, mode, initialData?.dni]); // Only depend on stable values
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'signature') => {
         const file = e.target.files?.[0];
@@ -150,10 +190,9 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({ isOpen, onClose, o
                                 <div className="relative mb-4">
                                     <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
                                         <img
-                                            src={photoPreview || "/img/placeholder-user.png"}
+                                            src={profileImageSrc}
                                             alt="Profile"
                                             className="w-full h-full object-cover"
-                                            onError={(e) => (e.currentTarget.src = '/img/placeholder-user.png')}
                                         />
                                     </div>
                                     {!isReadOnly && (
@@ -179,7 +218,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({ isOpen, onClose, o
                                 <h5 className="text-sm font-semibold text-gray-700 mb-3">Firma Digital</h5>
                                 <label className={`relative w-full h-32 border-2 border-dashed ${isReadOnly ? 'border-gray-200 cursor-default' : 'border-gray-300 hover:border-blue-400 cursor-pointer'} rounded-xl flex flex-col items-center justify-center overflow-hidden transition-all bg-gray-50/30 group`}>
                                     {signaturePreview ? (
-                                        <img src={signaturePreview} alt="Firma" className="max-h-full max-w-full object-contain p-2" />
+                                        <img src={signatureImageSrc} alt="Firma" className="max-h-full max-w-full object-contain p-2" />
                                     ) : (
                                         <span className="text-sm text-gray-400 font-medium">Sin firma</span>
                                     )}
@@ -303,11 +342,9 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({ isOpen, onClose, o
                                             onChange={e => setFormData({ ...formData, tipo: e.target.value })}
                                             className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-50 bg-white"
                                         >
-                                            <option value="OPERARIO">OPERARIO</option>
-                                            <option value="CHOFER">CHOFER</option>
-                                            <option value="INSPECTOR">INSPECTOR</option>
-                                            <option value="SUPERVISOR">SUPERVISOR</option>
-                                            <option value="RESIDENTE">RESIDENTE</option>
+                                            {cargos.map((cargo) => (
+                                                <option key={cargo} value={cargo}>{cargo}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>

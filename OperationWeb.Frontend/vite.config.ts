@@ -14,6 +14,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/imagenes': {
+        target: 'http://localhost:5132',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/uploads': {
+        target: 'http://localhost:5132',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });
