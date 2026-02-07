@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { excelDateToJSDate } from '../../utils/excelUtils';
 import { EmployeeModal } from './components/EmployeeModal';
 import { CessationModal } from './components/CessationModal';
+import { DeleteConfirmationModal } from './components/DeleteConfirmationModal';
 
 export default function PersonalPage() {
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -33,6 +34,10 @@ export default function PersonalPage() {
     // Cessation Modal State
     const [isCessationModalOpen, setIsCessationModalOpen] = useState(false);
     const [employeeToCease, setEmployeeToCease] = useState<Employee | null>(null);
+
+    // Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
     // Handlers
     const handleOpenModal = (employee?: Employee, mode: 'create' | 'edit' | 'view' = 'create') => {
@@ -68,12 +73,7 @@ export default function PersonalPage() {
         if (!employeeToCease) return;
 
         try {
-            await personalService.update(employeeToCease.dni, {
-                ...employeeToCease,
-                estado: 'CESADO',
-                fechaCese: date,
-                motivoCese: reason
-            });
+            await personalService.terminate(employeeToCease.dni, date, reason);
             alert('Colaborador cesado correctamente');
             fetchEmployees();
             setIsCessationModalOpen(false);
@@ -103,9 +103,32 @@ export default function PersonalPage() {
         }
     };
 
-    const handleDelete = async (dni: string) => {
-        if (confirm('¿Eliminar colaborador? Esta acción no se puede deshacer.')) {
-            alert('Función Eliminar no implementada en servicio aún (Solo Cesar)');
+    const handleDelete = (employee: Employee) => {
+        if (!employee.dni) {
+            console.error('Cant delete employee without DNI', employee);
+            return;
+        }
+        setEmployeeToDelete(employee);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!employeeToDelete?.dni) {
+            console.error('No employee DNI for deletion', employeeToDelete);
+            alert('Error: DNI no encontrado para este colaborador');
+            return;
+        }
+
+        try {
+            console.log(`[DEBUG] Attempting to delete DNI: ${employeeToDelete.dni}`);
+            await personalService.delete(employeeToDelete.dni);
+            alert('Colaborador eliminado correctamente');
+            fetchEmployees();
+            setIsDeleteModalOpen(false);
+            setEmployeeToDelete(null);
+        } catch (e) {
+            console.error('Delete action failed:', e);
+            alert('Error al eliminar colaborador');
         }
     };
 
@@ -117,7 +140,8 @@ export default function PersonalPage() {
         area: '',
         tipo: '', // Puesto
         estado: '',
-        fechaInicio: ''
+        fechaInicio: '',
+        usuario: ''
     });
 
     const fetchEmployees = async () => {
@@ -132,6 +156,35 @@ export default function PersonalPage() {
         }
     };
 
+    const calculateAntiquity = (startDate: string | undefined) => {
+        if (!startDate) return '-';
+        const start = new Date(startDate);
+        const end = new Date();
+        if (isNaN(start.getTime()) || start > end) return '-';
+
+        let years = end.getFullYear() - start.getFullYear();
+        let months = end.getMonth() - start.getMonth();
+        let days = end.getDate() - start.getDate();
+
+        if (days < 0) {
+            months--;
+            const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+            days += prevMonth.getDate();
+        }
+
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        const parts = [];
+        if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
+        if (months > 0) parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`);
+        if (days > 0) parts.push(`${days} ${days === 1 ? 'día' : 'días'}`);
+
+        return parts.length > 0 ? parts.join(', ') : 'Menos de 1 día';
+    };
+
     useEffect(() => {
         fetchEmployees();
     }, []);
@@ -139,14 +192,25 @@ export default function PersonalPage() {
     const handleSync = async () => {
         if (confirm('¿Desea sincronizar la base de datos local con el servidor central?')) {
             try {
-                // Assuming syncService or personalService has this method. If not, will implement dummy or real call
-                alert('Iniciando Sincronización...');
-                // await personalService.sync(); 
+                setLoading(true);
+                await personalService.sync();
+                alert('Sincronización finalizada correctamente');
                 fetchEmployees();
             } catch (e) {
+                console.error(e);
                 alert('Error en sincronización');
+            } finally {
+                setLoading(false);
             }
         }
+    };
+
+    const handleDownloadTemplate = () => {
+        const headers = [['DNI', 'TRABAJADOR', 'TELEFONO', 'AREA', 'CARGO', 'FECHA INGRESO']];
+        const ws = XLSX.utils.aoa_to_sheet(headers);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+        XLSX.writeFile(wb, 'Plantilla_Colaboradores.xlsx');
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,7 +303,8 @@ export default function PersonalPage() {
     };
 
     const processedEmployees = useMemo(() => {
-        let result = [...employees];
+        // 0. Filter invalid records (DNI is required)
+        let result = employees.filter(e => e.dni && e.dni.trim() !== '');
 
         // 1. Status Filter (Base)
         if (statusFilter === 'ACTIVOS') {
@@ -267,7 +332,12 @@ export default function PersonalPage() {
             (colFilters.area === '' || e.area?.toLowerCase().includes(colFilters.area.toLowerCase())) &&
             (colFilters.tipo === '' || e.tipo?.toLowerCase().includes(colFilters.tipo.toLowerCase())) &&
             (colFilters.estado === '' || e.estado?.toLowerCase().includes(colFilters.estado.toLowerCase())) &&
-            (colFilters.fechaInicio === '' || e.fechaInicio?.includes(colFilters.fechaInicio))
+            (colFilters.fechaInicio === '' || e.fechaInicio?.includes(colFilters.fechaInicio)) &&
+            (colFilters.usuario === '' ||
+                (colFilters.usuario === 'ON' && e.hasUser && e.userIsActive) ||
+                (colFilters.usuario === 'OFF' && e.hasUser && !e.userIsActive) ||
+                (colFilters.usuario === 'NONE' && !e.hasUser)
+            )
         );
 
         // 4. Sorting
@@ -328,7 +398,7 @@ export default function PersonalPage() {
                     <button
                         onClick={() => {
                             setGlobalSearch('');
-                            setColFilters({ dni: '', inspector: '', telefono: '', area: '', tipo: '', estado: '', fechaInicio: '' });
+                            setColFilters({ dni: '', inspector: '', telefono: '', area: '', tipo: '', estado: '', fechaInicio: '', usuario: '' });
                         }}
                         className="text-gray-400 hover:text-red-500 transition-colors"
                         title="Reset Filters"
@@ -339,7 +409,10 @@ export default function PersonalPage() {
 
                 {/* Botonera */}
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 bg-white">
+                    <button
+                        onClick={handleDownloadTemplate}
+                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 bg-white"
+                    >
                         <Download size={16} />
                         <span className="hidden sm:inline">Plantilla</span>
                     </button>
@@ -382,6 +455,7 @@ export default function PersonalPage() {
                                 <th className="px-4 py-3 text-center">USUARIO</th>
                                 <th onClick={() => handleSort('estado')} className="px-4 py-3 cursor-pointer hover:bg-gray-100"><div className="flex items-center gap-1">ESTADO <ArrowUpDown size={12} /></div></th>
                                 <th className="px-4 py-3">F. INGRESO</th>
+                                <th className="px-4 py-3">ANTIGÜEDAD</th>
                                 <th className="px-4 py-3 text-center">ACCIONES</th>
                             </tr>
                             {/* Filter Row */}
@@ -391,9 +465,21 @@ export default function PersonalPage() {
                                 <td className="p-2"><input value={colFilters.telefono} onChange={e => setColFilters({ ...colFilters, telefono: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 text-xs border rounded bg-gray-50 focus:bg-white outline-none focus:border-blue-500" /></td>
                                 <td className="p-2"><input value={colFilters.area} onChange={e => setColFilters({ ...colFilters, area: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 text-xs border rounded bg-gray-50 focus:bg-white outline-none focus:border-blue-500" /></td>
                                 <td className="p-2"><input value={colFilters.tipo} onChange={e => setColFilters({ ...colFilters, tipo: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 text-xs border rounded bg-gray-50 focus:bg-white outline-none focus:border-blue-500" /></td>
-                                <td className="p-2"></td>
+                                <td className="p-2">
+                                    <select
+                                        value={colFilters.usuario}
+                                        onChange={e => setColFilters({ ...colFilters, usuario: e.target.value })}
+                                        className="w-full px-1 py-1 text-xs border rounded bg-gray-50 focus:bg-white outline-none focus:border-blue-500"
+                                    >
+                                        <option value="">TODOS</option>
+                                        <option value="ON">ON</option>
+                                        <option value="OFF">OFF</option>
+                                        <option value="NONE">SIN USUARIO</option>
+                                    </select>
+                                </td>
                                 <td className="p-2"><input value={colFilters.estado} onChange={e => setColFilters({ ...colFilters, estado: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 text-xs border rounded bg-gray-50 focus:bg-white outline-none focus:border-blue-500" /></td>
                                 <td className="p-2"><input value={colFilters.fechaInicio} onChange={e => setColFilters({ ...colFilters, fechaInicio: e.target.value })} placeholder="Filtrar..." className="w-full px-2 py-1 text-xs border rounded bg-gray-50 focus:bg-white outline-none focus:border-blue-500" /></td>
+                                <td className="p-2"></td>
                                 <td className="p-2"></td>
                             </tr>
                         </thead>
@@ -445,6 +531,9 @@ export default function PersonalPage() {
                                         <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                                             {emp.fechaInicio ? new Date(emp.fechaInicio).toLocaleDateString() : '-'}
                                         </td>
+                                        <td className="px-4 py-3 text-gray-600 text-xs font-medium">
+                                            {calculateAntiquity(emp.fechaInicio)}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-center items-center gap-1">
                                                 <button onClick={() => handleOpenModal(emp, 'view')} className="h-8 w-8 p-0 hover:bg-gray-100 rounded-md flex items-center justify-center text-blue-600" title="Ver">
@@ -463,7 +552,7 @@ export default function PersonalPage() {
                                                         <UserX size={16} />
                                                     </button>
                                                 )}
-                                                <button onClick={() => handleDelete(emp.dni)} className="h-8 w-8 p-0 hover:bg-gray-100 rounded-md flex items-center justify-center text-gray-400 hover:text-red-600" title="Eliminar">
+                                                <button onClick={() => handleDelete(emp)} className="h-8 w-8 p-0 hover:bg-gray-100 rounded-md flex items-center justify-center text-gray-400 hover:text-red-600" title="Eliminar">
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
@@ -530,6 +619,14 @@ export default function PersonalPage() {
                 onClose={() => setIsCessationModalOpen(false)}
                 onConfirm={handleConfirmCessation}
                 employeeName={employeeToCease?.inspector || ''}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                employeeName={employeeToDelete?.inspector || ''}
+                dni={employeeToDelete?.dni || ''}
             />
         </div>
     );

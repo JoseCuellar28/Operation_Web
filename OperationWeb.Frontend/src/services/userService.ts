@@ -16,5 +16,15 @@ export const userService = {
     async toggleStatus(dni: string): Promise<{ message: string }> {
         const response = await api.put(`/api/users/${dni}/toggle-status`);
         return response.data;
+    },
+
+    async activate(token: string, newPassword: string): Promise<{ message: string }> {
+        const response = await api.post('/api/auth/activate', { token, newPassword });
+        return response.data;
+    },
+
+    async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+        const response = await api.post('/api/auth/reset-password', { token, newPassword });
+        return response.data;
     }
 };

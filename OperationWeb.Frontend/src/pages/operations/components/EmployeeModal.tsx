@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { personalService, Employee } from '../../../services/personalService';
 import { userService } from '../../../services/userService';
-import { X, Save, Camera, Upload, UserCog } from 'lucide-react';
+import { X, Save, Camera, UserCog } from 'lucide-react';
 
 // Constant to prevent re-evaluation of placeholder path
 const PLACEHOLDER_IMAGE = '/img/placeholder-user.png';
@@ -146,8 +146,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({ isOpen, onClose, o
         setLoading(true);
         try {
             if (!initialData?.hasUser) {
-                const res = await userService.createUser(formData.dni, 'Usuario');
-                alert(`Usuario Creado.\nContraseña Temporal: ${res.tempPassword}`);
+                await userService.createUser(formData.dni, 'Usuario');
+                alert(`Usuario creado correctamente para el colaborador con DNI ${formData.dni}.\n\nSe ha enviado un correo electrónico con sus credenciales temporales y el enlace de activación de cuenta.`);
             } else {
                 await userService.toggleStatus(formData.dni);
                 alert('Estado de usuario actualizado.');

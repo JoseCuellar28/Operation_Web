@@ -51,12 +51,25 @@ export const personalService = {
     },
 
     sync: async () => {
-        const response = await api.post('/api/sync/personal');
+        const response = await api.post('/api/personal/sync');
         return response.data;
     },
 
     getMetadata: async (): Promise<PersonalMetadata> => {
         const response = await api.get('/api/personal/metadata');
+        return response.data;
+    },
+
+    terminate: async (dni: string, date: string, reason: string) => {
+        const response = await api.put(`/api/personal/${dni}/terminate`, {
+            fechaCese: date,
+            motivoCese: reason
+        });
+        return response.data;
+    },
+
+    delete: async (dni: string) => {
+        const response = await api.delete(`/api/personal/${dni}`);
         return response.data;
     }
 };
