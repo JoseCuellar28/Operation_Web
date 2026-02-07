@@ -128,18 +128,19 @@ namespace OperationWeb.Business.Services
             });
         }
 
-        public async Task<bool> TerminateAsync(string dni)
+        public async Task<bool> TerminateAsync(string dni, DateTime fechaCese, string? motivo)
         {
             var personal = await _personalRepository.GetByDNIAsync(dni);
             if (personal == null) return false;
 
-            personal.FechaCese = DateTime.UtcNow;
+            personal.FechaCese = fechaCese;
             personal.Estado = "Cesado"; 
+            personal.MotivoCeseDesc = motivo;
             
             await _personalRepository.UpdateAsync(personal);
             await _personalRepository.SyncToColaboradoresAsync(personal); // Sync status change
 
-            await LogEventoAsync(dni, "Baja", "Cese administrativo (Core)");
+            await LogEventoAsync(dni, "Baja", $"Cese administrativo: {motivo}");
             return true;
         }
 
@@ -175,6 +176,14 @@ namespace OperationWeb.Business.Services
                 await _eventoRepository.AddAsync(evento);
             }
             catch (Exception) { /* Silent */ }
+        }
+        public async Task SyncAllAsync()
+        {
+            var allPersonal = await _personalRepository.GetAllAsync();
+            foreach (var p in allPersonal)
+            {
+                await _personalRepository.SyncToColaboradoresAsync(p);
+            }
         }
     }
 }

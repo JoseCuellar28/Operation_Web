@@ -29,13 +29,47 @@ namespace OperationWeb.DataAccess.Repositories
                 var entity = await GetByDNIAsync(dni);
                 if (entity != null)
                 {
+                    // Cleanup Security
                     var users = await _context.Users.Where(u => u.DNI == dni).ToListAsync();
-                    if (users.Any()) _context.Users.RemoveRange(users);
                     
-                    // Cleanup staging
+                    var resetTokens = await _context.PasswordResetTokens.Where(t => t.DNI == dni).ToListAsync();
+                    if (resetTokens.Any()) _context.PasswordResetTokens.RemoveRange(resetTokens);
+
+                    // UserActivations are Cascade via UserId, but explicit cleanup is safer if Users deletion fails or order matters
+                    // However, we delete Users below which triggers Cascade for UserActivations if configured.
+                    // Let's rely on Cascade for UserActivations (as per DB Context) but ensure PasswordResetToken (No FK) is gone.
+                    
+                    if (users.Any())
+                    {
+                        _context.Users.RemoveRange(users);
+                        await _context.SaveChangesAsync(); // Critical: break FK_Users_Personal_DNI
+                    }
+                    
+                    // Cleanup Process
                     var staging = await _context.PersonalStaging.Where(p => p.DNI == dni).ToListAsync();
                     if (staging.Any()) _context.PersonalStaging.RemoveRange(staging);
 
+                    var eventos = await _context.PersonalEventosLaborales.Where(e => e.DNI == dni).ToListAsync();
+                    if (eventos.Any()) _context.PersonalEventosLaborales.RemoveRange(eventos);
+
+                    var proyectos = await _context.PersonalProyectos.Where(p => p.DNI == dni).ToListAsync();
+                    if (proyectos.Any()) _context.PersonalProyectos.RemoveRange(proyectos);
+
+                    // Note: AsistenciasDiarias removed from cleanup due to Error 208 (Invalid object name)
+                    // and likely residing in a different database/context.
+
+                    // HSE Cleanup (Inspector, Reporter, Worker, Recipient)
+                    var inspections = await _context.HseInspections.Where(i => i.InspectorDNI == dni).ToListAsync();
+                    if (inspections.Any()) _context.HseInspections.RemoveRange(inspections);
+
+                    var incidents = await _context.HseIncidents.Where(i => i.ReporterDNI == dni).ToListAsync();
+                    if (incidents.Any()) _context.HseIncidents.RemoveRange(incidents);
+
+                    var ppeDeliveries = await _context.HsePpeDeliveries.Where(p => p.DelivererDNI == dni || p.WorkerDNI == dni).ToListAsync();
+                    if (ppeDeliveries.Any()) _context.HsePpeDeliveries.RemoveRange(ppeDeliveries);
+
+                    // Note: CuadrillaColaborador is Cascade in DB/EF
+                    
                     _dbSet.Remove(entity);
                     await _context.SaveChangesAsync();
                 }

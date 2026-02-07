@@ -107,11 +107,13 @@ namespace OperationWeb.API.Controllers
         }
 
         [HttpPut("{dni}/terminate")]
-        public async Task<ActionResult> Terminate(string dni)
+        public async Task<ActionResult> Terminate(string dni, [FromBody] TerminationDto termination)
         {
             try
             {
-                var result = await _personalService.TerminateAsync(dni);
+                if (termination == null) return BadRequest("Datos de cese inválidos");
+
+                var result = await _personalService.TerminateAsync(dni, termination.FechaCese, termination.MotivoCese);
                 if (!result) return NotFound($"Personal con DNI {dni} no encontrado");
                 return NoContent();
             }
@@ -306,6 +308,21 @@ namespace OperationWeb.API.Controllers
             
             // Convert to uppercase for consistency
             return sanitized.ToUpperInvariant();
+        }
+
+        [HttpPost("sync")]
+        public async Task<ActionResult> Sync()
+        {
+            try
+            {
+                await _personalService.SyncAllAsync();
+                return Ok(new { message = "Sincronización completa" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en sincronización masiva");
+                return StatusCode(500, "Error interno del servidor");
+            }
         }
     }
 }
