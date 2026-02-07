@@ -87,3 +87,11 @@ appsettings.Production.json
 
 # Mobile Project (Excluded from Web Repo)
 Modelo_Android/
+
+# Temporary admin and testing scripts
+check_admin.py
+reset_admin_password.sql
+restore_admin.py
+restore_admin.sql
+test_email.py
+tools/db_admin/

@@ -2,6 +2,7 @@
 
 | Fecha | Agente | Rama | Cambio Realizado | Estado |
 | :--- | :--- | :--- | :--- | :--- |
+| 2026-02-07 | Agent 1 (Backend) | main | Implementación de Flujo de Activación + Fixes en Cese/Eliminación de Colaboradores | ✅ COMPLETADO |
 | 2026-02-05 | QA Agent | main | 🐛 BUG REPORT: Error 500 en Carga de Fotos/Firmas - Bloqueante | 🔴 CRÍTICO |
 | 2026-02-05 | Agent 2 (BD) | main | 📋 TAREA URGENTE: Verificación de Esquema para Imágenes | ⏳ PENDIENTE |
 | 2026-02-05 | Agent 3 (Frontend) | dev-frontend-fase5 | Fix Crítico: Bucle Infinito en EmployeeModal (useMemo stabilization) | ✅ COMPLETADO |
@@ -15,7 +16,48 @@
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Inicialización de Workspace DB y mapeo de tablas en Toshiba | ✅ LISTO |
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
 
+
 ---
+
+## 2026-02-07
+
+## [2026-02-07] Flujo de Activación de Usuario - IMPLEMENTADO ✅
+
+### Problema
+El sistema no proporcionaba un flujo claro de bienvenida y activación para nuevos usuarios, lo que obligaba a procesos manuales para la entrega de credenciales.
+
+### Solución Implementada
+
+#### 1. Backend (`OperationWeb.Business`)
+- **UserActivations:** Restaurado el uso de la tabla legacy para gestionar tokens de bienvenida.
+- **UserService.cs:**
+    - `CreateUserAsync`: Genera token UUID y registra en `UserActivations`.
+    - `ActivateAccountAsync`: Nuevo método para validar token, establecer contraseña final y activar cuenta.
+- **EmailService.cs:**
+    - Plantilla HTML responsiva para correos de bienvenida.
+    - Integración con SMTP de Gmail.
+
+#### 2. Frontend (`OperationWeb.Frontend`)
+- **ResetPasswordPage.tsx:** Nueva página unificada que maneja `/activate` y `/reset-password`.
+- **App.tsx:** Configuración de rutas públicas para el flujo de seguridad.
+- **userService.ts:** Añadidos métodos `activate` y `resetPassword`.
+
+### Verificación
+- ✅ Token generado correctamente en DB.
+- ✅ Correo recibido exitosamente en `arbildoc@gmail.com`.
+- ✅ Enlace funcional redirige a la nueva página de activación.
+- ✅ Cambio de contraseña y activación de cuenta verificado por el usuario.
+- ✅ Login exitoso con las nuevas credenciales.
+
+### Archivos Modificados
+- `OperationWeb.Business/Services/UserService.cs`
+- `OperationWeb.Business.Interfaces/IUserService.cs`
+- `OperationWeb.Business/Services/EmailService.cs`
+- `OperationWeb.API/Controllers/AuthController.cs`
+- `OperationWeb.Frontend/src/App.tsx`
+- `OperationWeb.Frontend/src/services/userService.ts`
+- `OperationWeb.Frontend/src/pages/auth/ResetPasswordPage.tsx`
+- `OperationWeb.Frontend/src/pages/operations/components/EmployeeModal.tsx`
 
 ## 2026-02-05
 
