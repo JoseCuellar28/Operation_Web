@@ -21,6 +21,14 @@ export const authService = {
         return response.data;
     },
 
+    async forgotPassword(dniOrEmail: string): Promise<void> {
+        await api.post('/api/auth/forgot-password', { dniOrEmail });
+    },
+
+    async resetPassword(token: string, newPassword: string): Promise<void> {
+        await api.post('/api/auth/reset-password', { token, newPassword });
+    },
+
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');

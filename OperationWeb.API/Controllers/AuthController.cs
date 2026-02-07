@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
 
 namespace OperationWeb.API.Controllers
 {
@@ -364,7 +365,138 @@ namespace OperationWeb.API.Controllers
             }
         }
 
+        [HttpPost("activate")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Activate([FromBody] ActivateRequest req)
+        {
+            try
+            {
+                await _userService.ActivateAccountAsync(req.Token, req.NewPassword);
+                return Ok(new { message = "Cuenta activada exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Error al activar la cuenta. Intenta de nuevo." });
+            }
+        }
+
         public record ForgotPasswordRequest(string DniOrEmail);
         public record ResetPasswordRequest(string Token, string NewPassword);
+        public record ActivateRequest(string Token, string NewPassword);
+
+        // TEMPORARY: Restore Admin Endpoint - Direct DB approach
+        [HttpPost("restore-admin")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RestoreAdmin([FromServices] OperationWeb.DataAccess.OperationWebDbContext context)
+        {
+            try
+            {
+                var dni = "41007510";
+                var password = "Admin2026!";
+                
+                // 1. Ensure Personal Record Exists
+                var personal = await context.Personal.FirstOrDefaultAsync(p => p.DNI == dni);
+                if (personal == null)
+                {
+                    personal = new Personal
+                    {
+                        DNI = dni,
+                        Inspector = "Admin Sistema",
+                        Telefono = "999-999-999",
+                        Distrito = "Central",
+                        Tipo = "Administrador",
+                        Division = "Sistemas",
+                        Area = "TI",
+                        FechaInicio = DateTime.UtcNow,
+                        FechaCreacion = DateTime.UtcNow,
+                        Estado = "Activo"
+                    };
+                    context.Personal.Add(personal);
+                    await context.SaveChangesAsync();
+                }
+
+                // 2. Check if User already exists
+                var existingUser = await context.Users.FirstOrDefaultAsync(u => u.DNI == dni);
+                if (existingUser != null)
+                {
+                    return BadRequest("Admin User ya existe. Usa DNI: 41007510, Password: (verifica con administrador)");
+                }
+
+                // 3. Create User with known password
+                var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
+                var user = new User
+                {
+                    DNI = dni,
+                    PasswordHash = passwordHash,
+                    Role = "Admin",
+                    IsActive = true,
+                    MustChangePassword = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                context.Users.Add(user);
+                await context.SaveChangesAsync();
+
+                // 4. Create Access Config
+                var accessConfig = new UserAccessConfig
+                {
+                    UserId = user.Id,
+                    AccessWeb = true,
+                    AccessApp = true,
+                    LastUpdated = DateTime.UtcNow
+                };
+                context.UserAccessConfigs.Add(accessConfig);
+                await context.SaveChangesAsync();
+
+                return Ok(new { 
+                    message = "✅ Admin restaurado exitosamente", 
+                    dni = dni,
+                    password = password,
+                    note = "Puedes iniciar sesión ahora"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, details = ex.InnerException?.Message });
+            }
+        }
+
+        // TEMPORARY: Reset Admin Password Endpoint
+        [HttpPost("reset-admin-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetAdminPassword([FromServices] OperationWeb.DataAccess.OperationWebDbContext context)
+        {
+            try
+            {
+                var dni = "41007510";
+                var password = "Admin2026!";
+                
+                var user = await context.Users.FirstOrDefaultAsync(u => u.DNI == dni);
+                if (user == null)
+                {
+                    return NotFound("Admin user not found");
+                }
+
+                // Reset password
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+                user.MustChangePassword = false;
+                user.IsActive = true;
+                await context.SaveChangesAsync();
+
+                return Ok(new { 
+                    message = "✅ Contraseña restablecida", 
+                    dni = dni,
+                    password = password,
+                    note = "Ahora puedes iniciar sesión"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }

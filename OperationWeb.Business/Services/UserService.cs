@@ -125,17 +125,33 @@ namespace OperationWeb.Business.Services
             _context.UserAccessConfigs.Add(accessConfig);
             await _context.SaveChangesAsync();
 
+            // Generate Activation Token (Welcome Flow)
+            var token = Guid.NewGuid().ToString("N");
+            var activation = new UserActivation
+            {
+                UserId = user.Id,
+                DNI = dni,
+                Token = token,
+                Purpose = "Welcome",
+                IssuedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(24),
+                Status = "Pending",
+                IssuedBy = "System"
+            };
+            _context.UserActivations.Add(activation);
+            await _context.SaveChangesAsync();
+
             // Send email
             var personal = await _context.Personal.FirstOrDefaultAsync(p => p.DNI == dni);
             var email = !string.IsNullOrEmpty(personal?.EmailPersonal) ? personal.EmailPersonal : personal?.Email; 
             
             if (!string.IsNullOrEmpty(email))
             {
-                await _emailService.SendCredentialsAsync(email, dni, password);
+                await _emailService.SendWelcomeCredentialsAsync(email, dni, password, token);
             }
             else
             {
-                System.Console.WriteLine($"[UserService] No email found for DNI {dni}. Password: {password}");
+                System.Console.WriteLine($"[UserService] No email found for DNI {dni}. Token: {token}, TempPassword: {password}");
             }
 
             return (user, password);
@@ -200,7 +216,7 @@ namespace OperationWeb.Business.Services
             return new string(result);
         }
 
-        public async Task<string> RequestPasswordResetAsync(string dniOrEmail)
+        public async Task RequestPasswordResetAsync(string dniOrEmail)
         {
             // Find user by DNI or email
             var user = await _context.Users.FirstOrDefaultAsync(u => u.DNI == dniOrEmail);
@@ -263,8 +279,6 @@ namespace OperationWeb.Business.Services
 
             // Send email
             await _emailService.SendPasswordResetAsync(email, user.DNI, token);
-
-            return token;
         }
 
         public async Task<bool> ResetPasswordWithTokenAsync(string token, string newPassword)
@@ -295,6 +309,40 @@ namespace OperationWeb.Business.Services
             // Mark token as used
             resetToken.IsUsed = true;
             resetToken.UsedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ActivateAccountAsync(string token, string newPassword)
+        {
+            var activation = await _context.UserActivations
+                .FirstOrDefaultAsync(t => t.Token == token && t.Status == "Pending");
+
+            if (activation == null)
+            {
+                throw new InvalidOperationException("Token de activación inválido o ya utilizado.");
+            }
+
+            if (activation.ExpiresAt < DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("El token de activación ha expirado. Solicite uno nuevo.");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == activation.UserId);
+            if (user == null)
+            {
+                throw new InvalidOperationException("Usuario no encontrado.");
+            }
+
+            // Update password (Enforce BCrypt)
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.MustChangePassword = false;
+            user.IsActive = true;
+
+            // Mark activation as used
+            activation.Status = "Used";
+            activation.UsedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             return true;
