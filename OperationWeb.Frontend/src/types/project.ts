@@ -7,6 +7,8 @@ export interface Project {
   presupuesto?: number;
   division?: string;
   gerenteDni?: string;
+  id_cuadrilla?: string;
+  id_efectivo?: string;
 }
 
 export interface ProjectParams {

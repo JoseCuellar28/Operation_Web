@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { projectsService, Project } from '../../services/projectsService';
+import { projectsService, Project, ProjectParams } from '../../services/projectsService';
 import { squadService, Squad } from '../../services/squadService';
 import { personalService, Employee } from '../../services/personalService';
 import { Plus, Briefcase, Calendar, Shield, Truck, Edit, Search, Eye } from 'lucide-react';
@@ -51,9 +51,9 @@ export const ProjectsView: React.FC = () => {
     const handleSave = async (data: Partial<Project>) => {
         try {
             if (editingProject) {
-                await projectsService.update(editingProject.id, data);
+                await projectsService.update(editingProject.id, data as ProjectParams);
             } else {
-                await projectsService.create(data);
+                await projectsService.create(data as ProjectParams);
             }
             setShowModal(false);
             fetchData();

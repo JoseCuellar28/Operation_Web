@@ -1,5 +1,12 @@
 import axios from 'axios';
 
+// Extend Axios Request Config to include _retryCount
+declare module 'axios' {
+    export interface InternalAxiosRequestConfig {
+        _retryCount?: number;
+    }
+}
+
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '',
     headers: {
@@ -24,10 +31,43 @@ api.interceptors.request.use(
     }
 );
 
-// Response Interceptor: Handle 401
+// Response Interceptor: Handle 401 and Retry Logic
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
+        const originalRequest = error.config;
+
+        // Initialize retry count
+        if (!originalRequest._retryCount) {
+            originalRequest._retryCount = 0;
+        }
+
+        // Configuration
+        const MAX_RETRIES = 3;
+        const INITIAL_BACKOFF = 1000; // 1 second
+
+        // Check if error is retryable (Network Error or 5xx Server Error)
+        const isNetworkError = !error.response; // Network error usually has no response
+        const isServerError = error.response && error.response.status >= 500;
+
+        // Don't retry if it's a 4xx error (Client Error) or 401 (Auth)
+        const isClientError = error.response && error.response.status >= 400 && error.response.status < 500;
+
+        if ((isNetworkError || isServerError) && !isClientError && originalRequest._retryCount < MAX_RETRIES) {
+            originalRequest._retryCount++;
+
+            // Calculate delay with exponential backoff
+            const delay = INITIAL_BACKOFF * Math.pow(2, originalRequest._retryCount - 1);
+
+            console.warn(`[API] Connection failed. Retrying (${originalRequest._retryCount}/${MAX_RETRIES}) in ${delay}ms...`);
+
+            // Wait for the delay
+            await new Promise(resolve => setTimeout(resolve, delay));
+
+            // Retry the request
+            return api(originalRequest);
+        }
+
         if (error.response?.status === 401) {
             // Optional: Redirect to login or clear token
             // window.location.href = '/login'; 
