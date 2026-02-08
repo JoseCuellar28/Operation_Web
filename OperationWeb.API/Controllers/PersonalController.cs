@@ -284,7 +284,11 @@ namespace OperationWeb.API.Controllers
                 // SECURITY: Path Traversal Check (Canonical & Strict)
                 if (!fullFolderPath.StartsWith(fullBaseDir, StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogWarning("Security: Path traversal attempt blocked. Base: {Base}, Target: {Target}", fullBaseDir, fullFolderPath);
+                    // Sanitize for log injection prevention
+                    var safeBase = fullBaseDir.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                    var safeTarget = fullFolderPath.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+
+                    _logger.LogWarning("Security: Path traversal attempt blocked. Base: {Base}, Target: {Target}", safeBase, safeTarget);
                     throw new InvalidOperationException("Invalid path detected.");
                 }
                 
