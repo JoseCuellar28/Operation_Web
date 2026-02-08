@@ -265,21 +265,26 @@ namespace OperationWeb.API.Controllers
                 var data = base64.Contains(",") ? base64.Split(',')[1] : base64;
                 var bytes = Convert.FromBase64String(data);
                 
-                // Sanitize employee name for folder (whitelist approach + removing traversal chars)
+                // Sanitize employee name for folder (whitelist approach)
                 var safeName = SanitizeFolderName(employeeName);
 
                 // Define base directory
                 var baseDir = Path.Combine(_env.WebRootPath ?? "wwwroot", "imagenes", "fotos");
-                
-                // New structure: /imagenes/fotos/{EMPLOYEE_NAME}/
-                var folder = Path.Combine(baseDir, safeName);
-                
-                // SECURITY: Path Traversal Check
-                var fullFolderPath = Path.GetFullPath(folder);
                 var fullBaseDir = Path.GetFullPath(baseDir);
 
+                // Ensure base directory ends with separator for secure check
+                // This prevents "C:\base" matching "C:\base_secret"
+                if (!fullBaseDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                    fullBaseDir += Path.DirectorySeparatorChar;
+                
+                // New structure: /imagenes/fotos/{EMPLOYEE_NAME}/
+                var folder = Path.Combine(fullBaseDir, safeName);
+                var fullFolderPath = Path.GetFullPath(folder);
+                
+                // SECURITY: Path Traversal Check (Canonical & Strict)
                 if (!fullFolderPath.StartsWith(fullBaseDir, StringComparison.OrdinalIgnoreCase))
                 {
+                    _logger.LogWarning("Security: Path traversal attempt blocked. Base: {Base}, Target: {Target}", fullBaseDir, fullFolderPath);
                     throw new InvalidOperationException("Invalid path detected.");
                 }
                 
@@ -308,19 +313,16 @@ namespace OperationWeb.API.Controllers
 
         private string SanitizeFolderName(string name)
         {
-            if (string.IsNullOrEmpty(name)) return "UNKNOWN";
+            if (string.IsNullOrWhiteSpace(name)) return "UNKNOWN";
             
-            // Remove invalid path characters
-            var invalid = Path.GetInvalidFileNameChars();
-            var sanitized = string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
-            
-            // Replace spaces with underscores
-            sanitized = sanitized.Replace(" ", "_");
-            
-            // SECURITY: Prevent Directory Traversal
-            sanitized = sanitized.Replace("..", "");
+            // Whitelist approach: Allow only letters, digits, underscore, and hyphen
+            // This is strictly safer than blacklisting characters
+            var allowedChars = new HashSet<char>("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-");
+            var sanitizedChars = name.Where(c => allowedChars.Contains(c)).ToArray();
+            var sanitized = new string(sanitizedChars);
 
-            // Convert to uppercase for consistency
+            if (string.IsNullOrWhiteSpace(sanitized)) return "UNKNOWN";
+            
             return sanitized.ToUpperInvariant();
         }
 
