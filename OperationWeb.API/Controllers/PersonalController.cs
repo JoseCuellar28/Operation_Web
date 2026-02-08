@@ -265,23 +265,30 @@ namespace OperationWeb.API.Controllers
                 var data = base64.Contains(",") ? base64.Split(',')[1] : base64;
                 var bytes = Convert.FromBase64String(data);
                 
-                // Sanitize employee name for folder (remove special chars)
+                // Sanitize employee name for folder (whitelist approach + removing traversal chars)
                 var safeName = SanitizeFolderName(employeeName);
+
+                // Define base directory
+                var baseDir = Path.Combine(_env.WebRootPath ?? "wwwroot", "imagenes", "fotos");
                 
                 // New structure: /imagenes/fotos/{EMPLOYEE_NAME}/
-                var folder = Path.Combine(
-                    _env.WebRootPath ?? "wwwroot", 
-                    "imagenes", 
-                    "fotos", 
-                    safeName
-                );
+                var folder = Path.Combine(baseDir, safeName);
                 
-                if (!Directory.Exists(folder)) 
-                    Directory.CreateDirectory(folder);
+                // SECURITY: Path Traversal Check
+                var fullFolderPath = Path.GetFullPath(folder);
+                var fullBaseDir = Path.GetFullPath(baseDir);
+
+                if (!fullFolderPath.StartsWith(fullBaseDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("Invalid path detected.");
+                }
+                
+                if (!Directory.Exists(fullFolderPath)) 
+                    Directory.CreateDirectory(fullFolderPath);
 
                 // Simple filename: foto.jpg or firma.jpg
                 var fileName = $"{type}.jpg";
-                var path = Path.Combine(folder, fileName);
+                var path = Path.Combine(fullFolderPath, fileName);
                 
                 // Overwrite if exists
                 await System.IO.File.WriteAllBytesAsync(path, bytes);
@@ -290,7 +297,11 @@ namespace OperationWeb.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"[IMAGE SAVE ERROR] Failed to save {type} for {employeeName} (DNI: {dni})");
+                // SECURITY: Log Injection Prevention
+                var safeEmployeeName = employeeName?.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                var safeDni = dni?.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                
+                _logger.LogError(ex, "[IMAGE SAVE ERROR] Failed to save {Type} for {EmployeeName} (DNI: {Dni})", type, safeEmployeeName, safeDni);
                 return null;
             }
         }
@@ -306,6 +317,9 @@ namespace OperationWeb.API.Controllers
             // Replace spaces with underscores
             sanitized = sanitized.Replace(" ", "_");
             
+            // SECURITY: Prevent Directory Traversal
+            sanitized = sanitized.Replace("..", "");
+
             // Convert to uppercase for consistency
             return sanitized.ToUpperInvariant();
         }

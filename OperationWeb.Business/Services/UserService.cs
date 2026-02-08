@@ -147,7 +147,7 @@ namespace OperationWeb.Business.Services
             
             if (!string.IsNullOrEmpty(email))
             {
-                await _emailService.SendWelcomeCredentialsAsync(email, dni, password, token);
+                await _emailService.SendWelcomeCredentialsAsync(email, dni, token);
             }
             else
             {

@@ -18,65 +18,8 @@ namespace OperationWeb.Business.Services
             _context = context;
         }
 
-        public async Task SendCredentialsAsync(string toEmail, string username, string password)
-        {
-            // 1. Try to get settings from DB
-            Dictionary<string, string> settings = new Dictionary<string, string>();
-            try
-            {
-                settings = await _context.SystemSettings.ToDictionaryAsync(s => s.Key, s => s.Value);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[EmailService] Error fetching settings from DB: {ex.Message}");
-            }
-            
-            string host = settings.ContainsKey("SmtpHost") ? settings["SmtpHost"] : _configuration["EmailSettings:Host"];
-            string portStr = settings.ContainsKey("SmtpPort") ? settings["SmtpPort"] : _configuration["EmailSettings:Port"];
-            string smtpUser = settings.ContainsKey("SmtpUser") ? settings["SmtpUser"] : _configuration["EmailSettings:UserName"];
-            string smtpPass = settings.ContainsKey("SmtpPassword") ? settings["SmtpPassword"] : _configuration["EmailSettings:Password"];
-            string fromEmail = settings.ContainsKey("FromEmail") ? settings["FromEmail"] : _configuration["EmailSettings:FromEmail"];
 
-            if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(smtpUser) || string.IsNullOrEmpty(smtpPass))
-            {
-                Console.WriteLine("[EmailService] SMTP settings not configured. Skipping email.");
-                return;
-            }
-
-            int port = int.TryParse(portStr, out int p) ? p : 587;
-
-            try
-            {
-                using var client = new SmtpClient(host, port)
-                {
-                    Credentials = new NetworkCredential(smtpUser, smtpPass),
-                    EnableSsl = true
-                };
-
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(fromEmail ?? "no-reply@operationweb.com"),
-                    Subject = "Credenciales de Acceso - Operation Web",
-                    Body = $@"
-                        <h2>Bienvenido a Operation Web</h2>
-                        <p>Se ha creado su cuenta de usuario.</p>
-                        <p><strong>Usuario:</strong> {username}</p>
-                        <p><strong>Contraseña Temporal:</strong> {password}</p>
-                        <p>Por favor ingrese y cambie su contraseña inmediatamente.</p>",
-                    IsBodyHtml = true
-                };
-                mailMessage.To.Add(toEmail);
-
-                await client.SendMailAsync(mailMessage);
-                Console.WriteLine($"[EmailService] Email sent to {toEmail}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[EmailService] Error sending email: {ex.Message}");
-            }
-        }
-
-        public async Task SendWelcomeCredentialsAsync(string toEmail, string username, string password, string token)
+        public async Task SendWelcomeCredentialsAsync(string toEmail, string username, string token)
         {
             // 1. Try to get settings from DB
             Dictionary<string, string> settings = new Dictionary<string, string>();
@@ -115,29 +58,28 @@ namespace OperationWeb.Business.Services
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(fromEmail ?? "no-reply@operationweb.com"),
-                    Subject = "Bienvenido a Operation Web - Credenciales de Acceso",
+                    Subject = "Bienvenido a Operation Web - Activa tu Cuenta",
                     Body = $@"
                         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;'>
                             <h2 style='color: #2c3e50;'>¡Bienvenido a Operation Web!</h2>
-                            <p>Se ha creado exitosamente tu cuenta de acceso al sistema.</p>
+                            <p>Se ha creado exitosamente tu cuenta de usuario.</p>
                             
                             <div style='background-color: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;'>
-                                <p style='margin: 5px 0;'><strong>Usuario:</strong> {username}</p>
-                                <p style='margin: 5px 0;'><strong>Contraseña Temporal:</strong> {password}</p>
+                                <p style='margin: 5px 0;'><strong>Usuario (DNI):</strong> {username}</p>
                             </div>
 
-                            <p>Para configurar tu contraseña permanente y activar tu cuenta, haz clic en el siguiente botón:</p>
+                            <p>Para establecer tu contraseña y activar tu acceso, haz clic en el siguiente botón:</p>
                             
                             <div style='text-align: center; margin: 30px 0;'>
-                                <a href='{activationUrl}' style='background-color: #3498db; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>Activar Cuenta y Cambiar Contraseña</a>
+                                <a href='{activationUrl}' style='background-color: #3498db; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>Activar Cuenta</a>
                             </div>
 
-                            <p style='color: #7f8c8d; font-size: 0.9em;'>Este enlace expirará en 24 horas por motivos de seguridad.</p>
-                            <p>Si tienes problemas con el botón, copia y pega este enlace en tu navegador:</p>
+                            <p style='color: #7f8c8d; font-size: 0.9em;'>Este enlace es válido por 24 horas.</p>
+                            <p>Si el botón no funciona, copia este enlace:</p>
                             <p style='word-break: break-all; color: #3498db;'>{activationUrl}</p>
                             
                             <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                            <p style='font-size: 0.8em; color: #95a5a6;'>Este es un correo automático, por favor no respondas a este mensaje.</p>
+                            <p style='font-size: 0.8em; color: #95a5a6;'>Mensaje automático de seguridad.</p>
                         </div>",
                     IsBodyHtml = true
                 };
