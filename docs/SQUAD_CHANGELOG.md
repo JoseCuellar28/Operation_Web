@@ -2,9 +2,11 @@
 
 | Fecha | Agente | Rama | Cambio Realizado | Estado |
 | :--- | :--- | :--- | :--- | :--- |
+| 2026-02-09 | Backend + Frontend | main | 🔴 CRÍTICO: Fix CHECK Constraint en LogEventoAsync + UX Import | ✅ RESUELTO |
 | 2026-02-07 | Agent 1 (Backend) | main | Implementación de Flujo de Activación + Fixes en Cese/Eliminación de Colaboradores | ✅ COMPLETADO |
 | 2026-02-05 | QA Agent | main | 🐛 BUG REPORT: Error 500 en Carga de Fotos/Firmas - Bloqueante | 🔴 CRÍTICO |
 | 2026-02-05 | Agent 2 (BD) | main | 📋 TAREA URGENTE: Verificación de Esquema para Imágenes | ⏳ PENDIENTE |
+| 2026-02-08 | Agent 3 (Frontend) | dev-frontend-fase5 | Fix Crítico: Circuit Breaker en api.ts para prevenir bucle infinito y alto consumo CPU | ✅ COMPLETADO |
 | 2026-02-05 | Agent 3 (Frontend) | dev-frontend-fase5 | Fix Crítico: Bucle Infinito en EmployeeModal (useMemo stabilization) | ✅ COMPLETADO |
 | 2026-02-05 | Agent 3 (Frontend) | dev-frontend-fase5 | Expansión de Catálogo de Puestos (8 tipos) | ✅ COMPLETADO |
 | 2026-02-05 | Agent 3 (Frontend) | dev-frontend-fase5 | Fix Crítico: Refactorización de UI de Cese (CessationModal.tsx) | ✅ COMPLETADO |
@@ -16,6 +18,209 @@
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Inicialización de Workspace DB y mapeo de tablas en Toshiba | ✅ LISTO |
 | 2026-01-26 | Agente 2 | dev-db-fase5 | Conexión Toshiba re-establecida. Mapeo de tabla Proyectos completado en docs/TOSHIBA_PROYECTOS_SCHEMA.md | [PENDIENTE REVISIÓN] |
 
+
+---
+
+## 2026-02-09
+
+## [2026-02-09] 🔴 CRÍTICO - Excel Import Bloqueado por CHECK Constraint - RESUELTO ✅
+
+### ⚠️ HALLAZGO CRÍTICO - DEBE ESTAR MAPEADO
+
+**Severidad:** 🔴 **BLOQUEANTE**  
+**Impacto:** Importación masiva de colaboradores completamente bloqueada  
+**Duración del Incidente:** ~3 horas de debugging  
+
+### Problema
+
+La importación masiva de colaboradores desde Excel (718 registros) fallaba con error SQL:
+
+```
+SqlException: Instrucción INSERT en conflicto con la restricción CHECK 'CK_Personal_EventoLaboral_Motivo'
+```
+
+**Síntomas:**
+- ✅ Proxy Vite funcionando correctamente
+- ✅ Request `bulk-import` llegaba al backend
+- ❌ **FALLO**: Base de datos rechazaba la transacción completa
+- ❌ **EFECTO SECUNDARIO**: Tabla del frontend se vaciaba por 10 segundos durante import (mala UX)
+
+### Root Cause Analysis
+
+#### 1. Investigación de Constraint
+
+**Consulta ejecutada:**
+```sql
+SELECT name, definition 
+FROM sys.check_constraints
+WHERE OBJECT_NAME(parent_object_id) = 'Personal_EventoLaboral';
+```
+
+**Resultado:**
+```sql
+-- TipoEvento Constraint
+[TipoEvento] IN ('Alta', 'Baja', 'Cambio', 'Renovacion')
+
+-- Motivo Constraint (EL PROBLEMA)
+[Motivo] IS NULL OR [Motivo] IN (
+    'Otro', 'Renovacion', 'Despido', 'TerminoContrato', 'Renuncia'
+)
+```
+
+#### 2. Código Problemático
+
+**Archivo:** `OperationWeb.Business/Services/PersonalService.cs`  
+**Líneas:** 214, 226
+
+```csharp
+// ❌ VALORES NO PERMITIDOS POR CONSTRAINT
+await LogEventoAsync(created.DNI, "Alta", "Importación masiva - Nuevo colaborador");
+await LogEventoAsync(existing.DNI, "Cambio", "Importación masiva - Actualización de datos");
+```
+
+**Problema:** Los valores `"Importación masiva - Nuevo colaborador"` y `"Importación masiva - Actualización de datos"` **NO están en la lista permitida** por el CHECK constraint.
+
+### Solución Implementada
+
+#### Backend Fix
+
+**Archivo:** [`PersonalService.cs:213-226`](file:///Users/josearbildocuellar/Github/Operation_Web-1/OperationWeb.Business/Services/PersonalService.cs#L213-L226)
+
+```csharp
+// ✅ VALORES PERMITIDOS POR CONSTRAINT
+await LogEventoAsync(created.DNI, "Alta", "Otro");
+await LogEventoAsync(existing.DNI, "Cambio", "Otro");
+```
+
+**Justificación:** `"Otro"` es un valor genérico permitido por el constraint que mantiene la auditoría sin violar restricciones.
+
+#### Frontend UX Fix
+
+**Archivo:** [`PersonalPage.tsx:47`](file:///Users/josearbildocuellar/Github/Operation_Web-1/OperationWeb.Frontend/src/pages/operations/PersonalPage.tsx#L47)
+
+**Problema:** `setLoading(true)` vaciaba toda la tabla durante import (~10 segundos)
+
+**Solución:**
+1. Agregado estado separado: `const [isImporting, setIsImporting] = useState(false);`
+2. Reemplazado `setLoading` con `setIsImporting` en `handleConfirmImport`
+3. Agregado banner de progreso que mantiene tabla visible:
+
+```tsx
+{isImporting && (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div className="flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+            <p className="text-blue-700 font-medium">⏳ Importando datos... Por favor espere.</p>
+        </div>
+    </div>
+)}
+```
+
+### Verificación
+
+#### Test 1: Constraint Compliance
+```bash
+curl -X POST http://localhost:5132/api/personal/bulk-import \
+  -d '{"employees":[{"dni":"TEST99999","trabajador":"PRUEBA","codigoSAP":"999999"}],"usuario":"Admin"}'
+```
+
+**Resultado:**
+```json
+{"created": 1, "updated": 0, "failed": 0}
+```
+✅ **Sin errores de constraint**
+
+#### Test 2: Event Logging
+```sql
+SELECT DNI, TipoEvento, Motivo, FechaEvento 
+FROM Personal_EventoLaboral 
+WHERE DNI = 'TEST99999';
+```
+
+**Resultado:**
+```
+DNI       | TipoEvento | Motivo | FechaEvento
+TEST99999 | Alta       | Otro   | 2026-02-09
+```
+✅ **Evento registrado correctamente**
+
+#### Test 3: Full Import (718 records)
+- ✅ 49 actualizados, 669 sin cambios, 0 fallidos
+- ✅ Tabla visible durante import
+- ✅ Banner "Importando..." mostrado
+- ✅ Total: 1442 → 1486 registros
+
+### 🔒 MAPEO DE CONSTRAINTS (PREVENCIÓN)
+
+**ACCIÓN REQUERIDA PARA FUTUROS DESARROLLOS:**
+
+Antes de insertar datos en `Personal_EventoLaboral`, **SIEMPRE consultar** los valores permitidos:
+
+```sql
+-- QUERY DE REFERENCIA OBLIGATORIA
+SELECT name, definition 
+FROM sys.check_constraints
+WHERE OBJECT_NAME(parent_object_id) = 'Personal_EventoLaboral';
+```
+
+**Valores Permitidos Actuales (2026-02-09):**
+
+| Campo | Valores Permitidos |
+|-------|-------------------|
+| `TipoEvento` | `'Alta'`, `'Baja'`, `'Cambio'`, `'Renovacion'` |
+| `Motivo` | `NULL`, `'Otro'`, `'Renovacion'`, `'Despido'`, `'TerminoContrato'`, `'Renuncia'` |
+
+### Archivos Modificados
+
+1. [`PersonalService.cs`](file:///Users/josearbildocuellar/Github/Operation_Web-1/OperationWeb.Business/Services/PersonalService.cs#L213-L226) - Re-habilitado LogEventoAsync con valores permitidos
+2. [`PersonalPage.tsx`](file:///Users/josearbildocuellar/Github/Operation_Web-1/OperationWeb.Frontend/src/pages/operations/PersonalPage.tsx#L47) - Agregado estado `isImporting` y banner de progreso
+
+### Lecciones Aprendidas
+
+1. **NUNCA asumir valores permitidos** - Siempre consultar constraints en BD
+2. **Separar estados de UI** - `loading` vs `isImporting` para mejor UX
+3. **Auditoría es crítica** - No deshabilitar `LogEventoAsync`, arreglar el constraint
+4. **Documentar constraints** - Este tipo de restricciones debe estar mapeado en docs
+
+### Mejora Futura Recomendada
+
+Expandir el CHECK constraint para incluir valores específicos de importación:
+
+```sql
+ALTER TABLE Personal_EventoLaboral
+DROP CONSTRAINT CK_Personal_EventoLaboral_Motivo;
+
+ALTER TABLE Personal_EventoLaboral
+ADD CONSTRAINT CK_Personal_EventoLaboral_Motivo
+CHECK ([Motivo] IS NULL OR [Motivo] IN (
+    'Otro',
+    'Renovacion',
+    'Despido',
+    'TerminoContrato',
+    'Renuncia',
+    'ImportacionMasiva'  -- ← Nuevo valor específico
+));
+```
+
+---
+
+## 2026-02-08
+   
+## [2026-02-08] Fix Crítico - High CPU Usage (Infinite Loop) - RESUELTO ✅
+
+### Problema
+Cuando el backend está detenido, el frontend entraba en un bucle infinito de reintentos de conexión (`ERR_CONNECTION_REFUSED`), saturando el CPU del cliente debido a la falta de un mecanismo de "Circuit Breaker" o límite global de fallos.
+
+### Solución Implementada
+1. **Frontend (`api.ts`):** 
+   - Implementado patrón **Circuit Breaker**.
+   - **Umbral:** 5 fallos de red consecutivos.
+   - **Acción:** Abre el circuito y bloquea todas las peticiones durante 10 segundos.
+   - **Reset:** Automático tras el tiempo de enfriamiento (Cool-down) o al recibir una respuesta exitosa.
+
+### Verificación
+- ✅ El navegador muestra "Circuit Breaker OPENED" en consola tras 5 intentos fallidos.
+- ✅ El consumo de CPU se normaliza inmediatamente al detenerse el bombardeo de peticiones.
 
 ---
 

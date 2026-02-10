@@ -31,10 +31,26 @@ api.interceptors.request.use(
     }
 );
 
+// Circuit Breaker State
+let failureCount = 0;
+let isCircuitOpen = false;
+const FAILURE_THRESHOLD = 5;
+const CIRCUIT_RESET_TIME = 10000; // 10 seconds
+
 // Response Interceptor: Handle 401 and Retry Logic
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Successful response - reset circuit breaker
+        failureCount = 0;
+        isCircuitOpen = false;
+        return response;
+    },
     async (error) => {
+        // Fast fail if circuit is open
+        if (isCircuitOpen) {
+            return Promise.reject(new Error('Circuit Breaker is open - Server is unreachable'));
+        }
+
         const originalRequest = error.config;
 
         // Initialize retry count
@@ -47,11 +63,25 @@ api.interceptors.response.use(
         const INITIAL_BACKOFF = 1000; // 1 second
 
         // Check if error is retryable (Network Error or 5xx Server Error)
-        const isNetworkError = !error.response; // Network error usually has no response
+        const isNetworkError = !error.response || error.code === 'ERR_CONNECTION_REFUSED';
         const isServerError = error.response && error.response.status >= 500;
 
         // Don't retry if it's a 4xx error (Client Error) or 401 (Auth)
         const isClientError = error.response && error.response.status >= 400 && error.response.status < 500;
+
+        if (isNetworkError || isServerError) {
+            failureCount++;
+            if (failureCount >= FAILURE_THRESHOLD) {
+                console.error(`[API] Circuit Breaker OPENED (${failureCount} failures). Pausing requests.`);
+                isCircuitOpen = true;
+                setTimeout(() => {
+                    console.log('[API] Circuit Breaker RESET. Resuming requests.');
+                    isCircuitOpen = false;
+                    failureCount = 0;
+                }, CIRCUIT_RESET_TIME);
+                return Promise.reject(error);
+            }
+        }
 
         if ((isNetworkError || isServerError) && !isClientError && originalRequest._retryCount < MAX_RETRIES) {
             originalRequest._retryCount++;
