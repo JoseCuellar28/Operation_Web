@@ -13,10 +13,12 @@ namespace OperationWeb.API.Controllers
     public class AttendanceController : ControllerBase
     {
         private readonly IAttendanceService _attendanceService;
+        private readonly IEmpleadoService _empleadoService;
 
-        public AttendanceController(IAttendanceService attendanceService)
+        public AttendanceController(IAttendanceService attendanceService, IEmpleadoService empleadoService)
         {
             _attendanceService = attendanceService;
+            _empleadoService = empleadoService;
         }
 
         // DTOs for Requests
@@ -43,6 +45,13 @@ namespace OperationWeb.API.Controllers
         {
             var records = await _attendanceService.GetAttendanceAsync(date);
             return Ok(records);
+        }
+
+        [HttpGet("employees")]
+        public async Task<IActionResult> GetEmployees()
+        {
+            var employees = await _empleadoService.GetAllEmpleadosAsync();
+            return Ok(employees);
         }
 
         // [HttpGet("employees")] moved to EmpleadosController? 

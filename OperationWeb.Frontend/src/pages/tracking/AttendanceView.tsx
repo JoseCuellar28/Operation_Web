@@ -37,12 +37,12 @@ export default function AttendanceView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [syncFilter, setSyncFilter] = useState<string>('all');
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'monitor' | 'seguimiento'>('monitor');
+  const [showAbsents, setShowAbsents] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<string>(() => {
@@ -110,6 +110,19 @@ export default function AttendanceView() {
   useEffect(() => {
     let filtered = [...allRecords];
 
+    // Filter by Tab specific logic
+    if (activeTab === 'seguimiento') {
+      filtered = filtered.filter(r =>
+        (r.alert_status === 'pending') ||
+        (r.whatsapp_sync === false && r.system_status !== 'falta')
+      );
+    } else {
+      // Monitor Tab: Default to hiding absences unless explicitly requested
+      if (!showAbsents && statusFilter === 'all' && !searchTerm) {
+        filtered = filtered.filter(r => r.system_status !== 'falta');
+      }
+    }
+
     if (searchTerm) {
       filtered = filtered.filter(r =>
         r.employee?.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -127,7 +140,7 @@ export default function AttendanceView() {
 
     setFilteredRecords(filtered);
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, syncFilter, allRecords]);
+  }, [searchTerm, statusFilter, syncFilter, allRecords, activeTab, showAbsents]);
 
   const handleRowClick = (record: AttendanceRecord) => {
     setSelectedRecord(record);
@@ -250,12 +263,40 @@ export default function AttendanceView() {
 
   return (
     <div className="h-full flex flex-col">
+      <div className="flex border-b border-gray-200 mb-6">
+        <button
+          onClick={() => setActiveTab('monitor')}
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'monitor'
+            ? 'border-blue-600 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+        >
+          Monitor de Asistencia
+        </button>
+        <button
+          onClick={() => setActiveTab('seguimiento')}
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'seguimiento'
+            ? 'border-blue-600 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+        >
+          Seguimiento de Incidencias
+          {(allRecords.filter(r => r.alert_status === 'pending').length > 0) && (
+            <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-bounce">
+              {allRecords.filter(r => r.alert_status === 'pending').length}
+            </span>
+          )}
+        </button>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Monitor de Asistencia</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {activeTab === 'monitor' ? 'Monitor en Tiempo Real' : 'Control de Incidencias'}
+          </h1>
           <div className="flex items-center gap-2 mt-1">
             <p className="text-sm text-gray-500">
-              Dashboard en tiempo real:
+              Dashboard:
             </p>
             <input
               type="date"
@@ -268,55 +309,83 @@ export default function AttendanceView() {
         <button
           onClick={loadAttendance}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm"
         >
           <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-          Actualizar
+          {loading ? 'Actualizando...' : 'Actualizar Datos'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <KPICard
-          title="Total Plantilla"
-          value={totalPlantilla}
-          icon={Users}
-          color="text-blue-600"
-          bgColor="bg-blue-50"
-        />
-        <KPICard
-          title="Asistieron"
-          value={asistieron}
-          icon={CheckCircle2}
-          color="text-green-600"
-          bgColor="bg-green-50"
-        />
-        <KPICard
-          title="Tardanzas"
-          value={tardanzas}
-          icon={Clock}
-          color="text-yellow-600"
-          bgColor="bg-yellow-50"
-        />
-        <KPICard
-          title="Faltas"
-          value={faltas}
-          icon={XCircle}
-          color="text-red-600"
-          bgColor="bg-red-50"
-        />
-      </div>
+      {
+        activeTab === 'monitor' ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <KPICard
+              title="Total Plantilla"
+              value={totalPlantilla}
+              icon={Users}
+              color="text-blue-600"
+              bgColor="bg-blue-50"
+            />
+            <KPICard
+              title="Asistieron"
+              value={asistieron}
+              icon={CheckCircle2}
+              color="text-green-600"
+              bgColor="bg-green-50"
+            />
+            <KPICard
+              title="Tardanzas"
+              value={tardanzas}
+              icon={Clock}
+              color="text-yellow-600"
+              bgColor="bg-yellow-50"
+            />
+            <KPICard
+              title="Faltas"
+              value={faltas}
+              icon={XCircle}
+              color="text-red-600"
+              bgColor="bg-red-50"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <KPICard
+              title="Alertas GPS Pendientes"
+              value={allRecords.filter(r => r.alert_status === 'pending').length}
+              icon={MapPin}
+              color="text-orange-600"
+              bgColor="bg-orange-50"
+            />
+            <KPICard
+              title="Sincronización Pendiente"
+              value={allRecords.filter(r => !r.whatsapp_sync && r.system_status !== 'falta').length}
+              icon={RefreshCw}
+              color="text-red-600"
+              bgColor="bg-red-50"
+            />
+            <KPICard
+              title="Registros Hoy"
+              value={recordsWithLocation.length}
+              icon={CheckCircle2}
+              color="text-blue-600"
+              bgColor="bg-blue-50"
+            />
+          </div>
+        )
+      }
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
         <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Registros de Asistencia</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div className="relative md:col-span-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="text"
-                  placeholder="Buscar empleado..."
+                  placeholder="Buscar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -328,10 +397,10 @@ export default function AttendanceView() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todos los estados</option>
+                <option value="all">Filtro de Estado</option>
                 <option value="presente">Presente</option>
                 <option value="tardanza">Tardanza</option>
-                <option value="falta">Falta</option>
+                <option value="falta">Falta (Ausentes)</option>
               </select>
 
               <select
@@ -344,8 +413,21 @@ export default function AttendanceView() {
                 <option value="pending">Pendiente</option>
               </select>
 
-              <div className="text-sm text-gray-600 flex items-center">
-                Mostrando {startIndex + 1}-{Math.min(endIndex, filteredRecords.length)} de {filteredRecords.length}
+              {activeTab === 'monitor' && (
+                <div className="flex items-center gap-2 px-3 border border-gray-300 rounded-lg bg-gray-50">
+                  <input
+                    type="checkbox"
+                    id="showAbsents"
+                    className="rounded text-blue-600 focus:ring-blue-500"
+                    checked={showAbsents}
+                    onChange={(e) => setShowAbsents(e.target.checked)}
+                  />
+                  <label htmlFor="showAbsents" className="text-xs text-gray-600 cursor-pointer select-none">Mostrar Ausentes</label>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500 flex items-center justify-end font-medium">
+                {filteredRecords.length} resultado(s)
               </div>
             </div>
           </div>
@@ -360,6 +442,7 @@ export default function AttendanceView() {
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empleado</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Marca</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Salud</th>
@@ -402,6 +485,11 @@ export default function AttendanceView() {
                               </div>
                               <div className="text-xs text-gray-500">{record.employee?.role}</div>
                             </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-gray-600">
+                            {record.date}
                           </div>
                         </td>
                         <td className="px-4 py-3">
