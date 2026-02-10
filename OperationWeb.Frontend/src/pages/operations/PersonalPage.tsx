@@ -6,6 +6,7 @@ import { excelDateToJSDate } from '../../utils/excelUtils';
 import { EmployeeModal } from './components/EmployeeModal';
 import { CessationModal } from './components/CessationModal';
 import { DeleteConfirmationModal } from './components/DeleteConfirmationModal';
+import { ImportConfirmModal } from '../../components/ImportConfirmModal';
 
 export default function PersonalPage() {
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -38,6 +39,12 @@ export default function PersonalPage() {
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+
+    // Import Confirmation Modal State
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [pendingImportData, setPendingImportData] = useState<any[] | null>(null);
+    const [importRecordCount, setImportRecordCount] = useState(0);
+    const [isImporting, setIsImporting] = useState(false);
 
     // Handlers
     const handleOpenModal = (employee?: Employee, mode: 'create' | 'edit' | 'view' = 'create') => {
@@ -213,6 +220,135 @@ export default function PersonalPage() {
         XLSX.writeFile(wb, 'Plantilla_Colaboradores.xlsx');
     };
 
+    // Handler para confirmar importación desde el modal
+    const handleConfirmImport = async () => {
+        if (!pendingImportData) return;
+
+        try {
+            setIsImporting(true);
+            setIsImportModalOpen(false); // Cerrar modal
+
+            const jsonData = pendingImportData;
+
+            // Helper para obtener valores con múltiples posibles nombres de columna
+            const getVal = (row: any, keys: string[]) => {
+                for (const k of keys) {
+                    if (row[k] !== undefined && row[k] !== null && row[k] !== '') {
+                        return row[k];
+                    }
+                }
+                return null;
+            };
+
+            // Helper para convertir fechas de Excel a ISO string
+            const parseExcelDate = (val: any): string | null => {
+                if (!val) return null;
+                const date = excelDateToJSDate(val);
+                return date ? date.toISOString() : null;
+            };
+
+            // Mapear TODOS los 27 campos del Excel
+            const employees = jsonData.map((row: any) => ({
+                // Identificación
+                dni: String(getVal(row, ['DNI', 'CODIGO SAP', 'Documento']) || '').trim(),
+                codigoSAP: String(getVal(row, ['CODIGO SAP', 'Código SAP', 'CodigoSAP']) || '').trim(),
+
+                // Datos personales
+                trabajador: String(getVal(row, ['TRABAJADOR', 'NOMBRE', 'Nombre Completo', 'Inspector']) || '').trim(),
+                fechaNacimiento: parseExcelDate(getVal(row, ['FECHA NACIMIENTO', 'F. Nacimiento', 'FechaNacimiento'])),
+                sexo: String(getVal(row, ['SEXO', 'Género']) || '').trim(),
+                edad: getVal(row, ['EDAD', 'Edad']) ? Number(getVal(row, ['EDAD', 'Edad'])) : null,
+
+                // Organización
+                situacion: String(getVal(row, ['SITUACION', 'Situación']) || '').trim(),
+                categoria: String(getVal(row, ['CATEGORIA / GRUPO OCUPACIONAL', 'CATEGORIA', 'Categoría']) || '').trim(),
+                cargo: String(getVal(row, ['CARGO', 'PUESTO', 'Tipo']) || '').trim(),
+                division: String(getVal(row, ['DIVISION', 'División']) || '').trim(),
+                lineaNegocio: String(getVal(row, ['LINEA DE NEGOCIO', 'Línea Negocio', 'LineaNegocio']) || '').trim(),
+                areaProyecto: String(getVal(row, ['AREA-PROYECTO', 'AREA/PROYECTO', 'Area', 'Proyecto']) || '').trim(),
+                seccionServicio: String(getVal(row, ['SECCION-SERVICIO', 'SECCION/SERVICIO', 'Sección', 'Servicio']) || '').trim(),
+                detalleCebe: String(getVal(row, ['DETALLE CEBE', 'Detalle']) || '').trim(),
+                codigoCebe: String(getVal(row, ['CODIGO CEBE', 'CódigoCebe']) || '').trim(),
+
+                // Estado laboral
+                fechaIngreso: parseExcelDate(getVal(row, ['FECHA INGRESO', 'F. Ingreso', 'FechaIngreso'])),
+                fechaCese: parseExcelDate(getVal(row, ['FECHA DE CESE', 'F. Cese', 'FechaCese'])),
+                motivoCese: String(getVal(row, ['MOTIVO DE CESE', 'Motivo Cese', 'MotivoCese']) || '').trim(),
+                permanencia: getVal(row, ['PERMANENCIA', 'Permanencia']) ? Number(getVal(row, ['PERMANENCIA', 'Permanencia'])) : null,
+
+                // Contacto
+                correoCorporativo: String(getVal(row, ['CORREO CORPORATIVO', 'Email', 'Correo']) || '').trim(),
+                correoPersonal: String(getVal(row, ['CORREO PERSONAL', 'Email Personal']) || '').trim(),
+                telefono: String(getVal(row, ['TELEFONO', 'CELULAR', 'Teléfono']) || '').trim(),
+
+                // Otros
+                sedeTrabajo: String(getVal(row, ['SEDE DE TRABAJO', 'Sede', 'Distrito']) || '').trim(),
+                jefeInmediato: String(getVal(row, ['JEFE INMEDIATO', 'Jefe']) || '').trim(),
+                comentario: String(getVal(row, ['COMENTARIO', 'Observaciones']) || '').trim()
+            })).filter((emp: any) => emp.dni); // Filtrar filas sin DNI
+
+            console.log(`✅ Registros válidos con DNI: ${employees.length}`);
+
+            if (employees.length === 0) {
+                alert('❌ No se encontraron registros válidos con DNI.\n\nVerifica que el Excel tenga datos en la columna DNI.');
+                return;
+            }
+
+            console.log(`🚀 Iniciando importación de ${employees.length} registros...`);
+            console.log(`📋 Primer registro:`, employees[0]);
+
+            // Llamar al endpoint de importación masiva
+            console.log('📡 Enviando datos al servidor...');
+            const response = await fetch('/api/personal/bulk-import', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    employees: employees,
+                    usuario: 'Admin' // TODO: Obtener del contexto de usuario
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Mostrar resultados detallados
+            alert(
+                `✅ Importación Completada\n\n` +
+                `✅ Creados: ${result.created}\n` +
+                `🔄 Actualizados: ${result.updated}\n` +
+                `⏭️ Sin cambios: ${result.unchanged}\n` +
+                `❌ Fallidos: ${result.failed}\n\n` +
+                `${result.message}`
+            );
+
+            if (result.errors && result.errors.length > 0) {
+                console.warn('Errores de importación:', result.errors);
+            }
+
+            // Recargar la lista
+            fetchEmployees();
+
+        } catch (err) {
+            console.error("Error processing import", err);
+            alert("Error crítico al procesar la importación.");
+        } finally {
+            setIsImporting(false);
+            setPendingImportData(null);
+        }
+    };
+
+    const handleCancelImport = () => {
+        setIsImportModalOpen(false);
+        setPendingImportData(null);
+        setLoading(false);
+    };
+
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -224,72 +360,26 @@ export default function PersonalPage() {
                 const wb = XLSX.read(bstr, { type: 'binary' });
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
-                const jsonData = XLSX.utils.sheet_to_json(ws);
 
-                if (!confirm(`Se han detectado ${jsonData.length} registros. ¿Proceder a cargar uno por uno?`)) {
-                    e.target.value = '';
-                    return;
-                }
+                // El Excel tiene metadata en las primeras 4 filas
+                // Fila 5 tiene los headers reales: DNI, CODIGO SAP, TRABAJADOR, etc.
+                // IMPORTANTE: La columna A está vacía, los datos empiezan en columna B
+                // Necesitamos empezar desde la fila 5 Y desde la columna B (índice 1)
+                const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+                range.s.r = 4; // Empezar desde fila 5 (0-indexed)
+                range.s.c = 1; // Empezar desde columna B (0-indexed), saltando columna A vacía
+                const jsonData = XLSX.utils.sheet_to_json(ws, { range: XLSX.utils.encode_range(range) });
 
-                setLoading(true);
-                let successCount = 0;
-                let failCount = 0;
-                let errors: string[] = [];
+                console.log(`📊 Registros parseados: ${jsonData.length}`);
 
-                // Direct mapping logic (Dictionary)
-                for (const row of jsonData as any[]) {
-                    try {
-                        const getVal = (keys: string[]) => {
-                            for (const k of keys) if (row[k] !== undefined) return row[k];
-                            return '';
-                        };
+                // Mostrar modal personalizado en lugar de confirm nativo
+                setImportRecordCount(jsonData.length);
+                setPendingImportData(jsonData);
+                setIsImportModalOpen(true);
+                e.target.value = ''; // Limpiar input para permitir re-selección
 
-                        const employeeData: Partial<Employee> = {
-                            dni: String(getVal(['DNI', 'CODIGO SAP', 'dni'])),
-                            inspector: getVal(['TRABAJADOR', 'NOMBRE', 'Inspector', 'Nombre']),
-                            telefono: String(getVal(['TELEFONO', 'CELULAR', 'Telefono'])),
-                            area: getVal(['AREA', 'UNIDAD', 'Area']),
-                            tipo: getVal(['CARGO', 'PUESTO', 'Cargo']),
-                            estado: 'ACTIVO',
-                            fechaInicio: excelDateToJSDate(getVal(['FECHA INGRESO', 'F. INGRESO', 'Fecha Ingreso']))?.toISOString()
-                        };
-
-                        // Validate minimum requirement
-                        if (!employeeData.dni) throw new Error("Falta DNI");
-
-                        // Individual POST (Update if exists, Create if new - handled by logic often called 'Upsert' or just Create)
-                        // User asked for "Peticiones POST individuales a /api/personal"
-                        // Assuming POST handles upsert or we might get 409. 
-                        // If 409 (Conflict), we might want to PUT.
-                        // For Web 1 Replica, let's try Upsert logic if possible, or just POST.
-                        // I'll try POST, if error, continue.
-
-                        // Legacy logic usually tried to find then update. Here we just POST.
-                        try {
-                            await personalService.create(employeeData);
-                            successCount++;
-                        } catch (apiError: any) {
-                            // If user exists, maybe try Update? Or just log failure as per "Fail Gracefully".
-                            // Let's assume POST is create-only. If it fails, we count as error for now unless 409.
-                            if (apiError.response?.status === 409) {
-                                // Try Update
-                                await personalService.update(employeeData.dni!, employeeData);
-                                successCount++;
-                            } else {
-                                throw apiError;
-                            }
-                        }
-
-                    } catch (err: any) {
-                        failCount++;
-                        errors.push(`Row DNI ${row['DNI'] || '?'}: ${err.message}`);
-                    }
-                }
-
-                alert(`Proceso Finalizado.\nExitosos: ${successCount}\nFallidos: ${failCount}`);
-                if (errors.length > 0) console.warn("Errores de carga:", errors);
-
-                fetchEmployees();
+                // El procesamiento continuará cuando el usuario confirme en handleConfirmImport()
+                return; // Salir aquí, la importación se ejecutará desde el modal
 
             } catch (err) {
                 console.error("Error processing file", err);
@@ -441,7 +531,41 @@ export default function PersonalPage() {
                 </div>
             </div>
 
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-xs text-gray-500 font-medium uppercase mb-1">Total</p>
+                    <p className="text-3xl font-bold text-gray-900">{employees.length}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-xs text-gray-500 font-medium uppercase mb-1">Activos</p>
+                    <p className="text-3xl font-bold text-green-600">
+                        {employees.filter(e => e.estado === 'ACTIVO' || !e.fechaCese || new Date(e.fechaCese) > new Date()).length}
+                    </p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-xs text-gray-500 font-medium uppercase mb-1">Con Usuario</p>
+                    <p className="text-3xl font-bold text-blue-600">
+                        {employees.filter(e => e.hasUser && e.userIsActive).length}
+                    </p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-xs text-gray-500 font-medium uppercase mb-1">Inactivos</p>
+                    <p className="text-3xl font-bold text-red-600">
+                        {employees.filter(e => e.estado === 'CESADO' || (e.fechaCese && new Date(e.fechaCese) <= new Date())).length}
+                    </p>
+                </div>
+            </div>
+
             {/* Data Grid */}
+            {isImporting && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                        <p className="text-blue-700 font-medium">⏳ Importando datos... Por favor espere.</p>
+                    </div>
+                </div>
+            )}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
@@ -627,6 +751,13 @@ export default function PersonalPage() {
                 onConfirm={handleConfirmDelete}
                 employeeName={employeeToDelete?.inspector || ''}
                 dni={employeeToDelete?.dni || ''}
+            />
+
+            <ImportConfirmModal
+                isOpen={isImportModalOpen}
+                recordCount={importRecordCount}
+                onConfirm={handleConfirmImport}
+                onCancel={handleCancelImport}
             />
         </div>
     );

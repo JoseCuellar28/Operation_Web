@@ -39,8 +39,8 @@ namespace OperationWeb.Business.Services
             // Core: Persist in Master Table (DB_Operation.Personal)
             var created = await _personalRepository.AddAsync(personal);
 
-            // Sync: Replicate to Slave Table (Opera_Main.Colaboradores)
-            await _personalRepository.SyncToColaboradoresAsync(created);
+            // Sync: Replicate handled by SQL Trigger
+
 
             await LogEventoAsync(created.DNI, "Alta", "Creación de nuevo colaborador (Core)");
             return created;
@@ -76,8 +76,8 @@ namespace OperationWeb.Business.Services
 
             await _personalRepository.UpdateAsync(existing);
             
-            // Sync Update
-            await _personalRepository.SyncToColaboradoresAsync(existing);
+            // Sync Update handled by SQL Trigger
+
 
             await LogEventoAsync(existing.DNI, "Cambio", "Actualización de datos (Core)");
             return existing;
@@ -138,7 +138,8 @@ namespace OperationWeb.Business.Services
             personal.MotivoCeseDesc = motivo;
             
             await _personalRepository.UpdateAsync(personal);
-            await _personalRepository.SyncToColaboradoresAsync(personal); // Sync status change
+            await _personalRepository.UpdateAsync(personal);
+
 
             await LogEventoAsync(dni, "Baja", $"Cese administrativo: {motivo}");
             return true;
@@ -180,10 +181,276 @@ namespace OperationWeb.Business.Services
         public async Task SyncAllAsync()
         {
             var allPersonal = await _personalRepository.GetAllAsync();
-            foreach (var p in allPersonal)
+            // Deprecated: Sync handled by SQL Trigger
+        }
+
+        public async Task<BulkImportResultDto> BulkImportAsync(List<PersonalImportDto> employees, string usuario)
+        {
+            var result = new BulkImportResultDto();
+            var errors = new List<string>();
+
+            foreach (var emp in employees)
             {
-                await _personalRepository.SyncToColaboradoresAsync(p);
+                try
+                {
+                    // Validar DNI requerido
+                    if (string.IsNullOrWhiteSpace(emp.DNI))
+                    {
+                        errors.Add($"Fila sin DNI: {emp.Trabajador ?? "Desconocido"}");
+                        result.Failed++;
+                        continue;
+                    }
+
+                    var existing = await _personalRepository.GetByDNIAsync(emp.DNI);
+
+                    if (existing == null)
+                    {
+                        // CREATE: Nuevo colaborador
+                        var personal = MapToPersonal(emp, usuario);
+                        var created = await _personalRepository.AddAsync(personal);
+                        await LogEventoAsync(created.DNI, "Alta", "Otro");
+                        result.Created++;
+                    }
+                    else
+                    {
+                        // UPDATE: Colaborador existente - Merge inteligente
+                        bool hasChanges = MergeChanges(existing, emp, usuario);
+                        
+                        if (hasChanges)
+                        {
+                            await _personalRepository.UpdateAsync(existing);
+                            await LogEventoAsync(existing.DNI, "Cambio", "Otro");
+
+                            result.Updated++;
+                        }
+                        else
+                        {
+                            result.Unchanged++;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"DNI {emp.DNI}: {ex.Message}");
+                    result.Failed++;
+                }
             }
+
+            // Registrar historial de carga
+            try
+            {
+                await RegisterLoadHistoryAsync(new HistorialCargaPersonal
+                {
+                    Usuario = usuario,
+                    FechaCarga = DateTime.UtcNow,
+                    FilasProcesadas = result.Created + result.Updated + result.Unchanged + result.Failed,
+                    InsertadosSnapshot = result.Created,
+                    ActualizadosSnapshot = result.Updated
+                });
+            }
+            catch { /* Silent */ }
+
+            result.Errors = errors;
+            result.Message = $"Proceso completado: {result.Created} creados, {result.Updated} actualizados, {result.Unchanged} sin cambios, {result.Failed} fallidos";
+            
+            return result;
+        }
+
+        private Personal MapToPersonal(PersonalImportDto dto, string usuario)
+        {
+            return new Personal
+            {
+                // Identificación
+                DNI = dto.DNI,
+                CodigoEmpleado = dto.CodigoSAP,
+                
+                // Datos personales
+                Inspector = dto.Trabajador,
+                FechaNacimiento = dto.FechaNacimiento,
+                Sexo = dto.Sexo,
+                Edad = dto.Edad,
+                
+                // Organización
+                Categoria = dto.Categoria,
+                Tipo = dto.Cargo,
+                Division = dto.Division,
+                LineaNegocio = dto.LineaNegocio,
+                Area = dto.AreaProyecto,
+                Seccion = dto.SeccionServicio,
+                DetalleCebe = dto.DetalleCebe,
+                CodigoCebe = dto.CodigoCebe,
+                
+                // Estado laboral - CRÍTICO: Detección automática basada en FechaCese
+                Estado = dto.FechaCese.HasValue ? "CESADO" : "ACTIVO",
+                FechaInicio = dto.FechaIngreso,
+                FechaCese = dto.FechaCese,
+                MotivoCeseDesc = dto.MotivoCese,
+                Permanencia = dto.Permanencia,
+                
+                // Contacto
+                Email = dto.CorreoCorporativo,
+                EmailPersonal = dto.CorreoPersonal,
+                Telefono = dto.Telefono,
+                
+                // Otros
+                Distrito = dto.SedeTrabajo,
+                JefeInmediato = dto.JefeInmediato,
+                Comentario = dto.Comentario,
+                
+                // Auditoría
+                UsuarioCreacion = usuario,
+                FechaCreacion = DateTime.UtcNow
+            };
+        }
+
+        private bool MergeChanges(Personal existing, PersonalImportDto dto, string usuario)
+        {
+            bool hasChanges = false;
+
+            // Solo actualizar si el valor nuevo es diferente y no nulo/vacío
+            if (!string.IsNullOrWhiteSpace(dto.CodigoSAP) && existing.CodigoEmpleado != dto.CodigoSAP)
+            {
+                existing.CodigoEmpleado = dto.CodigoSAP;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Trabajador) && existing.Inspector != dto.Trabajador)
+            {
+                existing.Inspector = dto.Trabajador;
+                hasChanges = true;
+            }
+
+            if (dto.FechaNacimiento.HasValue && existing.FechaNacimiento != dto.FechaNacimiento)
+            {
+                existing.FechaNacimiento = dto.FechaNacimiento;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Sexo) && existing.Sexo != dto.Sexo)
+            {
+                existing.Sexo = dto.Sexo;
+                hasChanges = true;
+            }
+
+            if (dto.Edad.HasValue && existing.Edad != dto.Edad)
+            {
+                existing.Edad = dto.Edad;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Categoria) && existing.Categoria != dto.Categoria)
+            {
+                existing.Categoria = dto.Categoria;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Cargo) && existing.Tipo != dto.Cargo)
+            {
+                existing.Tipo = dto.Cargo;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Division) && existing.Division != dto.Division)
+            {
+                existing.Division = dto.Division;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.LineaNegocio) && existing.LineaNegocio != dto.LineaNegocio)
+            {
+                existing.LineaNegocio = dto.LineaNegocio;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.AreaProyecto) && existing.Area != dto.AreaProyecto)
+            {
+                existing.Area = dto.AreaProyecto;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.SeccionServicio) && existing.Seccion != dto.SeccionServicio)
+            {
+                existing.Seccion = dto.SeccionServicio;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.DetalleCebe) && existing.DetalleCebe != dto.DetalleCebe)
+            {
+                existing.DetalleCebe = dto.DetalleCebe;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.CodigoCebe) && existing.CodigoCebe != dto.CodigoCebe)
+            {
+                existing.CodigoCebe = dto.CodigoCebe;
+                hasChanges = true;
+            }
+
+            if (dto.FechaIngreso.HasValue && existing.FechaInicio != dto.FechaIngreso)
+            {
+                existing.FechaInicio = dto.FechaIngreso;
+                hasChanges = true;
+            }
+
+            // Estado especial: SIEMPRE actualizar basado en FechaCese
+            var nuevoEstado = dto.FechaCese.HasValue ? "CESADO" : "ACTIVO";
+            if (existing.Estado != nuevoEstado || existing.FechaCese != dto.FechaCese)
+            {
+                existing.Estado = nuevoEstado;
+                existing.FechaCese = dto.FechaCese;
+                existing.MotivoCeseDesc = dto.MotivoCese;
+                hasChanges = true;
+            }
+
+            if (dto.Permanencia.HasValue && existing.Permanencia != dto.Permanencia)
+            {
+                existing.Permanencia = dto.Permanencia;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.CorreoCorporativo) && existing.Email != dto.CorreoCorporativo)
+            {
+                existing.Email = dto.CorreoCorporativo;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.CorreoPersonal) && existing.EmailPersonal != dto.CorreoPersonal)
+            {
+                existing.EmailPersonal = dto.CorreoPersonal;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Telefono) && existing.Telefono != dto.Telefono)
+            {
+                existing.Telefono = dto.Telefono;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.SedeTrabajo) && existing.Distrito != dto.SedeTrabajo)
+            {
+                existing.Distrito = dto.SedeTrabajo;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.JefeInmediato) && existing.JefeInmediato != dto.JefeInmediato)
+            {
+                existing.JefeInmediato = dto.JefeInmediato;
+                hasChanges = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Comentario) && existing.Comentario != dto.Comentario)
+            {
+                existing.Comentario = dto.Comentario;
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+            {
+                existing.UsuarioModificacion = usuario;
+                existing.FechaModificacion = DateTime.UtcNow;
+            }
+
+            return hasChanges;
         }
     }
 }

@@ -31,7 +31,10 @@ namespace OperationWeb.Core.Entities
         public string? LocationAddress { get; set; }
 
         [Column("check_salud_apto")]
-        public int? CheckSaludApto { get; set; } 
+        public bool? CheckSaludApto { get; set; } 
+
+        [NotMapped]
+        public string? DNI { get; set; }
 
         [Column("estado_final")]
         [StringLength(50)]
@@ -53,9 +56,5 @@ namespace OperationWeb.Core.Entities
 
         [Column("resolved_at")]
         public DateTime? ResolvedAt { get; set; }
-
-        [Column("dni")]
-        [StringLength(80)]
-        public string? DNI { get; set; }
     }
 }

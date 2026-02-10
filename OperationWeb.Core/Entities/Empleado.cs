@@ -12,11 +12,15 @@ namespace OperationWeb.Core.Entities
         public int IdEmpleado { get; set; }
 
         [NotMapped]
+        public int Id { get => IdEmpleado; set => IdEmpleado = value; }
+
+        [NotMapped]
         public int IdEmpresa { get; set; }
 
-        [StringLength(50)]
+        [NotMapped]
         public string? CodigoEmpleado { get; set; }
 
+        [NotMapped]
         public int? TipoDocumento { get; set; }
 
         [NotMapped]
@@ -42,27 +46,31 @@ namespace OperationWeb.Core.Entities
         [NotMapped]
         public string? ApellidoMaterno { get; set; }
 
+        [NotMapped]
         public DateTime? FechaNacimiento { get; set; }
 
-        [StringLength(100)]
-        [EmailAddress]
+        [NotMapped] // DB does not have Email in COLABORADORES
         public string? Email { get; set; }
 
         [StringLength(20)]
         [Column("phone")]
         public string? Telefono { get; set; }
 
+        [NotMapped]
         public int? IdJefeInmediato { get; set; }
 
+        [NotMapped]
         public int? IdEmpleadoPerfil { get; set; }
 
-        // Core Fix: DB uses Text for Area/Division
+        [NotMapped]
         [Column("division")] 
-        public string? Division { get; set; } // Replaces IdUnidad
+        public string? Division { get; set; } 
 
+        [NotMapped]
         [Column("area")]
-        public string? Area { get; set; } // Replaces IdArea
+        public string? Area { get; set; } 
 
+        [NotMapped]
         public bool? Administrador { get; set; }
 
         [NotMapped]
@@ -71,14 +79,16 @@ namespace OperationWeb.Core.Entities
         [Column("active")]
         public bool? Active { get; set; }
 
+        [Column("created_at")]
         public DateTime? FechaCreacion { get; set; }
 
+        [Column("updated_at")]
         public DateTime? FechaModificacion { get; set; }
 
-        [StringLength(50)]
+        [NotMapped]
         public string? UsuarioCreacion { get; set; }
 
-        [StringLength(50)]
+        [NotMapped]
         public string? UsuarioModificacion { get; set; }
 
         [Column("rol")]
@@ -91,20 +101,24 @@ namespace OperationWeb.Core.Entities
         [Column("estado_operativo")]
         public string? EstadoOperativo { get; set; }
 
-        // Ghost Fields Restored
+        [NotMapped]
         [Column("fecha_inicio")]
         public DateTime? FechaInicio { get; set; }
 
+        [NotMapped]
         [Column("fecha_cese")]
         public DateTime? FechaCese { get; set; }
 
+        [NotMapped]
         [Column("distrito")]
-        [StringLength(100)]
         public string? Distrito { get; set; }
 
+        [NotMapped]
         [Column("codigo_cebe")]
-        [StringLength(50)]
         public string? CodigoCebe { get; set; }
+
+        [Column("Proyecto")]
+        public string? Proyecto { get; set; }
 
 
         // Computed Properties

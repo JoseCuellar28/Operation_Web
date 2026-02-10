@@ -15,5 +15,6 @@ namespace OperationWeb.Business.Interfaces
         Task<HistorialCargaPersonal> RegisterLoadHistoryAsync(HistorialCargaPersonal history);
         Task<PersonalMetadataDto> GetMetadataAsync();
         Task SyncAllAsync();
+        Task<BulkImportResultDto> BulkImportAsync(List<PersonalImportDto> employees, string usuario);
     }
 }

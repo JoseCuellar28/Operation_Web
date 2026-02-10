@@ -99,8 +99,8 @@ namespace OperationWeb.Business.Services
                     FechaCreacion = DateTime.Now
                 };
                 await _personalRepository.AddAsync(newEntity);
-                // Try sync if method exists/implemented
-                try { await _personalRepository.SyncToColaboradoresAsync(newEntity); } catch {}
+                await _personalRepository.AddAsync(newEntity);
+
             }
             else
             {
@@ -119,7 +119,7 @@ namespace OperationWeb.Business.Services
                 existing.FechaModificacion = DateTime.Now;
                 
                 await _personalRepository.UpdateAsync(existing);
-                try { await _personalRepository.SyncToColaboradoresAsync(existing); } catch {}
+
             }
         }
 

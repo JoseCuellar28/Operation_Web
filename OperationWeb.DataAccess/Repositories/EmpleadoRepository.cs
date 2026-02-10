@@ -6,9 +6,9 @@ namespace OperationWeb.DataAccess.Repositories
 {
     public class EmpleadoRepository : IEmpleadoRepository
     {
-        private readonly OperationWebDbContext _context;
+        private readonly OperaMainDbContext _context;
 
-        public EmpleadoRepository(OperationWebDbContext context)
+        public EmpleadoRepository(OperaMainDbContext context)
         {
             _context = context;
         }
@@ -17,7 +17,6 @@ namespace OperationWeb.DataAccess.Repositories
         {
             return await _context.Empleados
                 .OrderBy(e => e.Nombre)
-                .ThenBy(e => e.ApellidoPaterno)
                 .ToListAsync();
         }
 
@@ -113,7 +112,6 @@ namespace OperationWeb.DataAccess.Repositories
             return await _context.Empleados
                 .Where(e => e.IdEmpresa == idEmpresa)
                 .OrderBy(e => e.Nombre)
-                .ThenBy(e => e.ApellidoPaterno)
                 .ToListAsync();
         }
 
@@ -122,7 +120,6 @@ namespace OperationWeb.DataAccess.Repositories
             return await _context.Empleados
                 .Where(e => e.UsuarioActivo == "S")
                 .OrderBy(e => e.Nombre)
-                .ThenBy(e => e.ApellidoPaterno)
                 .ToListAsync();
         }
 

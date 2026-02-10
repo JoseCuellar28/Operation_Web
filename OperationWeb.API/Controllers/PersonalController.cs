@@ -344,5 +344,89 @@ namespace OperationWeb.API.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
+        /// <summary>
+        /// Importación masiva de colaboradores desde Excel
+        /// </summary>
+        [HttpPost("bulk-import")]
+        public async Task<ActionResult<BulkImportResultDto>> BulkImport([FromBody] BulkImportRequestDto request)
+        {
+            _logger.LogWarning("🔥 [BULK-IMPORT] Request received at {Time}", DateTime.UtcNow);
+            
+            try
+            {
+                if (request.Employees == null || !request.Employees.Any())
+                {
+                    _logger.LogWarning("🔥 [BULK-IMPORT] No employees in request");
+                    return BadRequest(new { message = "No se proporcionaron datos para importar" });
+                }
+
+                _logger.LogInformation($"🔥 [BULK-IMPORT] Iniciando importación masiva de {request.Employees.Count} colaboradores");
+
+                var result = await _personalService.BulkImportAsync(request.Employees, request.Usuario);
+
+                _logger.LogInformation($"Importación completada: {result.Created} creados, {result.Updated} actualizados, {result.Failed} fallidos");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en importación masiva");
+                return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene estadísticas de importaciones recientes
+        /// </summary>
+        [HttpGet("import-history")]
+        public async Task<ActionResult> GetImportHistory()
+        {
+            try
+            {
+                var personal = await _personalService.GetAllAsync();
+                var totalPersonal = personal.Count();
+                var activos = personal.Count(p => p.Estado == "ACTIVO");
+                var cesados = personal.Count(p => p.Estado == "CESADO");
+                var conFechaCese = personal.Count(p => p.FechaCese.HasValue);
+
+                return Ok(new
+                {
+                    totalPersonal,
+                    activos,
+                    cesados,
+                    conFechaCese,
+                    ultimosActualizados = personal
+                        .Where(p => p.FechaModificacion.HasValue)
+                        .OrderByDescending(p => p.FechaModificacion)
+                        .Take(10)
+                        .Select(p => new
+                        {
+                            p.DNI,
+                            p.Inspector,
+                            p.Estado,
+                            p.FechaCese,
+                            p.FechaModificacion,
+                            p.UsuarioModificacion
+                        }),
+                    ultimosCesados = personal
+                        .Where(p => p.Estado == "CESADO")
+                        .OrderByDescending(p => p.FechaCese)
+                        .Take(10)
+                        .Select(p => new
+                        {
+                            p.DNI,
+                            p.Inspector,
+                            p.FechaCese,
+                            p.MotivoCeseDesc
+                        })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo historial de importaciones");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
     }
 }

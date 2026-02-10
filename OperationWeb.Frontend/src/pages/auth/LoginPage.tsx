@@ -11,6 +11,7 @@ const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
     // Captcha State
     const [captchaId, setCaptchaId] = useState('');
@@ -27,10 +28,22 @@ const LoginPage = () => {
         }
     }, [isAuthenticated, navigate]);
 
+    // Load saved username on mount
+    useEffect(() => {
+        const savedUsername = localStorage.getItem('rememberedUsername');
+        const wasRemembered = localStorage.getItem('rememberMe') === 'true';
+
+        if (savedUsername && wasRemembered) {
+            setUsername(savedUsername);
+            setRememberMe(true);
+        }
+    }, []);
+
     // Preventative Flow: Load Captcha on Mount
     useEffect(() => {
         fetchCaptcha();
     }, []);
+
 
     const fetchCaptcha = async () => {
         try {
@@ -58,6 +71,16 @@ const LoginPage = () => {
                 CaptchaId: captchaId,
                 CaptchaAnswer: captchaAnswer,
             });
+
+            // Handle Remember Me
+            if (rememberMe) {
+                localStorage.setItem('rememberedUsername', username);
+                localStorage.setItem('rememberMe', 'true');
+            } else {
+                localStorage.removeItem('rememberedUsername');
+                localStorage.removeItem('rememberMe');
+            }
+
             // Login successful
             navigate('/dashboard');
         } catch (err: any) {
@@ -78,6 +101,7 @@ const LoginPage = () => {
             setIsLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen flex font-inter">
@@ -208,6 +232,8 @@ const LoginPage = () => {
                                     id="remember-me"
                                     name="remember-me"
                                     type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
                                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                                 />
                                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 cursor-pointer select-none">

@@ -9,6 +9,6 @@ namespace OperationWeb.Core.Interfaces
         Task<IEnumerable<(Personal Personal, User? User)>> GetAllWithUserStatusAsync();
         Task<(IEnumerable<string> Divisions, IEnumerable<string> Areas, IEnumerable<string> Categories)> GetMetadataAsync();
         Task<HistorialCargaPersonal> RegisterLoadHistoryAsync(HistorialCargaPersonal history);
-        Task SyncToColaboradoresAsync(Personal personal);
+
     }
 }

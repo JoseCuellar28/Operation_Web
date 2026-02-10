@@ -11,11 +11,24 @@ namespace OperationWeb.DataAccess
 
         public DbSet<Material> Materiales { get; set; }
         public DbSet<Vehiculo> Vehiculos { get; set; }
-        public DbSet<ColaboradorMain> Colaboradores { get; set; }
+        public DbSet<Empleado> Colaboradores { get; set; }
+        public DbSet<AsistenciaDiaria> AsistenciasDiarias { get; set; }
+        public DbSet<User> Users { get; set; }
+        // Empleados alias for repository compatibility if needed
+        public DbSet<Empleado> Empleados => Colaboradores;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AsistenciaDiaria>(entity =>
+            {
+                entity.ToTable("ASISTENCIA_DIARIA");
+                entity.HasKey(e => e.IdRegistro);
+                
+                entity.Property(e => e.CheckSaludApto).HasColumnName("check_salud_apto").HasColumnType("bit");
+                entity.Property(e => e.WhatsappSync).HasColumnName("whatsapp_sync").HasColumnType("bit");
+            });
 
             modelBuilder.Entity<Material>(entity =>
             {

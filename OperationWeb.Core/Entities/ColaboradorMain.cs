@@ -7,7 +7,10 @@ namespace OperationWeb.Core.Entities
     [Table("COLABORADORES")]
     public class ColaboradorMain
     {
-         [Key]
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+
         [Column("dni")]
         [StringLength(80)]
         public string DNI { get; set; } = string.Empty;

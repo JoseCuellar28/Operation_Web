@@ -107,45 +107,6 @@ namespace OperationWeb.DataAccess.Repositories
             return history;
         }
 
-        public async Task SyncToColaboradoresAsync(Personal personal)
-        {
-            try 
-            {
-                var colabor = await _operaMainContext.Colaboradores.FirstOrDefaultAsync(e => e.DNI == personal.DNI);
-                
-                if (colabor == null)
-                {
-                    colabor = new ColaboradorMain
-                    {
-                        DNI = personal.DNI,
-                        Nombre = personal.Inspector ?? "Sin Nombre",
-                        Rol = personal.Tipo,
-                        Telefono = personal.Telefono,
-                        PhotoUrl = personal.FotoUrl,
-                        EstadoOperativo = personal.Estado,
-                        Active = personal.Estado != "Cesado",
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-                    await _operaMainContext.Colaboradores.AddAsync(colabor);
-                }
-                else
-                {
-                    colabor.Nombre = personal.Inspector ?? colabor.Nombre;
-                    colabor.Rol = personal.Tipo ?? colabor.Rol;
-                    colabor.Telefono = personal.Telefono ?? colabor.Telefono;
-                    colabor.PhotoUrl = personal.FotoUrl ?? colabor.PhotoUrl;
-                    colabor.EstadoOperativo = personal.Estado ?? colabor.EstadoOperativo;
-                    colabor.Active = personal.Estado != "Cesado";
-                    colabor.UpdatedAt = DateTime.UtcNow;
-                }
 
-                await _operaMainContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[SYNC ERROR] Failed to sync {personal.DNI} to Opera_Main: {ex.Message}");
-            }
-        }
     }
 }

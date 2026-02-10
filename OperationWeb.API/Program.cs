@@ -18,6 +18,15 @@ try { DotNetEnv.Env.Load(); } catch { /* Ignore missing .env in production */ }
 OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Kestrel for larger requests and longer timeouts
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 52428800; // 50 MB
+    serverOptions.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(5);
+    serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5);
+});
+
 // builder.WebHost.UseUrls(builder.Configuration["Urls"] ?? "http://localhost:5132");
 
 // Add services to the container.
@@ -211,6 +220,7 @@ Console.WriteLine($"[DEBUG] ContentRootPath: {app.Environment.ContentRootPath}")
 Console.WriteLine($"[DEBUG] WebRootPath: {app.Environment.WebRootPath}");
 
 
+
 // BLOCKING INITIALIZATION (The "No-Fail" Approach)
 // We await this explicitly to ensure the DB is ready before the app creates the HTTP server.
 try
@@ -252,10 +262,11 @@ try
 
         // 4. Seed Users (Automated Golden Script)
         // Ensure Admin exists for system health, but respect existing
-        if (!await db.Users.AnyAsync(u => u.DNI == "admin"))
+        var adminUser = await db.Users.FirstOrDefaultAsync(u => u.DNI == "admin");
+        if (adminUser == null)
         {
              // Only create if completely missing
-             await db.Users.AddAsync(new OperationWeb.Core.Entities.User 
+             adminUser = new OperationWeb.Core.Entities.User 
             { 
                 DNI = "admin", 
                 Email = "admin@ocal.com", 
@@ -264,11 +275,58 @@ try
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 MustChangePassword = false
-            });
+            };
+            await db.Users.AddAsync(adminUser);
             await db.SaveChangesAsync();
             Console.WriteLine("[STARTUP] Seeded Admin User (Missing).");
+            
+            // Create UserAccessConfig for admin
+            var adminConfig = new OperationWeb.Core.Entities.UserAccessConfig
+            {
+                UserId = adminUser.Id,
+                AccessWeb = true,
+                AccessApp = true,
+                JobLevel = "Manager",
+                LastUpdated = DateTime.UtcNow
+            };
+            await db.UserAccessConfigs.AddAsync(adminConfig);
+            await db.SaveChangesAsync();
+            Console.WriteLine("[STARTUP] Seeded Admin Access Config.");
+        }
+        else
+        {
+            // Ensure admin has access config
+            var adminConfig = await db.UserAccessConfigs.FirstOrDefaultAsync(c => c.UserId == adminUser.Id);
+            if (adminConfig == null)
+            {
+                adminConfig = new OperationWeb.Core.Entities.UserAccessConfig
+                {
+                    UserId = adminUser.Id,
+                    AccessWeb = true,
+                    AccessApp = true,
+                    JobLevel = "Manager",
+                    LastUpdated = DateTime.UtcNow
+                };
+                await db.UserAccessConfigs.AddAsync(adminConfig);
+                await db.SaveChangesAsync();
+                Console.WriteLine("[STARTUP] Created missing Admin Access Config.");
+            }
+            else if (!adminConfig.AccessWeb || !adminConfig.AccessApp)
+            {
+                // Fix access if disabled
+                adminConfig.AccessWeb = true;
+                adminConfig.AccessApp = true;
+                adminConfig.LastUpdated = DateTime.UtcNow;
+                await db.SaveChangesAsync();
+                Console.WriteLine("[STARTUP] Fixed Admin Access Config.");
+            }
         }
 
+
+        // REMOVED: DNI 41007510 is now a regular collaborator from Excel
+        // The system admin is DNI "admin" (see above)
+        // Jose Arbildo Cuellar (41007510) will be imported from Excel like other collaborators
+        /*
         // 4.3 SPECIFIC USER REQUEST (41007510)
         var targetUser = await db.Users.FirstOrDefaultAsync(u => u.DNI == "41007510");
         if (targetUser == null)
@@ -354,6 +412,8 @@ try
             await db.SaveChangesAsync();
             Console.WriteLine("[STARTUP] Seeded Personal Data for 41007510.");
         }
+        */
+
 
         // 6. Seed Projects (Test Data)
         // Using Raw SQL because Proyectos might not be fully mapped in DbSet yet or to be safe
@@ -401,6 +461,9 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"[STARTUP CHECKS] Failed to count personal: {ex.Message}");
     }
 }
+
+// DIAGNOSTIC END
+// DIAGNOSTIC END
 
 app.Run();
 
