@@ -95,8 +95,7 @@ builder.Services.AddScoped<OperationWeb.Business.Interfaces.IUserContextService,
 builder.Services.AddHttpContextAccessor();
 
 
-// Add CORS
-builder.Services.AddCors();
+// builder.Services.AddCors(); // Removed to prevent any default wildcard behavior
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -158,24 +157,41 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseRouting();
-
 // ---------------------------------------------------------
-// NUCLEAR CORS: MANUAL ORIGIN REFLECTION (Cloudflare Bypass)
+// NUCLEAR CORS: MANUAL ORIGIN REFLECTION (Top of Pipeline)
 // ---------------------------------------------------------
 app.Use(async (context, next) =>
 {
+    // Capture Origin from Request
     var origin = context.Request.Headers["Origin"].ToString();
-    if (!string.IsNullOrEmpty(origin))
+    
+    // Use OnStarting to ensure headers are set at the last possible moment
+    context.Response.OnStarting(() => {
+        if (!string.IsNullOrEmpty(origin))
+        {
+            // Explicitly remove any existing headers to prevent duplicates/wildcards
+            context.Response.Headers.Remove("Access-Control-Allow-Origin");
+            context.Response.Headers.Remove("Access-Control-Allow-Credentials");
+            
+            // Set reflected origin and required credentials flag
+            context.Response.Headers.AccessControlAllowOrigin = origin;
+            context.Response.Headers.AccessControlAllowCredentials = "true";
+            context.Response.Headers.AccessControlAllowMethods = "GET, POST, PUT, DELETE, OPTIONS";
+            context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With, Origin, Accept";
+            
+            // Logging for server-side verification (visible in Docker logs)
+            Console.WriteLine($"[CORS] Reflected Origin: {origin}");
+        }
+        return Task.CompletedTask;
+    });
+
+    // Handle Pre-flight OPTIONS requests immediately
+    if (context.Request.Method == "OPTIONS")
     {
         context.Response.Headers.AccessControlAllowOrigin = origin;
         context.Response.Headers.AccessControlAllowCredentials = "true";
         context.Response.Headers.AccessControlAllowMethods = "GET, POST, PUT, DELETE, OPTIONS";
-        context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With";
-    }
-
-    if (context.Request.Method == "OPTIONS")
-    {
+        context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With, Origin, Accept";
         context.Response.StatusCode = 204;
         await context.Response.CompleteAsync();
         return;
@@ -183,6 +199,8 @@ app.Use(async (context, next) =>
 
     await next();
 });
+
+app.UseRouting();
 
 app.UseRateLimiter();
 
