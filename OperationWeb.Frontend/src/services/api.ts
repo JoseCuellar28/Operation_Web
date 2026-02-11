@@ -8,11 +8,13 @@ declare module 'axios' {
 }
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'https://locale-beijing-simultaneously-wilson.trycloudflare.com',
+    baseURL: import.meta.env.VITE_API_URL || '',
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+console.log('[API] Connection BaseURL:', api.defaults.baseURL || 'RELATIVE (Will likely fail on Windows)');
 
 // Request Interceptor: Attach Token
 api.interceptors.request.use(
