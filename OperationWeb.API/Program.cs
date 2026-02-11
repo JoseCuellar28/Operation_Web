@@ -96,20 +96,7 @@ builder.Services.AddHttpContextAccessor();
 
 
 // Add CORS
-var corsSection = builder.Configuration.GetSection("Cors");
-var allowedOrigins = corsSection.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:8000", "http://localhost:8080", "http://localhost:5173" };
-var allowAnyOriginInDev = corsSection.GetValue<bool>("AllowAnyOriginInDev");
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("DevFrontend", policy =>
-    {
-        // Support Credentials for Cloudflare bypass cookies
-        policy.SetIsOriginAllowed(origin => true) 
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
-});
+builder.Services.AddCors();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -172,7 +159,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-app.UseCors("DevFrontend");
+app.UseCors(policy => policy
+    .SetIsOriginAllowed(origin => true)
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowCredentials());
 app.UseRateLimiter();
 
 // Enable static file serving for images
