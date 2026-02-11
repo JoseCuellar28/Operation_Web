@@ -17,7 +17,7 @@ using Microsoft.EntityFrameworkCore;
 namespace OperationWeb.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _config;

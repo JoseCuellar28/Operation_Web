@@ -32,7 +32,7 @@ export const checkConnection = async () => {
     // but here we just want to ping the root or a known path. 
     // Let's ping the /api/auth/captcha endpoint as a lightweight check since we saw it in authService
     // or just the root.
-    const res = await fetch(`${apiUrl}/api/auth/captcha`);
+    const res = await fetch(`${apiUrl}/api/v1/auth/captcha`);
     return res.ok;
   } catch (err) {
     console.error('API connection check failed:', err);

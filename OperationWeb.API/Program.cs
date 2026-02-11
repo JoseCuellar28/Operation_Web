@@ -95,7 +95,17 @@ builder.Services.AddScoped<OperationWeb.Business.Interfaces.IUserContextService,
 builder.Services.AddHttpContextAccessor();
 
 
-// builder.Services.AddCors(); // Removed to prevent any default wildcard behavior
+// Add CORS (Standard Reflective Policy)
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(origin => true) // This echoes any origin, satisfying credentials requirement
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // REQUIRED for Cloudflare cookies and Auth
+    });
+});
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -157,50 +167,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// ---------------------------------------------------------
-// NUCLEAR CORS: MANUAL ORIGIN REFLECTION (Top of Pipeline)
-// ---------------------------------------------------------
-app.Use(async (context, next) =>
-{
-    // Capture Origin from Request
-    var origin = context.Request.Headers["Origin"].ToString();
-    
-    // Use OnStarting to ensure headers are set at the last possible moment
-    context.Response.OnStarting(() => {
-        if (!string.IsNullOrEmpty(origin))
-        {
-            // Explicitly remove any existing headers to prevent duplicates/wildcards
-            context.Response.Headers.Remove("Access-Control-Allow-Origin");
-            context.Response.Headers.Remove("Access-Control-Allow-Credentials");
-            
-            // Set reflected origin and required credentials flag
-            context.Response.Headers.AccessControlAllowOrigin = origin;
-            context.Response.Headers.AccessControlAllowCredentials = "true";
-            context.Response.Headers.AccessControlAllowMethods = "GET, POST, PUT, DELETE, OPTIONS";
-            context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With, Origin, Accept";
-            
-            // Logging for server-side verification (visible in Docker logs)
-            Console.WriteLine($"[CORS] Reflected Origin: {origin}");
-        }
-        return Task.CompletedTask;
-    });
-
-    // Handle Pre-flight OPTIONS requests immediately
-    if (context.Request.Method == "OPTIONS")
-    {
-        context.Response.Headers.AccessControlAllowOrigin = origin;
-        context.Response.Headers.AccessControlAllowCredentials = "true";
-        context.Response.Headers.AccessControlAllowMethods = "GET, POST, PUT, DELETE, OPTIONS";
-        context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With, Origin, Accept";
-        context.Response.StatusCode = 204;
-        await context.Response.CompleteAsync();
-        return;
-    }
-
-    await next();
-});
-
 app.UseRouting();
+
+// Standard CORS Middleware (Uses the default policy with mirroring + credentials)
+app.UseCors();
 
 app.UseRateLimiter();
 
@@ -241,8 +211,10 @@ app.MapGet("/health", () => Results.Ok("Healthy"));
 
 // Secure Root Path (API Only Mode)
 app.MapGet("/", () => Results.Json(new { status = "online", service = "OperationWeb.API", version = "v1-core" }));
-app.MapGet("/{path:nonfile}", (string path) => {
-    if (path.StartsWith("api")) return Results.NotFound(); // Let API 404 handle it normally if controller not found
+
+// Simplified Catch-all (to avoid interference with v1 routes)
+app.MapGet("/{*path}", (string path) => {
+    if (path.StartsWith("api/v1")) return Results.NotFound();
     return Results.Json(new { error = "Not Found", message = "API-Only Server. Please use /api/v1 prefix." }, statusCode: 404);
 });
 
