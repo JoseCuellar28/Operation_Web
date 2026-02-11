@@ -103,10 +103,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevFrontend", policy =>
     {
-        // NUCLEAR CORS OPTION: Allow everything to ensure frontend URL works immediately
-        policy.AllowAnyOrigin()
+        // Support Credentials for Cloudflare bypass cookies
+        policy.SetIsOriginAllowed(origin => true) 
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
