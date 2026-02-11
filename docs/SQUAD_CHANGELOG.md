@@ -2152,3 +2152,16 @@ ORDER BY tc.CONSTRAINT_TYPE, kcu.COLUMN_NAME;
 
 
 [2026-01-26] [dev-db-fase5] [Agente 2 Online - Conexión a Toshiba verificada] [LISTO].
+
+## [2026-02-10 09:37] FIX: Mobile Connection & Frontend Syntax
+- **Issue**: Android app failed to connect (`Failed to connect to /100.75.88.34:5132`).
+- **Root Cause**: Backend was binding only to `localhost` (127.0.0.1), preventing external connections via Tailscale interface.
+- **Fix**: Restarted backend with `--urls "http://0.0.0.0:5132"` to bind to all network interfaces.
+- **Frontend Fix**: Resolved `Adjacent JSX elements` syntax error in `DeleteConfirmationModal.tsx` caused by accidental deletion of button elements during previous edits. Restored missing buttons and corrected JSX nesting.
+
+## [2026-02-10 12:15] 🛡️ INFRA: Fallback to Cloudflare Tunnel
+- **Issue**: Mobile device failed to resolve Tailscale Funnel DNS (`Unable to resolve host`).
+- **Solution**: Deployed **Cloudflare Tunnel** as a robust fallback.
+- **URL**: `https://cafe-bras-adam-heroes.trycloudflare.com`
+- **Why**: Uses standard HTTPS (port 443) and Cloudflare's global anycast DNS, bypassing local/ISP DNS blocks.
+- **Action**: Updated APK instructions with this final, universally accessible URL.
