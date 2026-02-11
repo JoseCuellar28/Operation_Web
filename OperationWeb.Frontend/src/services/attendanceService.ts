@@ -13,12 +13,17 @@ export interface AttendanceRecord {
 }
 
 export const attendanceService = {
-    getDailyLogs: async (): Promise<AttendanceRecord[]> => {
+    getDailyLogs: async (date?: string): Promise<AttendanceRecord[]> => {
         // Attempt real endpoint or mock
         try {
-            const response = await api.get('/api/asistencia/diaria');
+            // Default to today in YYYY-MM-DD format if not provided
+            const queryDate = date || new Date().toISOString().split('T')[0];
+
+            // Backend expects: /api/v1/attendance?date=YYYY-MM-DD
+            const response = await api.get(`/api/v1/attendance?date=${queryDate}`);
             return response.data;
         } catch (e) {
+            console.error('[AttendanceService] Failed to load attendance. Using fallback mock.', e);
             // Mock data for "Fidelidad Web 1" demonstration
             return [
                 { id: 1, dni: '41007510', nombre: 'JUAN PEREZ', fecha: new Date().toISOString(), tipo: 'INGRESO', estado: 'A TIEMPO', lat: -12.046, lng: -77.042 },
