@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: operation_backend
+    ports:
+      - "5132:5132"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5132
+      # The Windows Agent handles the connection string replacement
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - Jwt__Key=${JWT_SECRET_KEY}
+    restart: always
+
+  frontend:
+    build:
+      context: ./OperationWeb.Frontend
+      dockerfile: Dockerfile
+      args:
+        # INJECTING PRODUCTION API URL AT BUILD TIME
+        VITE_API_URL: "https://polar-deviant-aye-likewise.trycloudflare.com"
+    container_name: operation_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # Runtime fallback (though Vite uses build-time envs mostly)
+      - VITE_API_URL=https://polar-deviant-aye-likewise.trycloudflare.com
+    restart: always
