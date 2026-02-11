@@ -159,11 +159,31 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-app.UseCors(policy => policy
-    .SetIsOriginAllowed(origin => true)
-    .AllowAnyMethod()
-    .AllowAnyHeader()
-    .AllowCredentials());
+
+// ---------------------------------------------------------
+// NUCLEAR CORS: MANUAL ORIGIN REFLECTION (Cloudflare Bypass)
+// ---------------------------------------------------------
+app.Use(async (context, next) =>
+{
+    var origin = context.Request.Headers["Origin"].ToString();
+    if (!string.IsNullOrEmpty(origin))
+    {
+        context.Response.Headers.AccessControlAllowOrigin = origin;
+        context.Response.Headers.AccessControlAllowCredentials = "true";
+        context.Response.Headers.AccessControlAllowMethods = "GET, POST, PUT, DELETE, OPTIONS";
+        context.Response.Headers.AccessControlAllowHeaders = "Content-Type, Authorization, X-Requested-With";
+    }
+
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.StatusCode = 204;
+        await context.Response.CompleteAsync();
+        return;
+    }
+
+    await next();
+});
+
 app.UseRateLimiter();
 
 // Enable static file serving for images
