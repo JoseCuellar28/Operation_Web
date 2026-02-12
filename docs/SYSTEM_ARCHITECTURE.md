@@ -135,6 +135,61 @@ Para ver qué está pasando dentro del motor en la Windows Server:
 
 ---
 
+## 8. Deep Dive: Arquitectura Interna del Servidor (The Engine Room)
+
+Esta sección explica cómo se "hablan" los componentes dentro de la Windows Server.
+
+### A. La Red Interna de Docker (Docker Network)
+Docker crea una red virtual privada (ej. `operation_web_network`) donde viven los contenedores.
+*   **Visibilidad**: Los contenedores no conocen las IPs externas del servidor. Se hablan usando sus nombres de servicio:
+    *   El Frontend busca a la API en: `http://operation_backend:5132` (internamente).
+*   **Aislamiento**: Nada desde fuera puede entrar a esta red, excepto a través de las "puertas" que abrimos.
+
+### B. El Ciclo de Cloudflare Tunnel (External Traffic)
+El servidor corre dos procesos `cloudflared` (Túneles) que actúan como guardaespaldas:
+1.  **Conexión de Salida**: El servidor se conecta a Cloudflare (no al revés). Esto salta cualquier Firewall.
+2.  **Mapeo Dinámico**: 
+    *   Túnel 1 -> Redirige tráfico a `http://localhost:5173` (Frontend).
+    *   Túnel 2 -> Redirige tráfico a `http://localhost:5132` (Backend).
+3.  **Identidad**: Cada túnel genera una URL tipo `.trycloudflare.com`.
+
+### C. Capa de Datos: Conexión a SQL Server
+El acceso a la base de datos `100.125.169.14` ocurre a nivel de la máquina física (Host).
+*   **Ruta**: Contenedor Backend -> Puerta de Enlace Docker -> Red Tailscale -> SQL Server.
+*   **Seguridad**: El servidor Windows debe estar logueado en Tailscale para que el contenedor pueda llegar a la IP `100.x.x.x`. Si Tailscale cae en el servidor, la App reportará "Error 500".
+
+```mermaid
+graph TD
+    subgraph "Nube Cloudflare"
+        URL[URL Pública https://...]
+    end
+
+    subgraph "🪟 Windows Server (Host)"
+        Tail[🛡️ Tailscale/Red Privada]
+        Tunnel[☁️ Cloudflare Tunnel]
+
+        subgraph "🐳 Docker Engine"
+            subgraph "Red Interna: operation_web_net"
+                API[⚙️ API .NET Core]
+                Web[💻 Frontend Nginx]
+            end
+        end
+    end
+
+    subgraph "🗄️ Servidor Externo"
+        SQL[(SQL Server 100.125.169.14)]
+    end
+
+    URL -->|Tunnel| Tunnel
+    Tunnel -->|Port Forward| API
+    Tunnel -->|Port Forward| Web
+    API -->|TCP 1433| Tail
+    Tail -->|Ruta Privada| SQL
+```
+
+
+---
+
 ## 7. Bitácora de Ajustes Arquitectónicos (Enero-Febrero 2026)
 
 Para que el sistema funcione en local y producción sin errores, se aplicaron estos cambios estructurales:
