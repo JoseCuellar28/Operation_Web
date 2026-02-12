@@ -101,9 +101,57 @@ Aunque el destino final es Windows, tu Mac es un entorno de ejecución completo.
     *   *Verificación:* Navegue a `http://localhost:5132/health`. Debe decir "Healthy".
 2.  **Frontend**: Abra otra terminal en `OperationWeb.Frontend` y ejecute `npm run dev`.
     *   *Acceso:* Navegue a `http://localhost:5173`.
-3.  **Resultado**: La aplicación funcionará con las **mismas reglas de negocio y rutas** que en producción. Si el Login funciona aquí, funcionará allá (salvo problemas de red/fuego).
+### Herramientas de Verificación en Mac:
+*   **sqlcmd**: Herramienta de línea de comandos para consultar la base de datos directamente sin pasar por la API.
+    *   Ejemplo: `/opt/homebrew/bin/sqlcmd -S 100.125.169.14 -U SA -P 'Password' -d DB_Operation -Q "SELECT TOP 5 * FROM Users"`
+*   **Logs en tiempo real**: Al usar `dotnet run` y `npm run dev`, los errores aparecen instantáneamente en la terminal.
 
-> [!IMPORTANT]
-> **Conectividad de Red (VPN/Tailscale)**:
-> Para que el Backend local pueda conectarse a la base de datos de producción (`100.125.169.14`), es **IMPRESCINDIBLE** que la Mac tenga activa la conexión a la red privada (Tailscale o VPN). Sin esto, el sistema local reportará errores 500 (Timeout) al intentar autenticar usuarios.
+### Configuración Sensible (Local):
+*   **appsettings.Development.json**: Este archivo es el más importante en la Mac. Contiene las credenciales reales para conectar a la base de datos de Tailscale. **NUNCA** debe subirse a producción (está en `.gitignore`).
+*   **Identidad**: El sistema local utiliza la tabla `Users` de producción. Si no puedes loguearte localmente, probablemente es un problema de red (VPN) o de que el usuario no está marcado como `IsActive = 1`.
+
+---
+
+## 6. El Mundo del Servidor (Windows Production)
+
+El servidor no es solo una máquina; es un ecosistema de contenedores aislados.
+
+### Especificaciones Técnicas:
+*   **SO**: Windows Server con Docker Engine.
+*   **Orquestación**: Docker Compose.
+*   **Red**: Los contenedores viven en una red interna privada. Solo son visibles al mundo a través de Cloudflare.
+
+### El Corazón del Despliegue: `start_operation_smart.ps1`
+Este script de PowerShell es el que "mueve los hilos" en producción. Realiza 4 acciones críticas:
+1.  **Descubrimiento**: Pregunta a Cloudflare: *"¿En qué URL estás hoy?"*.
+2.  **Sincronización**: Hace un `git reset --hard` para asegurar que el código es el de GitHub.
+3.  **Inyección**: Escribe la URL oficial del Backend dentro del código del Frontend (`docker-compose.prod.yml`).
+4.  **Ignición**: Ejecuta `docker-compose up --build --force-recreate` para levantar todo limpio.
+
+### Gestión de Logs en el Servidor:
+Para ver qué está pasando dentro del motor en la Windows Server:
+*   `docker logs operation_backend -f`: Muestra el tráfico de la API en tiempo real.
+*   `docker logs operation_frontend -f`: Muestra los logs del servidor web (Nginx/Vite).
+
+---
+
+## 7. Bitácora de Ajustes Arquitectónicos (Enero-Febrero 2026)
+
+Para que el sistema funcione en local y producción sin errores, se aplicaron estos cambios estructurales:
+
+### A. Unificación de Prefijos (Routing)
+*   **Problema**: Había rutas mezcladas (`/api/auth`, `/api/v1/attendance`). El servidor bloqueaba las que no tenían `/v1/`.
+*   **Solución**: Todas las rutas ahora nacen bajo `/api/v1/`.
+*   **Archivos Clave**: `AuthController.cs`, `authService.ts`, `userService.ts`.
+
+### B. CORS de Grado Industrial
+*   **Problema**: El uso de comodines (`*`) bloquea el envío de cookies de seguridad (Cloudflare).
+*   **Solución**: Se eliminó el middleware manual y se activó `AddCors` + `UseCors` con la política de **Reflexión dinámica**. El servidor ahora mira quién le habla y le da permiso solo a ese origen, permitiendo "Credentials".
+*   **Archivos Clave**: `Program.cs`, `api.ts` (con `withCredentials: true`).
+
+### C. Inyección Dinámica de URL
+*   **Problema**: Las URLs de Cloudflare cambian en cada reinicio.
+*   **Solución**: El script de despliegue captura la URL activa de la API y la inyecta quirúrgicamente en el Frontend antes de la compilación.
+*   **Archivos Clave**: `start_operation_smart.ps1`, `docker-compose.prod.yml`.
+
 
