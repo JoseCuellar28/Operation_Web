@@ -3,6 +3,7 @@ import { Users, CheckCircle2, Clock, XCircle, MapPin, RefreshCw, Search, Chevron
 import { AttendanceRecord, Employee } from '../../connections/supabase';
 import AttendanceMap from '../../components/AttendanceMap';
 import ResolutionDrawer from '../../components/ResolutionDrawer';
+import api from '../../services/api';
 
 interface KPICardProps {
   title: string;
@@ -56,16 +57,12 @@ export default function AttendanceView() {
     setLoading(true);
     try {
       // 1. Fetch Attendance from SQL API
-      const recordsRes = await fetch(`/api/v1/attendance?date=${selectedDate}`);
-
-      if (!recordsRes.ok) throw new Error('Failed to fetch attendance');
-      const recordsData: AttendanceRecord[] = await recordsRes.json();
+      const recordsRes = await api.get(`/api/v1/attendance?date=${selectedDate}`);
+      const recordsData: AttendanceRecord[] = recordsRes.data;
 
       // 2. Fetch Employees from SQL API
-      const employeesRes = await fetch('/api/v1/employees');
-
-      if (!employeesRes.ok) throw new Error('Failed to fetch employees');
-      const allEmployees: Employee[] = await employeesRes.json();
+      const employeesRes = await api.get('/api/v1/employees');
+      const allEmployees: Employee[] = employeesRes.data;
 
       // 3. Identify absent employees
       const presentEmployeeIds = new Set(recordsData.map(r => r.employee_id));
@@ -157,13 +154,7 @@ export default function AttendanceView() {
 
     setSyncing(recordId);
     try {
-      const res = await fetch(`/api/v1/attendance/${recordId}/sync`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsapp_sync: !currentSync })
-      });
-
-      if (!res.ok) throw new Error('Sync failed');
+      await api.put(`/api/v1/attendance/${recordId}/sync`, { whatsapp_sync: !currentSync });
       await loadAttendance();
     } catch (error) {
       console.error('Error syncing:', error);
@@ -179,13 +170,7 @@ export default function AttendanceView() {
       const record = allRecords.find(r => r.id === recordId);
       const action = record?.alert_status === 'pending' ? 'approve_exception' : 'accept';
 
-      const res = await fetch(`/api/v1/attendance/${recordId}/resolve`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
-      });
-
-      if (!res.ok) throw new Error('Failed to accept');
+      await api.put(`/api/v1/attendance/${recordId}/resolve`, { action });
       await loadAttendance();
       handleCloseDrawer();
     } catch (error) {
@@ -201,13 +186,7 @@ export default function AttendanceView() {
       const record = allRecords.find(r => r.id === recordId);
       const action = record?.alert_status === 'pending' ? 'reject_exception' : 'reject';
 
-      const res = await fetch(`/api/v1/attendance/${recordId}/resolve`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
-      });
-
-      if (!res.ok) throw new Error('Failed to reject');
+      await api.put(`/api/v1/attendance/${recordId}/resolve`, { action });
       await loadAttendance();
       handleCloseDrawer();
     } catch (error) {
@@ -464,7 +443,11 @@ export default function AttendanceView() {
                           <div className="flex items-center gap-3">
                             <div className="relative">
                               <img
-                                src={record.employee?.photo_url || 'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=200'}
+                                src={record.employee?.photo_url
+                                  ? (record.employee.photo_url.startsWith('http')
+                                    ? record.employee.photo_url
+                                    : `${api.defaults.baseURL}${record.employee.photo_url}`)
+                                  : 'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=200'}
                                 alt={record.employee?.name}
                                 className={`w-10 h-10 rounded-full object-cover ${isBlocked ? 'border-2 border-red-600' : ''}`}
                               />
