@@ -190,6 +190,54 @@ graph TD
 
 ---
 
+## 10. Mapeo de Flujo: El Triángulo de Producción (La Clave del Problema)
+
+Para resolver los errores persistentes, es vital entender que la comunicación **no es interna entre contenedores**, sino que pasa por el navegador del usuario.
+
+### El Triángulo de Comunicación:
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Navegador (Usuario)
+    participant CF as ☁️ Cloudflare (Tunnels)
+    participant F as 💻 Contenedor Frontend
+    participant B as ⚙️ Contenedor Backend
+    participant DB as 🗄️ SQL Server (Tailscale)
+
+    Note over U, DB: 1. Carga de la Web
+    U->>CF: GET https://frontend...trycloudflare.com
+    CF->>F: Redirige a localhost:5173
+    F-->>U: Envía HTML/JS (Código del Frontend)
+
+    Note over U, DB: 2. Intento de Login (Punto de Crítico)
+    U->>CF: POST https://backend...trycloudflare.com/api/v1/auth/login
+    Note right of U: El navegador usa la variable VITE_API_URL
+    CF->>B: Redirige a localhost:5132
+    
+    Note over B, DB: 3. Verificación de Datos
+    B->>DB: Query DNI/Password (IP 100.125.169.14)
+    DB-->>B: Retorna Usuario
+    
+    Note over B, U: 4. Respuesta y CORS
+    B-->>CF: Responde 200 OK + Cabeceras CORS
+    CF-->>U: Entrega JSON al Navegador
+```
+
+### Por qué el Mapeo se rompe (Causas de Error):
+
+1.  **VITE_API_URL Desactualizada**: 
+    *   Si el Frontend se construye con una URL de backend vieja, el navegador del usuario llamará a un túnel muerto.
+    *   *Mapeo Correcto*: Se inyecta en cada arranque vía `start_operation_smart.ps1`.
+
+2.  **La Ilusión de "Red Interna"**:
+    *   Muchos errores ocurren al creer que el Frontend y el Backend se hablan por IP interna de Docker. 
+    *   *Realidad*: El Frontend (React) vive en el navegador del cliente. La red interna de Docker solo sirve para que el contenedor Nginx sirva los archivos estáticos. **Toda la lógica de API debe ser pública vía Cloudflare.**
+
+3.  **CORS Reflected**:
+    *   Como las URLs del Frontend y Backend son distintas, el navegador bloquea la comunicación a menos que el Backend "mapee" de vuelta el origen exacto del Frontend.
+
+---
+
 ## 7. Bitácora de Ajustes Arquitectónicos (Enero-Febrero 2026)
 
 Para que el sistema funcione en local y producción sin errores, se aplicaron estos cambios estructurales:
