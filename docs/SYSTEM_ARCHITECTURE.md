@@ -81,3 +81,29 @@ graph TD
 *   `./start_operation_smart.ps1`: **El Botón Rojo**. Baja cambios, borra contenedores viejos, reconstruye todo y levanta los túneles.
 *   `docker system prune -a -f --volumes`: **Limpieza Nuclear**. Borra todo rastro de versiones anteriores para asegurar una instalación limpia.
 *   `git fetch origin main && git reset --hard origin/main`: **Forzar Sincronización**. Descarta cualquier cambio local en el servidor y se alinea exactamente con GitHub.
+
+---
+
+## 5. Ejecución Local en Mac (¿Cómo probar antes de subir?)
+
+Aunque el destino final es Windows, tu Mac es un entorno de ejecución completo.
+
+### Similitudes y Diferencias:
+| Característica | Local (Mac) | Producción (Windows) |
+| :--- | :--- | :--- |
+| **Código Fuente** | El mismo (`/api/v1/...`) | El mismo (Sincronizado vía Git) |
+| **Base de Datos** | InMemory (Volátil) o SQL Local | SQL Server (Persistente) |
+| **URL Base** | `http://localhost:5132` | `https://...trycloudflare.com` |
+| **CORS** | Refleja `localhost` | Refleja `...trycloudflare.com` |
+
+### Pasos para Arrancar en Mac:
+1.  **Backend**: Abra una terminal en `OperationWeb.API` y ejecute `dotnet run`.
+    *   *Verificación:* Navegue a `http://localhost:5132/health`. Debe decir "Healthy".
+2.  **Frontend**: Abra otra terminal en `OperationWeb.Frontend` y ejecute `npm run dev`.
+    *   *Acceso:* Navegue a `http://localhost:5173`.
+3.  **Resultado**: La aplicación funcionará con las **mismas reglas de negocio y rutas** que en producción. Si el Login funciona aquí, funcionará allá (salvo problemas de red/fuego).
+
+> [!IMPORTANT]
+> **Conectividad de Red (VPN/Tailscale)**:
+> Para que el Backend local pueda conectarse a la base de datos de producción (`100.125.169.14`), es **IMPRESCINDIBLE** que la Mac tenga activa la conexión a la red privada (Tailscale o VPN). Sin esto, el sistema local reportará errores 500 (Timeout) al intentar autenticar usuarios.
+
