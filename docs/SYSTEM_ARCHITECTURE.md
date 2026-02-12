@@ -124,9 +124,11 @@ El servidor no es solo una máquina; es un ecosistema de contenedores aislados.
 ### El Corazón del Despliegue: `start_operation_smart.ps1`
 Este script de PowerShell es el que "mueve los hilos" en producción. Realiza 4 acciones críticas:
 1.  **Descubrimiento**: Pregunta a Cloudflare: *"¿En qué URL estás hoy?"*.
-2.  **Sincronización**: Hace un `git reset --hard` para asegurar que el código es el de GitHub.
-3.  **Inyección**: Escribe la URL oficial del Backend dentro del código del Frontend (`docker-compose.prod.yml`).
-4.  **Ignición**: Ejecuta `docker-compose up --build --force-recreate` para levantar todo limpio.
+2.  **Inyección**: Escribe la URL oficial del Backend dentro del Frontend (`docker-compose.prod.yml`).
+3.  **Ignición**: Ejecuta `docker compose build --no-cache` + `docker compose up -d`.
+4.  **Verificación**: Valida `/health`, captcha, CORS y hardening de ruta legacy.
+
+> Nota: el script **no** hace `git pull` ni `git reset`. La sincronización de código con `main` debe hacerse antes de ejecutarlo.
 
 ### Gestión de Logs en el Servidor:
 Para ver qué está pasando dentro del motor en la Windows Server:
@@ -152,6 +154,9 @@ El servidor corre dos procesos `cloudflared` (Túneles) que actúan como guardae
     *   Túnel 1 -> Redirige tráfico a `http://localhost:5173` (Frontend).
     *   Túnel 2 -> Redirige tráfico a `http://localhost:5132` (Backend).
 3.  **Identidad**: Cada túnel genera una URL tipo `.trycloudflare.com`.
+
+> Nota operativa: `5173` corresponde al **modo Docker automatizado** (`start_operation_smart.ps1`).
+> En contingencia/manual (sin frontend Docker), el frontend se sirve en `54416`.
 
 ### C. Capa de Datos: Conexión a SQL Server
 El acceso a la base de datos `100.125.169.14` ocurre a nivel de la máquina física (Host).
@@ -282,4 +287,158 @@ Esta sección conecta los síntomas comunes con su causa raíz en la arquitectur
 *   **Por qué ocurre**: Generalmente es una consecuencia de los errores de CORS anteriores, donde el navegador bloquea las cookies de sesión, haciendo que el servidor crea que no hay un captcha válido activo.
 *   **Solución**: Limpiar caché del navegador (Hard Refresh) y asegurar que el CORS sea el correctivo Industrial (Reflected Origin).
 
+---
 
+## 11. Lecciones del Incidente (12-Feb-2026) y Estado Real
+
+Esta sección resume los hallazgos de producción ya verificados en campo para evitar repetir el mismo ciclo.
+
+### A. Causa raíz observada (orden real de fallas)
+1.  **Frontend compilado con `VITE_API_URL` inválido o placeholder** (`PEGA_AQUI_BACKEND_URL`) -> navegador rompe requests de auth.
+2.  **Túneles Cloudflare desalineados** (frontend y backend con URLs de ejecuciones distintas) -> `ERR_NAME_NOT_RESOLVED` o `502/1033`.
+3.  **Puerto frontend inestable** (`serve` cae a 58xxx cuando 54416 está ocupado) -> túnel apunta a puerto incorrecto.
+4.  **Variables de entorno incompletas o placeholder** (`DB_CONNECTION_STRING`) -> backend levanta pero login falla por DB.
+5.  **Sesión/caché del navegador stale** -> el usuario ve comportamiento viejo aunque backend ya esté corregido.
+
+### B. Confirmaciones técnicas del entorno
+1.  Endpoint correcto para captcha: `/api/v1/auth/captcha`.
+2.  Ruta legacy `/api/auth/captcha` debe responder `404` (hardening esperado).
+3.  CORS correcto: `Access-Control-Allow-Origin` refleja el frontend real y `Allow-Credentials=true`.
+4.  Salud backend validable por `/health` con `200`.
+
+### C. Ubicación oficial de runbook operativo
+*   Documento operativo detallado: `docs/RUNBOOK_CAPTCHA_PRODUCTION.md`.
+*   Script de automatización base: `start_operation_smart.ps1`.
+*   Este archivo (`docs/SYSTEM_ARCHITECTURE.md`) define el contexto y los puntos de control.
+
+### D. Para Docker y Antigravity: dónde mirar primero
+1.  `docker-compose.prod.yml`:
+    *   `VITE_API_URL` (build args + env)
+    *   estado de servicios `api` / `frontend`
+2.  Logs de túnel:
+    *   `backend*.log`, `frontend*.log`
+3.  Logs backend:
+    *   `docker logs operation_backend --tail 200`
+4.  Bundle frontend en runtime:
+    *   revisar que contenga solo la URL backend activa y no placeholders.
+
+---
+
+## 12. Operación Estable (Modelo de 3 Terminales)
+
+Este modelo es para **contingencia manual** (sin frontend Docker), y fue el que estabilizó el incidente cuando hubo múltiples terminales abiertas.
+Para reducir confusión operativa, usar siempre el mismo patrón:
+
+1.  **T1_BACKEND_TUNNEL**:
+    *   Mantiene túnel backend `127.0.0.1:5132`.
+2.  **T2_FRONTEND_SERVER**:
+    *   `npm run build` + `npx serve -s dist -l 54416` (puerto fijo).
+3.  **T3_FRONTEND_TUNNEL**:
+    *   Mantiene túnel frontend `127.0.0.1:54416`.
+
+Regla de oro:
+*   Si `serve` no toma `54416`, liberar puerto y reiniciar antes de publicar URL.
+
+---
+
+## 13. Checklist de Alineación Total (Antes de cerrar jornada)
+
+Objetivo: dejar todo consistente para que el sistema siga operativo y el próximo agente no herede estados ambiguos.
+
+### A. Infraestructura y conectividad
+1.  Backend URL activa capturada.
+2.  Frontend URL activa capturada.
+3.  `curl <backend>/health` = `200`.
+4.  `curl <backend>/api/v1/auth/captcha` = `200`.
+5.  `curl <backend>/api/auth/captcha` = `404`.
+
+### B. Configuración
+1.  `VITE_API_URL` en build frontend coincide con backend URL activa.
+2.  `DB_CONNECTION_STRING` y `JWT_SECRET_KEY` definidos sin placeholders.
+3.  Backend sin errores de autenticación SQL (`18456`) en logs.
+
+### C. Navegador / UX
+1.  Probar en incógnito (sin cache).
+2.  Confirmar en consola:
+    *   `[API] Connection BaseURL` apunta a backend real.
+3.  Validar login completo:
+    *   captcha visible en `/login`,
+    *   navegación a dashboard sin errores críticos.
+
+### D. Revisión general del proyecto (obligatoria)
+Antes de terminar:
+1.  Ejecutar revisión rápida de backend/frontend (build + endpoints críticos).
+2.  Verificar que documentación y script operativo sigan alineados:
+    *   `docs/SYSTEM_ARCHITECTURE.md`
+    *   `docs/RUNBOOK_CAPTCHA_PRODUCTION.md`
+    *   `start_operation_smart.ps1`
+3.  Registrar cambios operativos en bitácora (`docs/SQUAD_CHANGELOG.md`) si hubo ajustes.
+
+---
+
+## 14. Hallazgos Finales de la Jornada (Incidente Captcha/Login)
+
+### A. Qué quedó resuelto
+1.  **Captcha** volvió a cargar correctamente con la ruta auditada `/api/v1/auth/captcha`.
+2.  **CORS** quedó validado con mirror correcto (`Access-Control-Allow-Origin` = frontend activo).
+3.  **Hardening** validado (`/api/auth/captcha` devuelve `404` por diseño).
+
+### B. Qué causó los errores posteriores
+1.  **`BaseURL` placeholder en frontend** (`PEGA_AQUI_BACKEND_URL`) por build ejecutado sin URL real.
+2.  **Errores de login 500** por cadena de conexión SQL incorrecta (password de `SA` inválida o variable mal inyectada).
+3.  **`502 Bad Gateway` temporal** durante recreación/reinicio de `api` mientras el túnel seguía recibiendo tráfico.
+4.  **Captcha inválido/expirado** cuando se reusa `CaptchaId` viejo o se tarda demasiado entre generar y enviar login.
+
+### C. Señales de diagnóstico (rápidas)
+1.  Si en consola aparece `Connection BaseURL: PEGA_AQUI_BACKEND_URL`, el frontend publicado está mal compilado.
+2.  Si `captcha` da `200` pero login da `500`, revisar **DB** antes que CORS.
+3.  Si sale `1033` o `ERR_NAME_NOT_RESOLVED`, el problema es de túnel/DNS activo, no del endpoint funcional.
+
+---
+
+## 15. Arranque Operativo Sin Confusión (Terminales Correctas)
+
+Usar solo **3 terminales** y nombrarlas así:
+
+1.  **T1_BACKEND_TUNNEL** (dejar corriendo)
+    *   Levanta `cloudflared` hacia `http://127.0.0.1:5132`.
+    *   Exporta:
+        *   `$env:BACKEND_URL = "https://<backend>.trycloudflare.com"`
+2.  **T2_FRONTEND_SERVER** (dejar corriendo)
+    *   En `OperationWeb.Frontend`:
+        *   `$env:VITE_API_URL = $env:BACKEND_URL`
+        *   `npm run build`
+        *   `npx serve -s dist -l 54416`
+3.  **T3_FRONTEND_TUNNEL** (dejar corriendo)
+    *   Levanta `cloudflared` hacia `http://127.0.0.1:54416`.
+    *   Exporta:
+        *   `$env:FRONTEND_URL = "https://<frontend>.trycloudflare.com"`
+
+Reglas para evitar recaídas:
+1.  Nunca usar literales `"BACKEND_URL"` o `"PEGA_AQUI_BACKEND_URL"` en comandos.
+2.  Validar variables con `echo $env:BACKEND_URL` y `echo $env:FRONTEND_URL` antes de probar.
+3.  Si `serve` no queda en `54416`, liberar puerto y volver a levantar antes de túnel frontend.
+4.  Probar login con captcha recién generado (no reutilizar `CaptchaId`).
+
+### Modo recomendado por defecto (Automatizado Docker)
+Si no hay contingencia, usar:
+1.  `start_operation_smart.ps1` (one-click).
+2.  Frontend por Docker en `5173`.
+3.  No ejecutar `npx serve` en paralelo para evitar puertos mezclados y túneles cruzados.
+
+---
+
+## 16. Pedido Explícito para Docker/Antigravity (Siguiente Revisión Completa)
+
+Antes de finalizar operaciones del día, ejecutar **revisión completa del proyecto** y dejar evidencia:
+
+1.  **Infra:** estado de contenedores (`api`, `frontend`) + URLs activas de ambos túneles.
+2.  **Backend:** `/health`, `/api/v1/auth/captcha`, `/api/v1/auth/login` (con captcha nuevo).
+3.  **Seguridad:** confirmación de `404` en rutas legacy `/api/auth/...`.
+4.  **Frontend:** build con `VITE_API_URL` real y verificación de bundle sin placeholders.
+5.  **Datos:** confirmar conexión SQL sin error `18456`.
+6.  **Documentación alineada:**
+    *   `docs/SYSTEM_ARCHITECTURE.md`
+    *   `docs/RUNBOOK_CAPTCHA_PRODUCTION.md`
+    *   `start_operation_smart.ps1`
+7.  **Bitácora:** registrar timestamp, URLs vigentes y resultados de pruebas para handoff.

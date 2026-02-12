@@ -9,7 +9,7 @@
 
 Este catálogo describe los puntos de entrada activos en `OperationWeb.API`.
 
-### 🔐 Autenticación & Seguridad (`/api/auth`)
+### 🔐 Autenticación & Seguridad (`/api/v1/auth`)
 | Verbo | Ruta | Descripción | Lógica Clave / Tabla |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/login` | Iniciar sesión y obtener JWT. | `Users` (Auth), `Personal` (Claims). Valida Captcha + Credenciales + Acceso Plataforma. |
@@ -20,7 +20,7 @@ Este catálogo describe los puntos de entrada activos en `OperationWeb.API`.
 | `POST` | `/forgot-password` | Solicitar reset de clave. | `Users`, `PasswordResetTokens`. Envía Email. |
 | `POST` | `/reset-password` | Ejecutar reset con token. | `PasswordResetTokens`. Valida expiración y uso. |
 
-### 👥 Gestión de Personal (`/api/personal`)
+### 👥 Gestión de Personal (`/api/v1/personal`)
 | Verbo | Ruta | Descripción | Lógica Clave / Tabla |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Listar colaboradores. | `COLABORADORES` (vía `EmpleadoRepository`). Filtra por Rol (Manager/Coord). |
@@ -32,7 +32,7 @@ Este catálogo describe los puntos de entrada activos en `OperationWeb.API`.
 | `GET` | `/metadata` | Listas para dropdowns. | Distinct de `Division`, `Area`, `Cargo` en DB. |
 | `POST` | `/history` | Registrar carga masiva. | `HistorialCargaPersonal`. Log de auditoría. |
 
-### ⚙️ Configuración del Sistema (`/api/system-settings`)
+### ⚙️ Configuración del Sistema (`/api/v1/system-settings`)
 | Verbo | Ruta | Descripción | Lógica Clave / Tabla |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | Leer configuraciones. | `SystemSettings`. |
@@ -56,7 +56,7 @@ Explicación detallada de los procesos "inteligentes" del servidor.
 ### B. Motor de Captcha (Server-Side SVG)
 > **Objetivo:** Prevenir ataques de fuerza bruta automatizados.
 > **Flujo:**
-> 1.  Cliente pide `/api/auth/captcha`.
+> 1.  Cliente pide `/api/v1/auth/captcha`.
 > 2.  Servidor genera operación matemática simple (ej. "5 + 3").
 > 3.  Servidor guarda resultado ("8") en caché de memoria con un ID único y TTL de 2 minutos.
 > 4.  Servidor renderiza un SVG con ruido aleatorio y texto distorsionado (para vencer OCR básico).
