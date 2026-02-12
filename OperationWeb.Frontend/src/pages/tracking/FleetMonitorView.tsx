@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Truck, AlertTriangle, CheckCircle2, Wrench, XCircle, Search, Activity, History, PlusCircle, Save, X } from 'lucide-react';
+import api from '../../services/api';
 
 interface Vehicle {
     placa: string;
@@ -55,8 +56,8 @@ export default function FleetMonitorView() {
 
     const fetchFleet = async () => {
         try {
-            const res = await fetch('/api/v1/fleet/monitor');
-            if (res.ok) setVehicles(await res.json());
+            const res = await api.get('/api/v1/fleet/monitor');
+            setVehicles(res.data);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -64,8 +65,8 @@ export default function FleetMonitorView() {
     const fetchHistory = async (placa: string) => {
         setLoadingHistory(true);
         try {
-            const res = await fetch(`/api/v1/fleet/${placa}/history`);
-            if (res.ok) setHistory(await res.json());
+            const res = await api.get(`/api/v1/fleet/${placa}/history`);
+            setHistory(res.data);
         } catch (e) { console.error(e); }
         finally { setLoadingHistory(false); }
     };
@@ -94,23 +95,14 @@ export default function FleetMonitorView() {
                 checklist_data: formData.checklist
             };
 
-            const res = await fetch('/api/v1/fleet/inspection', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            await api.post('/api/v1/fleet/inspection', payload);
+            alert('Inspección Registrada');
+            setShowForm(false);
+            fetchHistory(selectedVehicle.placa); // Refresh History
+            fetchFleet(); // Refresh Main Monitor
 
-            if (res.ok) {
-                alert('Inspección Registrada');
-                setShowForm(false);
-                fetchHistory(selectedVehicle.placa); // Refresh History
-                fetchFleet(); // Refresh Main Monitor
-
-                // Update local selected vehicle KM
-                setSelectedVehicle(prev => prev ? ({ ...prev, ultimo_km_registrado: payload.kilometraje }) : null);
-            } else {
-                alert('Error al registrar');
-            }
+            // Update local selected vehicle KM
+            setSelectedVehicle(prev => prev ? ({ ...prev, ultimo_km_registrado: payload.kilometraje }) : null);
         } catch (e) {
             console.error(e);
             alert('Error de conexión');

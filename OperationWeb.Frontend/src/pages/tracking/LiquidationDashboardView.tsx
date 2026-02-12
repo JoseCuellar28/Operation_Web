@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, AlertOctagon, DollarSign, Archive, Search, Download, Eye, ArrowLeft, FileText, Calendar, Layers, ShieldCheck, Banknote, CheckCircle2 } from 'lucide-react';
+import api from '../../services/api';
 
 interface LiquidationItem {
     id_ot: string;
@@ -61,8 +62,8 @@ export default function LiquidationDashboardView({ onViewChange }: { onViewChang
     const fetchCandidates = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/v1/liquidation/candidates');
-            if (res.ok) setItems(await res.json());
+            const res = await api.get('/api/v1/liquidation/candidates');
+            setItems(res.data);
         } catch (error) { console.error(error); }
         finally { setLoading(false); }
     };
@@ -70,8 +71,8 @@ export default function LiquidationDashboardView({ onViewChange }: { onViewChang
     const fetchBatches = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/v1/liquidation/batches');
-            if (res.ok) setBatches(await res.json());
+            const res = await api.get('/api/v1/liquidation/batches');
+            setBatches(res.data);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -84,8 +85,8 @@ export default function LiquidationDashboardView({ onViewChange }: { onViewChang
         setHesDate(batch.fecha_aprobacion_hes ? new Date(batch.fecha_aprobacion_hes).toISOString().split('T')[0] : '');
 
         try {
-            const res = await fetch(`/api/v1/liquidation/batches/${batch.id_lote}/details`);
-            if (res.ok) setBatchDetails(await res.json());
+            const res = await api.get(`/api/v1/liquidation/batches/${batch.id_lote}/details`);
+            setBatchDetails(res.data);
         } catch (e) { console.error(e); }
         finally { setLoadingDetails(false); }
     };
@@ -94,32 +95,24 @@ export default function LiquidationDashboardView({ onViewChange }: { onViewChang
         if (!selectedBatch || !hesNumber || !hesDate) return alert('Complete los campos de HES');
 
         try {
-            const res = await fetch(`/api/v1/liquidation/batches/${selectedBatch.id_lote}/register-hes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    numero_hes: hesNumber,
-                    fecha_aprobacion_hes: hesDate
-                })
+            const res = await api.post(`/api/v1/liquidation/batches/${selectedBatch.id_lote}/register-hes`, {
+                numero_hes: hesNumber,
+                fecha_aprobacion_hes: hesDate
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                alert('Conformidad Registrada Correctamente');
-                // Update Local State
-                const updatedBatch = {
-                    ...selectedBatch,
-                    estado: 'CONFORMIDAD_TOTAL',
-                    numero_hes: hesNumber,
-                    fecha_aprobacion_hes: hesDate,
-                    fecha_pago_probable: data.paymentDate
-                };
-                setSelectedBatch(updatedBatch);
-                // Update List
-                setBatches(prev => prev.map(b => b.id_lote === updatedBatch.id_lote ? updatedBatch : b));
-            } else {
-                alert('Error al registrar HES');
-            }
+            const data = res.data;
+            alert('Conformidad Registrada Correctamente');
+            // Update Local State
+            const updatedBatch = {
+                ...selectedBatch,
+                estado: 'CONFORMIDAD_TOTAL',
+                numero_hes: hesNumber,
+                fecha_aprobacion_hes: hesDate,
+                fecha_pago_probable: data.paymentDate
+            };
+            setSelectedBatch(updatedBatch);
+            // Update List
+            setBatches(prev => prev.map(b => b.id_lote === updatedBatch.id_lote ? updatedBatch : b));
         } catch (e) { console.error(e); alert('Error de conexión'); }
     };
 
@@ -140,24 +133,17 @@ export default function LiquidationDashboardView({ onViewChange }: { onViewChang
 
     const handleGenerateBatch = async () => {
         try {
-            const res = await fetch('/api/v1/liquidation/generate-batch', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    selectedOtIds: Array.from(selectedIds),
-                    clientName: 'Cliente General',
-                    month: '2025-10'
-                })
+            const res = await api.post('/api/v1/liquidation/generate-batch', {
+                selectedOtIds: Array.from(selectedIds),
+                clientName: 'Cliente General',
+                month: '2025-10'
             });
-            if (res.ok) {
-                const json = await res.json();
-                alert(`Lote Generado Exitosamente: ${json.batchCode}`);
-                setShowModal(false);
-                fetchCandidates();
-                setSelectedIds(new Set());
-            } else {
-                throw new Error('Error creating batch');
-            }
+
+            const json = res.data;
+            alert(`Lote Generado Exitosamente: ${json.batchCode}`);
+            setShowModal(false);
+            fetchCandidates();
+            setSelectedIds(new Set());
         } catch (err) {
             alert('Error generando lote');
         }

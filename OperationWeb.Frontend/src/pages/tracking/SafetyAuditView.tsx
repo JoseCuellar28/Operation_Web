@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ShieldCheck, UserX, Lock, Unlock, AlertTriangle } from 'lucide-react';
+import api from '../../services/api';
 
 export default function SafetyAuditView() {
     const [auditState, setAuditState] = useState<'FORM' | 'LOCKED' | 'UNLOCK_MODAL'>('FORM');
@@ -17,18 +18,14 @@ export default function SafetyAuditView() {
         if (score === 0) {
             try {
                 // Post to Real SQL Server API
-                await fetch('/api/v1/hse/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id_colaborador: 1, // Mocked ID until Auth context exists
-                        id_supervisor: 2,
-                        score: score,
-                        resultado: 'BLOQUEADO',
-                        motivo: 'Falla en EPP Crítico (Señalización/Casco)',
-                        checklist: { casco: true, guantes: true, senalizacion: false }, // Should assume from state
-                        id_ot: 'OT-MOCK-123'
-                    })
+                await api.post('/api/v1/hse/audit', {
+                    id_colaborador: 1, // Mocked ID until Auth context exists
+                    id_supervisor: 2,
+                    score: score,
+                    resultado: 'BLOQUEADO',
+                    motivo: 'Falla en EPP Crítico (Señalización/Casco)',
+                    checklist: { casco: true, guantes: true, senalizacion: false }, // Should assume from state
+                    id_ot: 'OT-MOCK-123'
                 });
                 setAuditState('LOCKED');
             } catch (e) {
@@ -41,11 +38,7 @@ export default function SafetyAuditView() {
 
     const attemptUnlock = async () => {
         if (supervisorPin === '1234') {
-            await fetch('/api/v1/hse/unlock-resource', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_colaborador: 1, pin: supervisorPin })
-            });
+            await api.post('/api/v1/hse/unlock-resource', { id_colaborador: 1, pin: supervisorPin });
             setAuditState('FORM');
             setScore(100);
             setSupervisorPin('');

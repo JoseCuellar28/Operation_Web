@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ShieldAlert, Search, AlertTriangle } from 'lucide-react';
+import api from '../../services/api';
 
 interface Incident {
     id_incidente: number;
@@ -21,8 +22,8 @@ export default function HSEMonitorView() {
     useEffect(() => {
         const fetchIncidents = async () => {
             try {
-                const res = await fetch('/api/v1/hse/incidents');
-                const data = await res.json();
+                const res = await api.get('/api/v1/hse/incidents');
+                const data = res.data;
                 setIncidents(data);
 
                 // Check for new Critical Incidents (simulated logic for "Push" behavior)
@@ -52,15 +53,11 @@ export default function HSEMonitorView() {
                 evidencia_url: 'http://evidence.com/photo.jpg'
             };
 
-            await fetch('/api/v1/hse/incident', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(mockCritical)
-            });
+            await api.post('/api/v1/hse/incident', mockCritical);
 
             // The polling will pick it up, but for instant UI feedback we fetch immediately
-            const res = await fetch('/api/v1/hse/incidents');
-            const data = await res.json();
+            const res = await api.get('/api/v1/hse/incidents');
+            const data = res.data;
             setIncidents(data);
             const newItem = data.find((x: any) => x.descripcion === mockCritical.descripcion);
             if (newItem) setShowRedAlert(newItem);

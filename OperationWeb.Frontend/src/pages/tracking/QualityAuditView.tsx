@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
-    ArrowLeft, Package, User, MapPin,
+    ArrowLeft, Package,
     CheckCircle, XCircle, RotateCw, ZoomIn,
-    Save, AlertTriangle
+    AlertTriangle
 } from 'lucide-react';
+import api from '../../services/api';
 
 interface Material {
     cod_material: string;
@@ -51,9 +52,8 @@ export default function QualityAuditView({
         const fetchDetails = async () => {
             try {
                 // Reuse the GET details endpoint from Phase 4
-                const res = await fetch(`/api/v1/execution/details/${orderId}`);
-                if (!res.ok) throw new Error('Failed to load details');
-                const json = await res.json();
+                const res = await api.get(`/api/v1/execution/details/${orderId}`);
+                const json = res.data;
                 setData(json);
                 if (json.evidence?.length > 0) {
                     setActiveImage(json.evidence[0].url_archivo);
@@ -98,19 +98,12 @@ export default function QualityAuditView({
         }
 
         try {
-            const res = await fetch('/api/v1/quality/audit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_ot: orderId,
-                    nuevo_estado: finalStatus,
-                    comentario: comment,
-                    cambios: changes
-                })
+            await api.post('/api/v1/quality/audit', {
+                id_ot: orderId,
+                nuevo_estado: finalStatus,
+                comentario: comment,
+                cambios: changes
             });
-
-            if (!res.ok) throw new Error('Audit failed');
-
             onAuditComplete(); // Go back to Inbox
         } catch (err) {
             alert('Error guardando auditoría');
@@ -213,7 +206,9 @@ export default function QualityAuditView({
                     {activeImage ? (
                         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
                             <img
-                                src={activeImage}
+                                src={activeImage
+                                    ? (activeImage.startsWith('http') ? activeImage : `${api.defaults.baseURL}${activeImage}`)
+                                    : ''}
                                 style={{ transform: `scale(${zoom}) rotate(${rotation}deg)`, transition: 'transform 0.2s' }}
                                 className="max-w-[90%] max-h-[80%] object-contain"
                             />
@@ -230,7 +225,10 @@ export default function QualityAuditView({
                                 onClick={() => { setActiveImage(ev.url_archivo); setRotation(0); setZoom(1); }}
                                 className={`w-16 h-16 rounded border-2 flex-shrink-0 overflow-hidden ${activeImage === ev.url_archivo ? 'border-blue-500' : 'border-gray-600 opacity-60'}`}
                             >
-                                <img src={ev.url_archivo} className="w-full h-full object-cover" />
+                                <img
+                                    src={ev.url_archivo.startsWith('http') ? ev.url_archivo : `${api.defaults.baseURL}${ev.url_archivo}`}
+                                    className="w-full h-full object-cover"
+                                />
                             </button>
                         ))}
                     </div>
@@ -286,8 +284,8 @@ export default function QualityAuditView({
                                 onClick={() => handleCommitAudit(showConfirmModal === 'VALIDATE' ? 'VALIDADA_OK' : 'OBSERVADA')}
                                 disabled={(showConfirmModal === 'REJECT' || Object.keys(editedMaterials).length > 0) && !comment}
                                 className={`px-4 py-2 text-white rounded font-medium ${(showConfirmModal === 'REJECT' || Object.keys(editedMaterials).length > 0) && !comment
-                                        ? 'bg-gray-300 cursor-not-allowed'
-                                        : showConfirmModal === 'VALIDATE' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                                    ? 'bg-gray-300 cursor-not-allowed'
+                                    : showConfirmModal === 'VALIDATE' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
                                     }`}
                             >
                                 Confirmar

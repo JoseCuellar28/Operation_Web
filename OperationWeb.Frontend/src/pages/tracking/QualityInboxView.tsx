@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Filter, AlertOctagon, CheckCircle2, FileVideo, Package } from 'lucide-react';
+import api from '../../services/api';
 
 interface QualityOrder {
     id_ot: string;
@@ -25,9 +26,8 @@ export default function QualityInboxView({ onViewChange }: { onViewChange: (view
 
     const fetchInbox = async () => {
         try {
-            const res = await fetch('/api/v1/quality/inbox');
-            if (!res.ok) throw new Error('Failed to fetch quality inbox');
-            const data = await res.json();
+            const res = await api.get('/api/v1/quality/inbox');
+            const data = res.data;
             setOrders(data);
         } catch (error) {
             console.error(error);

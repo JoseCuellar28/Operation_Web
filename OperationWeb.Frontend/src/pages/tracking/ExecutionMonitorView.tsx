@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Clock, AlertTriangle, CheckCircle2, MapPin, Search, ChevronRight } from 'lucide-react';
+import api from '../../services/api';
 
 interface ExecutionOrder {
     id_ot: string;
@@ -21,9 +22,8 @@ export default function ExecutionMonitorView({ onViewChange }: { onViewChange: (
 
     const fetchExecutionData = async () => {
         try {
-            const response = await fetch('/api/v1/execution/monitor');
-            if (!response.ok) throw new Error('Failed to fetch execution data');
-            const data = await response.json();
+            const response = await api.get('/api/v1/execution/monitor');
+            const data = response.data;
             setOrders(data);
         } catch (error) {
             console.error('Error fetching execution monitor:', error);

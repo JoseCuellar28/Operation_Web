@@ -9,6 +9,7 @@ import {
     AlertOctagon,
     Gauge
 } from 'lucide-react';
+import api from '../../services/api';
 
 interface FleetStats {
     total_km_traveled: number;
@@ -42,8 +43,8 @@ export default function FleetAnalyticsView() {
 
     const fetchStats = async () => {
         try {
-            const res = await fetch('/api/v1/analytics/stats');
-            if (res.ok) setStats(await res.json());
+            const res = await api.get('/api/v1/analytics/stats');
+            setStats(res.data);
         } catch (e) {
             console.error('Error fetching stats', e);
         }
@@ -51,12 +52,10 @@ export default function FleetAnalyticsView() {
 
     const fetchScores = async () => {
         try {
-            const res = await fetch('/api/v1/analytics/fleet-score');
-            if (res.ok) {
-                const data = await res.json();
-                // Sort by worst score first for visibility of risk
-                setLeaderboard(data.sort((a: DriverScore, b: DriverScore) => a.safety_score - b.safety_score));
-            }
+            const res = await api.get('/api/v1/analytics/fleet-score');
+            const data = res.data;
+            // Sort by worst score first for visibility of risk
+            setLeaderboard(data.sort((a: DriverScore, b: DriverScore) => a.safety_score - b.safety_score));
         } catch (e) {
             console.error('Error fetching scores', e);
         }
