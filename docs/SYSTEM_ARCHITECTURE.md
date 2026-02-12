@@ -204,9 +204,34 @@ Para que el sistema funcione en local y producción sin errores, se aplicaron es
 *   **Solución**: Se eliminó el middleware manual y se activó `AddCors` + `UseCors` con la política de **Reflexión dinámica**. El servidor ahora mira quién le habla y le da permiso solo a ese origen, permitiendo "Credentials".
 *   **Archivos Clave**: `Program.cs`, `api.ts` (con `withCredentials: true`).
 
-### C. Inyección Dinámica de URL
-*   **Problema**: Las URLs de Cloudflare cambian en cada reinicio.
-*   **Solución**: El script de despliegue captura la URL activa de la API y la inyecta quirúrgicamente en el Frontend antes de la compilación.
-*   **Archivos Clave**: `start_operation_smart.ps1`, `docker-compose.prod.yml`.
+---
+
+## 9. Correlación de Errores y Diagnóstico (Troubleshooting)
+
+Esta sección conecta los síntomas comunes con su causa raíz en la arquitectura.
+
+### 🚩 Síntoma: `Access-Control-Allow-Origin: *` (CORS Wildcard)
+*   **Correlación**: **Falla de Hardening / Prefijo de Ruta**.
+*   **Causa**: El cliente está llamando a una ruta que **NO** empieza con `/api/v1/` (ej: `/api/auth/login`).
+*   **Por qué ocurre**: El servidor está configurado para solo aceptar `/api/v1/`. Cualquier otra cosa cae en el "Muro de Seguridad 404" (Catch-all), el cual, por diseño, responde con un comodín (`*`) que invalida las credenciales.
+*   **Solución**: Asegurar que en el Frontend el servicio use `/api/v1/`.
+
+### 🚩 Síntoma: `Unexpected token <` (HTML en lugar de JSON)
+*   **Correlación**: **Falla de Networking / Túnel**.
+*   **Causa**: El Frontend está recibiendo una página de error 404 (HTML de Nginx o Cloudflare) en lugar del JSON de la API.
+*   **Por qué ocurre**: La variable `VITE_API_URL` apunta a un túnel que está apagado o a una dirección que no existe, por lo que el proxy devuelve una página de "Not Found".
+*   **Solución**: Verificar que el Túnel de la API esté arriba y que la URL en `docker-compose.prod.yml` sea la correcta.
+
+### 🚩 Síntoma: `500 Internal Server Error` (Timeout)
+*   **Correlación**: **Falla de Capa de Datos (Tailscale)**.
+*   **Causa**: El motor (.NET) no puede hablar con el SQL Server en `100.125.169.14`.
+*   **Por qué ocurre**: El servidor Windows ha perdido la conexión a Tailscale o el contenedor no tiene permiso para salir a la red privada.
+*   **Solución**: Reiniciar Tailscale en el servidor y verificar que el SQL Server esté accesible.
+
+### 🚩 Síntoma: `Login Error / Bad Request` (Captcha Fail)
+*   **Correlación**: **Falla de Estado (Session/Token)**.
+*   **Causa**: El servidor rechaza el captcha o el token de sesión.
+*   **Por qué ocurre**: Generalmente es una consecuencia de los errores de CORS anteriores, donde el navegador bloquea las cookies de sesión, haciendo que el servidor crea que no hay un captcha válido activo.
+*   **Solución**: Limpiar caché del navegador (Hard Refresh) y asegurar que el CORS sea el correctivo Industrial (Reflected Origin).
 
 
