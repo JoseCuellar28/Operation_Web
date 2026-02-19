@@ -30,7 +30,7 @@ export const checkConnection = async () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5132';
     // Remove trailing /api if present to avoid duplication if the check adds it, 
     // but here we just want to ping the root or a known path. 
-    // Let's ping the /api/auth/captcha endpoint as a lightweight check since we saw it in authService
+    // Lightweight health/auth check against the audited captcha route
     // or just the root.
     const res = await fetch(`${apiUrl}/api/v1/auth/captcha`);
     return res.ok;

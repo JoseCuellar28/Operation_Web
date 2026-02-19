@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
+using OperationWeb.DataAccess;
 
 namespace OperationWeb.API.Controllers
 {
@@ -26,6 +27,8 @@ namespace OperationWeb.API.Controllers
         private readonly IUserService _userService;
         private readonly IProyectoService _proyectoService;
         private readonly IPersonalService _personalService;
+        private readonly OperaMainDbContext _operaMainDb;
+        private readonly OperationWebDbContext _operationWebDb;
 
         public AuthController(
             IConfiguration config, 
@@ -33,7 +36,9 @@ namespace OperationWeb.API.Controllers
             ILogger<AuthController> logger, 
             IUserService userService, 
             IProyectoService proyectoService,
-            IPersonalService personalService)
+            IPersonalService personalService,
+            OperaMainDbContext operaMainDb,
+            OperationWebDbContext operationWebDb)
         {
             _config = config;
             _cache = cache;
@@ -41,9 +46,11 @@ namespace OperationWeb.API.Controllers
             _userService = userService;
             _proyectoService = proyectoService;
             _personalService = personalService;
+            _operaMainDb = operaMainDb;
+            _operationWebDb = operationWebDb;
         }
 
-        public record LoginRequest(string Username, string Password, string? CaptchaId, string? CaptchaAnswer, string? Platform);
+        public record LoginRequest(string Username, string Password, string? CaptchaId, string? CaptchaAnswer, string? Platform, string? DeviceId);
         public record UserDto(int Id, string DNI, string? Email, bool IsActive, DateTime CreatedAt);
         public record RoleDto(int Id, string Name, string? Description);
         public record UserRoleDto(int Id, int UserId, int RoleId);
@@ -59,14 +66,54 @@ namespace OperationWeb.API.Controllers
             var cans = req.CaptchaAnswer ?? string.Empty;
             
             // Validate Captcha
-            if (cans != "9999")
+            if (string.IsNullOrWhiteSpace(cid) || string.IsNullOrWhiteSpace(cans)) return BadRequest("Captcha requerido");
+            var cacheKey = "captcha:" + cid;
+            if (!(_cache.TryGetValue(cacheKey, out var obj) && obj is CaptchaData cd)) return BadRequest("Captcha inválido o expirado");
+            if (!int.TryParse(cans, out var ans) || ans != cd.Expected) return BadRequest("Captcha incorrecto");
+            _cache.Remove(cacheKey);
+
+            // --- FASE 1: DEVICE BINDING CHECK ---
+            if (string.Equals(req.Platform, "mobile", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.IsNullOrWhiteSpace(cid) || string.IsNullOrWhiteSpace(cans)) return BadRequest("Captcha requerido");
-                var cacheKey = "captcha:" + cid;
-                if (!(_cache.TryGetValue(cacheKey, out var obj) && obj is CaptchaData cd)) return BadRequest("Captcha inválido o expirado");
-                if (!int.TryParse(cans, out var ans) || ans != cd.Expected) return BadRequest("Captcha incorrecto");
-                _cache.Remove(cacheKey);
+                // 1. Check if DeviceId is present
+                if (string.IsNullOrWhiteSpace(req.DeviceId))
+                {
+                    return BadRequest(new { 
+                        error = "ERR_AUTH_DEVICE_REQUIRED", 
+                        message = "DeviceId es obligatorio para acceso móvil." 
+                    });
+                }
+
+                // 2. Check Binding via Context (Raw SQL for speed/direct check or EF)
+                // Using raw check for simplicity in this phase or assume logic in Service?
+                // Requirements say: "Devolver 403 + code=ERR_AUTH_DEVICE si DeviceId no autorizado"
+                // We'll check Dispositivos_Vinculados.
+                
+                // Note: We need to know WHO is logging in to check if *this user* is bound to *this device*?
+                // Or just if the device is whitelisted? 
+                // "Validar contra Dispositivos_Vinculados". Usually Binding = Device + User.
+                // But typically Device Check happens *after* User is identified or we check if Device is banned.
+                // The requirement says "Login con DeviceId no autorizado -> 403".
+                // "Eliminar suplantacion de identidad por dispositivo no autorizado."
+                // This implies strict binding: Only pre-registered devices can login?
+                // Or "User X can only login from Device Y"?
+                // Let's look at F1 definition: "Creating Dispositivos_Vinculados. LoginRequest includes DeviceId. Validar contra Dispositivos_Vinculados."
+                
+                // Let's assume for F1: The device MUST exist in Dispositivos_Vinculados (whitelist) OR match the user's bound device?
+                // Let's implement: Check if Device exists in `Dispositivos_Vinculados` and is `ACTIVO`.
+                // Optionally if `UsuarioDni` is matched.
+                // Since we haven't authenticated the user yet (password check is later), we can't fully validate *User-Device* match securely unless we trust the username claim early or check after login.
+                // HOWEVER, standard pattern: Check credentials first, THEN check device binding.
+                // BUT the requirement says "Login mobile con DeviceId no autorizado -> 403".
+                // If I put it *before* `_userService.LoginAsync`, I can't check if user implies device.
+                // If I put it *after* success login, I can.
+                // Let's put it *after* `result.User` is confirmed, to bind User+Device.
+                
+                // WAIT: "Caso C: login mobile sin DeviceId -> 400". This MUST be before login.
+                // So Step 1 (Presence) is HERE.
+                // Step 2 (Authorization) is AFTER login success.
             }
+            // ------------------------------------
 
             // Delegate Auth Logic to Service
             var result = await _userService.LoginAsync(req.Username, req.Password);
@@ -105,6 +152,20 @@ namespace OperationWeb.API.Controllers
                 return Unauthorized("Acceso no habilitado para la plataforma solicitada.");
             }
 
+            if (normalizedPlatform == "mobile")
+            {
+                var deviceValidation = await ValidateMobileDeviceAsync(result.User.DNI, req.DeviceId);
+                if (!deviceValidation.IsAllowed)
+                {
+                    if (deviceValidation.ErrorCode == "ERR_AUTH_DEVICE_REQUIRED")
+                    {
+                        return BadRequest(new { code = deviceValidation.ErrorCode, message = deviceValidation.ErrorMessage });
+                    }
+
+                    return StatusCode(403, new { code = deviceValidation.ErrorCode, message = deviceValidation.ErrorMessage });
+                }
+            }
+
             // Initialize claims
             string division = "";
             string area = "";
@@ -140,9 +201,94 @@ namespace OperationWeb.API.Controllers
                 // Continue login without personal claims
             }
 
+
+            // --- FASE 1: DEVICE AUTHORIZATION CHECK ---
+            if (string.Equals(req.Platform, "mobile", StringComparison.OrdinalIgnoreCase))
+            {
+                var deviceId = req.DeviceId!;
+                var userDni = result.User.DNI;
+
+                // DIAGNOSTIC LOG
+                var dbName = _operationWebDb.Database.GetDbConnection().Database;
+                _logger.LogInformation("[AUTH-DEVICE] Checking Binding for DNI={DNI} Device={Device} in DB={DB}", userDni, deviceId, dbName);
+
+                // 1. Check Dispositivos_Vinculados (Primary Source)
+                try 
+                {
+                    // DEBUG: Check if exists
+                    var tableExists = await _operationWebDb.Database.SqlQueryRaw<int>(
+                        "SELECT COUNT(*) as Value FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Dispositivos_Vinculados'").FirstOrDefaultAsync();
+                    _logger.LogInformation("[AUTH-DEVICE] Table Dispositivos_Vinculados exists? {Exists}", tableExists > 0);
+
+                    var count = await _operationWebDb.Database.SqlQueryRaw<int>(
+                        "SELECT COUNT(1) as Value FROM [DB_Operation].[dbo].[Dispositivos_Vinculados] WHERE DeviceId = {0} AND UsuarioDni = {1} AND Estado = 'ACTIVO'", 
+                        deviceId, userDni).FirstOrDefaultAsync();
+                    
+                    if (count == 0)
+                    {
+                        // 2. Fallback: COLABORADORES (Legacy/Transition Source)
+                        var fallbackCount = await _operaMainDb.Database.SqlQueryRaw<int>(
+                            "SELECT COUNT(1) as Value FROM COLABORADORES WHERE DNI = {0} AND device_id_vinculado = {1}",
+                            userDni, deviceId).FirstOrDefaultAsync();
+                            
+                        if (fallbackCount == 0)
+                        {
+                             return StatusCode(403, new { 
+                                error = "ERR_AUTH_DEVICE", 
+                                message = "Dispositivo no autorizado para este usuario." 
+                            });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error validating Device Binding for {DNI}", userDni);
+                    // Fail safe: If check crashes, block access to prevent bypass
+                    return StatusCode(500, new { error = "ERR_AUTH_SYSTEM", message = "Error verificando seguridad de dispositivo." });
+                }
+            }
+
             // Token Generation
             var tokenStr = GenerateToken(result.User.DNI, result.Role, division, area, level);
             return Ok(new { token = tokenStr, role = result.Role, mustChangePassword = result.MustChangePassword });
+        }
+
+        private async Task<(bool IsAllowed, string ErrorCode, string ErrorMessage)> ValidateMobileDeviceAsync(string dni, string? deviceId)
+        {
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                return (false, "ERR_AUTH_DEVICE_REQUIRED", "DeviceId es obligatorio para acceso móvil.");
+            }
+
+            var normalizedInput = deviceId.Trim().ToLowerInvariant();
+
+            var colaborador = await _operaMainDb.Colaboradores
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.DNI == dni);
+
+            if (colaborador == null)
+            {
+                _logger.LogWarning("[Auth] Mobile login denied: colaborador no encontrado para DNI {DNI}", dni);
+                return (false, "ERR_AUTH_DEVICE", "Dispositivo no autorizado para este usuario.");
+            }
+
+            var hasMatchInDeviceTable = await _operaMainDb.DispositivosVinculados
+                .AsNoTracking()
+                .Where(d => d.IdColaborador == colaborador.IdEmpleado && d.Activo)
+                .AnyAsync(d =>
+                    (!string.IsNullOrEmpty(d.ImeiHash) && d.ImeiHash.ToLower() == normalizedInput) ||
+                    (!string.IsNullOrEmpty(d.UuidHash) && d.UuidHash.ToLower() == normalizedInput));
+
+            var hasMatchInColaborador = !string.IsNullOrWhiteSpace(colaborador.DeviceIdVinculado) &&
+                                        colaborador.DeviceIdVinculado.Trim().ToLowerInvariant() == normalizedInput;
+
+            if (hasMatchInDeviceTable || hasMatchInColaborador)
+            {
+                return (true, string.Empty, string.Empty);
+            }
+
+            _logger.LogWarning("[Auth] Mobile login denied: device mismatch for DNI {DNI}", dni);
+            return (false, "ERR_AUTH_DEVICE", "Dispositivo no autorizado para este usuario.");
         }
 
         public record RegisterUserRequest(string DNI, string Role, bool AccessWeb, bool AccessApp);

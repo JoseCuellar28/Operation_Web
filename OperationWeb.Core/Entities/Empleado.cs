@@ -120,6 +120,15 @@ namespace OperationWeb.Core.Entities
         [Column("Proyecto")]
         public string? Proyecto { get; set; }
 
+        [Column("device_id_vinculado")]
+        [StringLength(255)]
+        public string? DeviceIdVinculado { get; set; }
+
+        [Column("id_zona")]
+        public int? IdZona { get; set; }
+
+        [Column("id_vehiculo_asignado")]
+        public int? IdVehiculoAsignado { get; set; }
 
         // Computed Properties
         [NotMapped]

@@ -442,3 +442,49 @@ Antes de finalizar operaciones del día, ejecutar **revisión completa del proye
     *   `docs/RUNBOOK_CAPTCHA_PRODUCTION.md`
     *   `start_operation_smart.ps1`
 7.  **Bitácora:** registrar timestamp, URLs vigentes y resultados de pruebas para handoff.
+
+---
+
+## 17. Matriz de Endpoints (Implementados vs Pendientes)
+
+Esta matriz evita confundir problemas de infraestructura con rutas aún no implementadas.
+
+### A. Endpoints operativos confirmados
+1. `GET /health` -> `200`
+2. `GET /api/v1/auth/captcha` -> `200`
+3. `POST /api/v1/auth/login` -> operativo (si DB y credenciales están correctas)
+4. `GET /api/v1/attendance?date=YYYY-MM-DD` -> `200`
+5. `GET /api/v1/execution/monitor` -> `200`
+6. `GET /api/auth/captcha` -> `404` esperado (hardening legacy)
+
+### B. Endpoints reportados por frontend pero no implementados en backend actual
+1. `GET /api/v1/quality/inbox` -> `404`
+2. `POST /api/v1/quality/audit` -> `404`
+3. `GET /api/v1/analytics/stats` -> `404`
+4. `GET /api/v1/analytics/fleet-score` -> `404`
+
+### C. Regla de diagnóstico rápido
+1. Si una ruta da `404` y no existe controller/route en `OperationWeb.API/Controllers`, **no es CORS ni túnel**.
+2. Si una ruta da `500` con stack trace SQL (`18456`), **es configuración de DB/credenciales**.
+3. Si aparece `ERR_NAME_NOT_RESOLVED`, `1033` o `502` intermitente, **es desalineación de túnel/servicio en arranque**.
+4. Si aparece `Unexpected token '<' ... not valid JSON`, el frontend recibió HTML en vez de JSON (normalmente por base URL/ruta incorrecta).
+
+### D. Acción operativa temporal (hasta implementar endpoints pendientes)
+1. Mantener visibles solo módulos respaldados por endpoints activos.
+2. Marcar módulos `quality/analytics` como “No disponible en backend actual” o protegerlos detrás de feature flag.
+3. No abrir incidentes de CORS/túnel por `404` de rutas no implementadas: clasificar como **gap funcional**.
+
+---
+
+## 18. Documentos Operativos de Cierre (Referencia Rápida)
+
+Para cierres de jornada y handoff entre agentes, usar estos documentos como fuente oficial:
+
+1. Checklist APK:
+   * `docs/CHECKLIST_VALIDACION_APK.md`
+2. Checklist post-deploy servidor:
+   * `docs/CHECKLIST_SERVIDOR_POST_DEPLOY.md`
+3. Acta de cierre de la alineación Web/API/APK (sesión 2026-02-17):
+   * `docs/CIERRE_ALINEACION_WEB_APK_2026-02-17.md`
+4. Hoja de ruta oficial de implementación SGO por fases:
+   * `docs/HOJA_RUTA_SGO_AGENTE_WEB.md`

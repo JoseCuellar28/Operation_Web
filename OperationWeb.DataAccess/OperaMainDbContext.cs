@@ -12,6 +12,7 @@ namespace OperationWeb.DataAccess
         public DbSet<Material> Materiales { get; set; }
         public DbSet<Vehiculo> Vehiculos { get; set; }
         public DbSet<Empleado> Colaboradores { get; set; }
+        public DbSet<DispositivoVinculado> DispositivosVinculados { get; set; }
         public DbSet<AsistenciaDiaria> AsistenciasDiarias { get; set; }
         public DbSet<User> Users { get; set; }
         // Empleados alias for repository compatibility if needed
@@ -56,6 +57,18 @@ namespace OperationWeb.DataAccess
                 entity.Property(e => e.Estado).HasColumnName("estado");
                 entity.Property(e => e.UltimoKmRegistrado).HasColumnName("ultimo_km_registrado");
                 entity.Property(e => e.ProximoMantKm).HasColumnName("proximo_mant_km");
+            });
+
+            modelBuilder.Entity<DispositivoVinculado>(entity =>
+            {
+                entity.ToTable("Dispositivos_Vinculados");
+                entity.HasKey(e => e.IdDispositivo);
+                entity.Property(e => e.IdDispositivo).HasColumnName("id_dispositivo");
+                entity.Property(e => e.IdColaborador).HasColumnName("id_colaborador");
+                entity.Property(e => e.ImeiHash).HasColumnName("imei_hash");
+                entity.Property(e => e.UuidHash).HasColumnName("uuid_hash");
+                entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro");
+                entity.Property(e => e.Activo).HasColumnName("activo");
             });
         }
     }

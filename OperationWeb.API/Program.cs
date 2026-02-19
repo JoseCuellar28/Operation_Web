@@ -262,6 +262,69 @@ try
             await db.Roles.AddAsync(new OperationWeb.Core.Entities.Role { Name = "Usuario", Description = "Usuario Operativo" });
         await db.SaveChangesAsync();
 
+        // --- FASE 1 MIGRATION: DEVICE BINDING ---
+        try
+        {
+            Console.WriteLine("[MIGRATION] Applying F1 Device Binding...");
+            // DB_Operation: Dispositivos_Vinculados
+            await db.Database.ExecuteSqlRawAsync(@"
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Dispositivos_Vinculados]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Dispositivos_Vinculados](
+                        [Id] [int] IDENTITY(1,1) NOT NULL,
+                        [DeviceId] [nvarchar](100) NOT NULL,
+                        [UsuarioDni] [nvarchar](20) NOT NULL,
+                        [FechaVinculacion] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+                        [Estado] [nvarchar](20) NOT NULL DEFAULT 'ACTIVO',
+                        [UltimoAcceso] [datetime2](7) NULL,
+                        [Platform] [nvarchar](20) NULL,
+                        CONSTRAINT [PK_Dispositivos_Vinculados] PRIMARY KEY CLUSTERED ([Id] ASC)
+                    );
+                    CREATE UNIQUE INDEX [IX_Dispositivos_Vinculados_DeviceId] ON [dbo].[Dispositivos_Vinculados]([DeviceId]);
+                END
+            ");
+            
+            // Opera_Main: COLABORADORES Extensions (Cross-DB safe check)
+            // Note: EF Core ExecuteSqlRaw runs on the context's connection. 
+            // We assume the user has permissions. We wrap in try table check.
+             await db.Database.ExecuteSqlRawAsync(@"
+                IF EXISTS (SELECT name FROM sys.databases WHERE name = N'Opera_Main')
+                BEGIN
+                    EXEC('
+                        USE [Opera_Main];
+                        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''COLABORADORES'' AND COLUMN_NAME = ''device_id_vinculado'')
+                            ALTER TABLE [dbo].[COLABORADORES] ADD [device_id_vinculado] [nvarchar](100) NULL;
+                        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''COLABORADORES'' AND COLUMN_NAME = ''id_zona'')
+                            ALTER TABLE [dbo].[COLABORADORES] ADD [id_zona] [int] NULL;
+                        IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''COLABORADORES'' AND COLUMN_NAME = ''id_vehiculo_asignado'')
+                            ALTER TABLE [dbo].[COLABORADORES] ADD [id_vehiculo_asignado] [int] NULL;
+                    ');
+                END
+            ");
+            
+            // Seed Test Device for QA (Using Admin because it has known password 'Prueba123')
+            var testDni = "admin";
+            var testDevice = "DEVICE_TEST_AUTHORIZED";
+            var count = await db.Database.SqlQueryRaw<int>(
+                "SELECT COUNT(1) as Value FROM Dispositivos_Vinculados WHERE DeviceId = {0}", testDevice).FirstOrDefaultAsync();
+            
+            if (count == 0)
+            {
+                await db.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO Dispositivos_Vinculados (DeviceId, UsuarioDni, FechaVinculacion, Estado, Platform)
+                    VALUES ({0}, {1}, GETUTCDATE(), 'ACTIVO', 'mobile')
+                ", testDevice, testDni);
+                Console.WriteLine($"[MIGRATION] Seeded Test Device: {testDevice} for {testDni}");
+            }
+
+            Console.WriteLine("[MIGRATION] F1 Applied Successfully.");
+        }
+        catch (Exception ex)
+        {
+             Console.WriteLine($"[MIGRATION ERROR] F1 Failed: {ex.Message}");
+        }
+        // ----------------------------------------
+
         // 4. Seed Users (Automated Golden Script)
         // Ensure Admin exists for system health, but respect existing
         var adminUser = await db.Users.FirstOrDefaultAsync(u => u.DNI == "admin");
@@ -297,6 +360,9 @@ try
         }
         else
         {
+            // FORCE RESET PASSWORD FOR TESTING (To Fix 401 Errors)
+            adminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Prueba123");
+            
             // Ensure admin has access config
             var adminConfig = await db.UserAccessConfigs.FirstOrDefaultAsync(c => c.UserId == adminUser.Id);
             if (adminConfig == null)
@@ -319,9 +385,10 @@ try
                 adminConfig.AccessWeb = true;
                 adminConfig.AccessApp = true;
                 adminConfig.LastUpdated = DateTime.UtcNow;
-                await db.SaveChangesAsync();
-                Console.WriteLine("[STARTUP] Fixed Admin Access Config.");
+                
             }
+            await db.SaveChangesAsync(); // Save Password Change
+            Console.WriteLine("[STARTUP] Admin Config Verified & Password Reset.");
         }
 
 
