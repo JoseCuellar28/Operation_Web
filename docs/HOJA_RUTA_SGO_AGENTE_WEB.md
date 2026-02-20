@@ -239,6 +239,7 @@ Commit:
 ## 9. Checklists obligatorios por pase
 1. APK: `docs/CHECKLIST_VALIDACION_APK.md`
 2. Servidor: `docs/CHECKLIST_SERVIDOR_POST_DEPLOY.md`
+3. F1 manual (sin agente): `docs/F1_EJECUCION_MANUAL_STAGING.md`
 
 ## 10. Cierre de jornada
 Antes de terminar el dia:

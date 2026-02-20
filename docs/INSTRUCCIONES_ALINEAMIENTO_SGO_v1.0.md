@@ -127,24 +127,27 @@ Entorno:
 1. F0 Baseline: `GO` (ver `deployment_evidence/F0_BASELINE_2026-02-19.md`).
 2. Siguiente fase activa: `F1 - P0 Device Binding` en entorno de pruebas.
 3. Estado actual F1: `IN PROGRESS` (implementacion tecnica iniciada; pendiente cierre con evidencia runtime).
+4. Modo de ejecucion vigente: `MANUAL` (sin agente web).
+5. Procedimiento oficial F1: `docs/F1_EJECUCION_MANUAL_STAGING.md`.
 
-## 8) Instruccion de arranque F1 (Agente Web)
-Desde este punto, F1 debe ejecutarse con mapeo tecnico y pruebas obligatorias.
+## 8) Instruccion de arranque F1 (Manual)
+Desde este punto, F1 se ejecuta manualmente con mapeo tecnico y pruebas obligatorias.
 
-Tareas obligatorias del Agente Web en F1:
+Tareas obligatorias en F1:
 1. Mapear e implementar:
    - DDL de `Dispositivos_Vinculados`.
    - Extension de `COLABORADORES` (`device_id_vinculado`, `id_zona`).
    - `DeviceId` en `LoginRequest`.
    - Validacion de `DeviceId` en `/api/v1/auth/login`.
    - Error estandar `ERR_AUTH_DEVICE`.
-2. Preparar entorno de pruebas (staging) con datos minimos.
-3. Ejecutar pruebas obligatorias:
+2. Ejecutar el runbook manual `docs/F1_EJECUCION_MANUAL_STAGING.md`.
+3. Preparar entorno de pruebas (staging) con datos minimos.
+4. Ejecutar pruebas obligatorias:
    - Login con `DeviceId` autorizado -> `200`.
    - Login con `DeviceId` no autorizado -> `401/403` + `ERR_AUTH_DEVICE`.
    - Login sin `DeviceId` -> `400`.
-4. Entregar reporte oficial de fase:
-   - `[FASE 1 - REPORTE AGENTE WEB]`
+5. Entregar reporte oficial de fase:
+   - `[FASE 1 - REPORTE TECNICO]`
    - cambios (archivo:linea)
    - SQL aplicado
    - comandos + esperado/obtenido

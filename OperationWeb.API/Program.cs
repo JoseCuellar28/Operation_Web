@@ -305,17 +305,20 @@ try
             // Seed Test Device for QA (Using Admin because it has known password 'Prueba123')
             var testDni = "admin";
             var testDevice = "DEVICE_TEST_AUTHORIZED";
-            var count = await db.Database.SqlQueryRaw<int>(
-                "SELECT COUNT(1) as Value FROM Dispositivos_Vinculados WHERE DeviceId = {0}", testDevice).FirstOrDefaultAsync();
             
-            if (count == 0)
-            {
-                await db.Database.ExecuteSqlRawAsync(@"
+            // Force update or insert to ensure it points to 'admin'
+            await db.Database.ExecuteSqlRawAsync(@"
+                IF EXISTS (SELECT 1 FROM Dispositivos_Vinculados WHERE DeviceId = {0})
+                BEGIN
+                    UPDATE Dispositivos_Vinculados SET UsuarioDni = {1}, Estado = 'ACTIVO' WHERE DeviceId = {0}
+                END
+                ELSE
+                BEGIN
                     INSERT INTO Dispositivos_Vinculados (DeviceId, UsuarioDni, FechaVinculacion, Estado, Platform)
                     VALUES ({0}, {1}, GETUTCDATE(), 'ACTIVO', 'mobile')
-                ", testDevice, testDni);
-                Console.WriteLine($"[MIGRATION] Seeded Test Device: {testDevice} for {testDni}");
-            }
+                END
+            ", testDevice, testDni);
+            Console.WriteLine($"[MIGRATION] Verified/Updated Test Device: {testDevice} for {testDni}");
 
             Console.WriteLine("[MIGRATION] F1 Applied Successfully.");
         }
