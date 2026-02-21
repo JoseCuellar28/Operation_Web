@@ -80,16 +80,33 @@ namespace OperationWeb.API.Controllers
 
             if (string.IsNullOrEmpty(dni)) return Unauthorized("Usuario no identificado");
 
-            var result = await _attendanceService.CheckInAsync(dni, req.Latitude, req.Longitude, req.Address, req.HealthStatus == "saludable");
+            var isHealthOk = ParseHealthStatus(req.HealthStatus);
+            var result = await _attendanceService.CheckInAsync(dni, req.Latitude, req.Longitude, req.Address, isHealthOk);
 
             if (!result.Success)
             {
                 if (result.Message.Contains("Ya marcaste")) return BadRequest(result.Message);
                 if (result.Message.Contains("no encontrado")) return NotFound(result.Message);
+                if (result.Message.StartsWith("ERR_HEALTH_NOT_FIT"))
+                    return StatusCode(403, new { code = "ERR_HEALTH_NOT_FIT", message = "Usuario no apto para iniciar operaciones." });
+                if (result.Message.StartsWith("ERR_SKILL_EXPIRED"))
+                    return StatusCode(403, new { code = "ERR_SKILL_EXPIRED", message = "Colaborador con certificacion vencida." });
                 return StatusCode(500, new { message = "Error interno", detail = result.Message });
             }
 
             return Ok(new { message = result.Message, status = result.Status });
+        }
+
+        private static bool ParseHealthStatus(string? healthStatus)
+        {
+            if (string.IsNullOrWhiteSpace(healthStatus)) return false;
+
+            var normalized = healthStatus.Trim().ToLowerInvariant();
+            return normalized == "saludable" ||
+                   normalized == "apto" ||
+                   normalized == "ok" ||
+                   normalized == "true" ||
+                   normalized == "1";
         }
 
         [HttpPut("attendance/{id}/sync")]

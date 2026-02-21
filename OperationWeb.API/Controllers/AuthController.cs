@@ -28,7 +28,6 @@ namespace OperationWeb.API.Controllers
         private readonly IProyectoService _proyectoService;
         private readonly IPersonalService _personalService;
         private readonly OperaMainDbContext _operaMainDb;
-        private readonly OperationWebDbContext _operationWebDb;
 
         public AuthController(
             IConfiguration config, 
@@ -37,8 +36,7 @@ namespace OperationWeb.API.Controllers
             IUserService userService, 
             IProyectoService proyectoService,
             IPersonalService personalService,
-            OperaMainDbContext operaMainDb,
-            OperationWebDbContext operationWebDb)
+            OperaMainDbContext operaMainDb)
         {
             _config = config;
             _cache = cache;
@@ -47,7 +45,6 @@ namespace OperationWeb.API.Controllers
             _proyectoService = proyectoService;
             _personalService = personalService;
             _operaMainDb = operaMainDb;
-            _operationWebDb = operationWebDb;
         }
 
         public record LoginRequest(string Username, string Password, string? CaptchaId, string? CaptchaAnswer, string? Platform, string? DeviceId);
@@ -172,81 +169,39 @@ namespace OperationWeb.API.Controllers
                 return (false, "ERR_AUTH_DEVICE_REQUIRED", "DeviceId es obligatorio para acceso móvil.");
             }
 
-            var normalizedInput = deviceId.Trim();
+            var normalizedInput = deviceId.Trim().ToLowerInvariant();
 
-            // 1. Check in DB_Operation (New Table with Auto-Repair)
-            try
+            var colaboradores = await _operaMainDb.Colaboradores
+                .AsNoTracking()
+                .Where(c => c.DNI == dni)
+                .ToListAsync();
+
+            if (colaboradores.Count == 0)
             {
-                var isAuthorized = await CheckNewDeviceBindingAsync(dni, normalizedInput);
-                if (isAuthorized) return (true, string.Empty, string.Empty);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[Auth] Error checking new device binding table. Attempting auto-repair.");
-                // Emergency Auto-Repair: Try to ensure table exists and retry once
-                await EnsureDeviceBindingTableExistsAsync();
-                try 
-                {
-                    if (await CheckNewDeviceBindingAsync(dni, normalizedInput)) return (true, string.Empty, string.Empty);
-                } catch { /* Fail silently to fallback */ }
+                _logger.LogWarning("[Auth] Mobile login denied: colaborador no encontrado para DNI {DNI}", dni);
+                return (false, "ERR_AUTH_DEVICE", "Dispositivo no autorizado para este usuario.");
             }
 
-            // 2. Fallback: Check in Opera_Main.COLABORADORES (Legacy Column)
-            try 
-            {
-                var colaborador = await _operaMainDb.Colaboradores
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.DNI == dni);
+            var collaboratorIds = colaboradores.Select(c => c.IdEmpleado).ToList();
 
-                if (colaborador != null && 
-                    !string.IsNullOrWhiteSpace(colaborador.DeviceIdVinculado) &&
-                    colaborador.DeviceIdVinculado.Trim().Equals(normalizedInput, StringComparison.OrdinalIgnoreCase))
-                {
-                    return (true, string.Empty, string.Empty);
-                }
-            }
-            catch (Exception ex)
+            var hasMatchInDeviceTable = await _operaMainDb.DispositivosVinculados
+                .AsNoTracking()
+                .Where(d => collaboratorIds.Contains(d.IdColaborador) && d.Activo)
+                .AnyAsync(d =>
+                    (!string.IsNullOrEmpty(d.ImeiHash) && d.ImeiHash.ToLower() == normalizedInput) ||
+                    (!string.IsNullOrEmpty(d.UuidHash) && d.UuidHash.ToLower() == normalizedInput));
+
+            var hasMatchInColaborador = colaboradores.Any(c =>
+                !string.IsNullOrWhiteSpace(c.DeviceIdVinculado) &&
+                c.DeviceIdVinculado.Trim().ToLowerInvariant() == normalizedInput);
+
+            if (hasMatchInDeviceTable || hasMatchInColaborador)
             {
-                _logger.LogError(ex, "[Auth] Error checking legacy device binding in COLABORADORES.");
+                return (true, string.Empty, string.Empty);
             }
 
-            _logger.LogWarning("[Auth] Mobile login denied: unauthorized device {Device} for DNI {DNI}", normalizedInput, dni);
+            _logger.LogWarning("[Auth] Mobile login denied: device mismatch for DNI {DNI}", dni);
             return (false, "ERR_AUTH_DEVICE", "Dispositivo no autorizado para este usuario.");
-        }
-
-        private async Task<bool> CheckNewDeviceBindingAsync(string dni, string deviceId)
-        {
-            // We use Raw SQL because the table might not be in the EF model yet or might be 'ghosted'
-            var count = await _operationWebDb.Database.SqlQueryRaw<int>(
-                "SELECT COUNT(1) as Value FROM [dbo].[Dispositivos_Vinculados] WHERE DeviceId = {0} AND UsuarioDni = {1} AND Estado = 'ACTIVO'", 
-                deviceId, dni).FirstOrDefaultAsync();
-            return count > 0;
-        }
-
-        private async Task EnsureDeviceBindingTableExistsAsync()
-        {
-            try
-            {
-                await _operationWebDb.Database.ExecuteSqlRawAsync(@"
-                    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Dispositivos_Vinculados]') AND type in (N'U'))
-                    BEGIN
-                        CREATE TABLE [dbo].[Dispositivos_Vinculados](
-                            [Id] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
-                            [DeviceId] [nvarchar](100) NOT NULL UNIQUE,
-                            [UsuarioDni] [nvarchar](20) NOT NULL,
-                            [FechaVinculacion] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
-                            [Estado] [nvarchar](20) NOT NULL DEFAULT 'ACTIVO',
-                            [UltimoAcceso] [datetime2](7) NULL,
-                            [Platform] [nvarchar](20) NULL
-                        );
-                    END
-                ");
-                _logger.LogInformation("[Auth] Emergency Table Recovery: Dispositivos_Vinculados verified/created.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex, "[Auth] CRITICAL: Failed to auto-repair Device Binding table.");
-            }
         }
 
         public record RegisterUserRequest(string DNI, string Role, bool AccessWeb, bool AccessApp);

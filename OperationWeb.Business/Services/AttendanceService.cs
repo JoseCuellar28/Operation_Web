@@ -26,17 +26,33 @@ namespace OperationWeb.Business.Services
             try
             {
                 var employee = await _context.Colaboradores
-                    .Where(e => e.DNI == dni) 
-                    .Select(e => new { e.Id }) 
+                    .Where(e => e.DNI == dni)
+                    .OrderByDescending(e => e.Active == true)
+                    .ThenBy(e => e.IdEmpleado)
+                    .Select(e => new { e.IdEmpleado, e.IdZona })
                     .FirstOrDefaultAsync();
                 
                 if (employee == null) 
                     return (false, $"Colaborador con DNI {dni} no encontrado en Opera_Main.", null);
                 
-                var empId = employee.Id;
+                var empId = employee.IdEmpleado;
                 var limaZone = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
                 var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, limaZone);
                 var today = now.Date;
+
+                await UpsertHealthStateAsync(empId, today, isHealthOk);
+
+                if (!isHealthOk)
+                {
+                    // F2: Stop Work blocking path
+                    return (false, "ERR_HEALTH_NOT_FIT: Usuario no apto para iniciar operaciones.", "blocked_health");
+                }
+
+                var hasExpiredSkill = await HasExpiredSkillAsync(empId, today);
+                if (hasExpiredSkill)
+                {
+                    return (false, "ERR_SKILL_EXPIRED: Certificacion vencida para el colaborador.", "blocked_skill");
+                }
                 
                 var exists = await _context.AsistenciasDiarias
                     .AnyAsync(a => a.IdColaborador == empId && a.FechaAsistencia == today);
@@ -46,6 +62,7 @@ namespace OperationWeb.Business.Services
 
                 var limitTime = today.AddHours(8); // 08:00 AM
                 var status = now > limitTime ? "tardanza" : "presente";
+                var alertStatus = await CalculateGeoAlertStatusAsync(employee.IdZona, lat, lng);
 
                 var record = new AsistenciaDiaria
                 {
@@ -60,7 +77,7 @@ namespace OperationWeb.Business.Services
                     EstadoFinal = status,
                     WhatsappSync = false,
                     SyncDate = null,
-                    AlertStatus = null
+                    AlertStatus = alertStatus
                 };
 
                 _context.Set<AsistenciaDiaria>().Add(record);
@@ -73,6 +90,76 @@ namespace OperationWeb.Business.Services
                 throw new Exception($"Error en CheckIn: {ex.Message}", ex);
             }
         }
+
+        private async Task UpsertHealthStateAsync(int empId, DateTime today, bool isHealthOk)
+        {
+            var state = await _context.EstadosSalud
+                .FirstOrDefaultAsync(s => s.IdColaborador == empId && s.Fecha == today);
+
+            if (state == null)
+            {
+                _context.EstadosSalud.Add(new EstadoSalud
+                {
+                    IdColaborador = empId,
+                    Fecha = today,
+                    Apto = isHealthOk,
+                    RespuestasJson = null
+                });
+            }
+            else
+            {
+                state.Apto = isHealthOk;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task<string?> CalculateGeoAlertStatusAsync(int? idZona, double lat, double lng)
+        {
+            if (idZona == null) return null;
+
+            var zona = await _context.ZonasTrabajo
+                .AsNoTracking()
+                .FirstOrDefaultAsync(z => z.IdZona == idZona.Value && z.Activo);
+
+            if (zona == null) return null;
+
+            var distanceMeters = HaversineMeters(
+                lat,
+                lng,
+                (double)zona.LatitudCentro,
+                (double)zona.LongitudCentro);
+
+            return distanceMeters > zona.RadioMetros ? "pending" : null;
+        }
+
+        private async Task<bool> HasExpiredSkillAsync(int empId, DateTime today)
+        {
+            return await _context.CertificacionesPersonal
+                .AsNoTracking()
+                .Where(c => c.IdColaborador == empId)
+                .AnyAsync(c =>
+                    c.FechaVencimiento.Date < today ||
+                    (c.EstadoVigencia != null && (
+                        c.EstadoVigencia.ToLower() == "vencido" ||
+                        c.EstadoVigencia.ToLower() == "expirado" ||
+                        c.EstadoVigencia.ToLower() == "no_apto"
+                    )));
+        }
+
+        private static double HaversineMeters(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371000; // meters
+            var dLat = DegreesToRadians(lat2 - lat1);
+            var dLon = DegreesToRadians(lon2 - lon1);
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(DegreesToRadians(lat1)) * Math.Cos(DegreesToRadians(lat2)) *
+                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            return R * c;
+        }
+
+        private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180.0;
 
         public async Task<bool> SyncWhatsappAsync(string id, bool sync, string? syncDate)
         {

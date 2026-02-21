@@ -14,6 +14,9 @@ namespace OperationWeb.DataAccess
         public DbSet<Empleado> Colaboradores { get; set; }
         public DbSet<DispositivoVinculado> DispositivosVinculados { get; set; }
         public DbSet<AsistenciaDiaria> AsistenciasDiarias { get; set; }
+        public DbSet<ZonaTrabajo> ZonasTrabajo { get; set; }
+        public DbSet<EstadoSalud> EstadosSalud { get; set; }
+        public DbSet<CertificacionPersonal> CertificacionesPersonal { get; set; }
         public DbSet<User> Users { get; set; }
         // Empleados alias for repository compatibility if needed
         public DbSet<Empleado> Empleados => Colaboradores;
@@ -69,6 +72,40 @@ namespace OperationWeb.DataAccess
                 entity.Property(e => e.UuidHash).HasColumnName("uuid_hash");
                 entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro");
                 entity.Property(e => e.Activo).HasColumnName("activo");
+            });
+
+            modelBuilder.Entity<ZonaTrabajo>(entity =>
+            {
+                entity.ToTable("Zonas_Trabajo");
+                entity.HasKey(e => e.IdZona);
+                entity.Property(e => e.IdZona).HasColumnName("id_zona");
+                entity.Property(e => e.NombreZona).HasColumnName("nombre_zona");
+                entity.Property(e => e.LatitudCentro).HasColumnName("latitud_centro");
+                entity.Property(e => e.LongitudCentro).HasColumnName("longitud_centro");
+                entity.Property(e => e.RadioMetros).HasColumnName("radio_metros");
+                entity.Property(e => e.Activo).HasColumnName("activo");
+            });
+
+            modelBuilder.Entity<EstadoSalud>(entity =>
+            {
+                entity.ToTable("Estado_Salud");
+                entity.HasKey(e => e.IdSalud);
+                entity.Property(e => e.IdSalud).HasColumnName("id_salud");
+                entity.Property(e => e.IdColaborador).HasColumnName("id_colaborador");
+                entity.Property(e => e.Fecha).HasColumnName("fecha");
+                entity.Property(e => e.RespuestasJson).HasColumnName("respuestas_json");
+                entity.Property(e => e.Apto).HasColumnName("apto");
+            });
+
+            modelBuilder.Entity<CertificacionPersonal>(entity =>
+            {
+                entity.ToTable("Certificaciones_Personal");
+                entity.HasKey(e => e.IdCert);
+                entity.Property(e => e.IdCert).HasColumnName("id_cert");
+                entity.Property(e => e.IdColaborador).HasColumnName("id_colaborador");
+                entity.Property(e => e.TipoCurso).HasColumnName("tipo_curso");
+                entity.Property(e => e.FechaVencimiento).HasColumnName("fecha_vencimiento");
+                entity.Property(e => e.EstadoVigencia).HasColumnName("estado_vigencia");
             });
         }
     }
