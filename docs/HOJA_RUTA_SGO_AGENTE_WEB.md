@@ -260,3 +260,4 @@ Antes de terminar el dia:
 9. Runbook F4 manual: `docs/F4_EJECUCION_MANUAL_STAGING.md` (cerrado).
 10. Fase activa: `F5 - Dashboard y Auditoria visual`.
 11. Regla operativa: entrega siempre con evidencia runtime y SQL aplicado.
+12. Runbook F5 manual: `docs/F5_EJECUCION_MANUAL_STAGING.md`.

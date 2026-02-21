@@ -232,6 +232,27 @@ export default function AttendanceView() {
     }
   };
 
+  const getSgoState = (record: AttendanceRecord): { label: string; className: string } => {
+    const normalizedHealth = (record.health_status || '').toLowerCase();
+    const isHealthBlocked = normalizedHealth.includes('no_apto') || normalizedHealth.includes('no apto') || record.employee?.estado_operativo === 'BLOQUEADO_SALUD';
+    const isAbsent = record.system_status === 'falta';
+    const isPending = record.alert_status === 'pending' || record.system_status === 'tardanza';
+
+    if (isAbsent) {
+      return { label: 'Negro - Ausente', className: 'bg-gray-900 text-white border-gray-900' };
+    }
+
+    if (isHealthBlocked) {
+      return { label: 'Rojo - Crítico', className: 'bg-red-100 text-red-800 border-red-200' };
+    }
+
+    if (isPending) {
+      return { label: 'Ámbar - En Proceso', className: 'bg-amber-100 text-amber-800 border-amber-200' };
+    }
+
+    return { label: 'Verde - Validado', className: 'bg-green-100 text-green-800 border-green-200' };
+  };
+
   const getHealthBadge = (health: string) => {
     if (!health) return <span className="text-xs text-gray-400">-</span>;
     if (health === 'saludable') {
@@ -424,6 +445,7 @@ export default function AttendanceView() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora Marca</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semáforo SGO</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Salud</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Sistema</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cruce WhatsApp</th>
@@ -493,6 +515,16 @@ export default function AttendanceView() {
                           ) : (
                             <span className="text-xs text-gray-400">-</span>
                           )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {(() => {
+                            const sgo = getSgoState(record);
+                            return (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${sgo.className}`}>
+                                {sgo.label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-4 py-3">
                           {getHealthBadge(record.health_status)}

@@ -67,6 +67,8 @@ export default function ResolutionDrawer({
   };
 
   const isPendingAlert = record.alert_status === 'pending' || record.system_status === 'tardanza';
+  const justification = record.gps_justification || record.notes || '';
+  const shortJustification = justification.length > 0 && justification.length < 20;
 
   return (
     <div className="fixed inset-0 z-[100]" style={{ isolation: 'isolate' }}>
@@ -149,8 +151,38 @@ export default function ResolutionDrawer({
             <div className="bg-gray-50 rounded-lg p-3">
               <span className="text-xs text-gray-500 block mb-1">Justificación / Notas</span>
               <p className="text-sm text-gray-700 italic">
-                "{record.gps_justification || record.notes || 'Sin notas adicionales'}"
+                "{justification || 'Sin notas adicionales'}"
               </p>
+              {shortJustification && (
+                <p className="text-xs text-amber-700 mt-2">
+                  Advertencia: justificación menor a 20 caracteres.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
+              <Clock className="text-purple-600" size={18} />
+              Audit Trail
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <span className="text-xs text-gray-500 block mb-1">alert_status</span>
+                <span className="font-medium text-gray-900">{record.alert_status || 'N/A'}</span>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <span className="text-xs text-gray-500 block mb-1">resolved_at</span>
+                <span className="font-medium text-gray-900">{record.resolved_at || 'N/A'}</span>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <span className="text-xs text-gray-500 block mb-1">resolved_by</span>
+                <span className="font-medium text-gray-900">{record.resolved_by || 'N/A'}</span>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <span className="text-xs text-gray-500 block mb-1">resolution_notes</span>
+                <span className="font-medium text-gray-900">{record.resolution_notes || 'N/A'}</span>
+              </div>
             </div>
           </div>
 
@@ -204,6 +236,13 @@ export default function ResolutionDrawer({
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <h3 className="font-semibold text-gray-900 mb-2">Selfie de Control</h3>
+            <p className="text-xs text-gray-500">
+              Evidencia visual mostrada desde `employee.photo_url` (si existe). La imagen se ve en cabecera del panel.
+            </p>
           </div>
         </div>
 

@@ -135,6 +135,7 @@ Entorno:
 9. Modo de ejecucion vigente: `MANUAL` (sin agente web).
 10. Procedimiento oficial F1: `docs/F1_EJECUCION_MANUAL_STAGING.md` (cerrado).
 11. Siguiente fase activa: `F5 - Dashboard y Auditoria`.
+12. Procedimiento oficial F5: `docs/F5_EJECUCION_MANUAL_STAGING.md`.
 
 ## 8) Instruccion de arranque F1 (Manual)
 Desde este punto, F1 se ejecuta manualmente con mapeo tecnico y pruebas obligatorias.
