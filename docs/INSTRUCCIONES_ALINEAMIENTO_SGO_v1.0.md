@@ -125,10 +125,16 @@ Entorno:
 
 ## 7) Estado de avance
 1. F0 Baseline: `GO` (ver `deployment_evidence/F0_BASELINE_2026-02-19.md`).
-2. Siguiente fase activa: `F1 - P0 Device Binding` en entorno de pruebas.
-3. Estado actual F1: `IN PROGRESS` (implementacion tecnica iniciada; pendiente cierre con evidencia runtime).
-4. Modo de ejecucion vigente: `MANUAL` (sin agente web).
-5. Procedimiento oficial F1: `docs/F1_EJECUCION_MANUAL_STAGING.md`.
+2. F1 Device Binding: `GO` (ver `deployment_evidence/F1_DEVICE_BINDING_GO_2026-02-20.md`).
+3. F2 Geocerca + Salud: `GO` (ver `deployment_evidence/F2_GEOFENCE_HEALTH_GO_2026-02-20.md`).
+4. F3 Sync Trigger Personal->Colaboradores: `GO` (ver `deployment_evidence/F3_SYNC_TRIGGER_GO_2026-02-20.md`).
+5. F4 Certificaciones y bloqueo por skill vencido: `GO` (ver `deployment_evidence/F4_SKILL_EXPIRED_GO_2026-02-21.md`).
+6. Procedimiento oficial F2: `docs/F2_EJECUCION_MANUAL_STAGING.md` (cerrado).
+7. Procedimiento oficial F3: `docs/F3_EJECUCION_MANUAL_STAGING.md`.
+8. Procedimiento oficial F4: `docs/F4_EJECUCION_MANUAL_STAGING.md` (cerrado).
+9. Modo de ejecucion vigente: `MANUAL` (sin agente web).
+10. Procedimiento oficial F1: `docs/F1_EJECUCION_MANUAL_STAGING.md` (cerrado).
+11. Siguiente fase activa: `F5 - Dashboard y Auditoria`.
 
 ## 8) Instruccion de arranque F1 (Manual)
 Desde este punto, F1 se ejecuta manualmente con mapeo tecnico y pruebas obligatorias.

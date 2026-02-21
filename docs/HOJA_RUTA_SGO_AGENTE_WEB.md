@@ -249,12 +249,14 @@ Antes de terminar el dia:
 4. Publicar bloque "Siguiente paso exacto" (max 3 acciones).
 
 ## 11. Estado Actual de Ejecucion
-1. Fase activa: `F1 - P0 Device Binding`.
-2. Regla operativa: desde F1 toda entrega debe incluir mapeo tecnico + pruebas runtime, no solo cambios de codigo.
-3. Entregable obligatorio para Agente Web:
-   - `[FASE 1 - REPORTE AGENTE WEB]` con:
-   - archivo:linea de cambios,
-   - script SQL aplicado,
-   - pruebas (comando/esperado/obtenido),
-   - riesgos abiertos,
-   - dictamen `GO/NO-GO`.
+1. Fase cerrada: `F1 - P0 Device Binding` (`GO`).
+2. Fase cerrada: `F2 - P1 Geocerca + Salud` (`GO`).
+3. Evidencia F2: `deployment_evidence/F2_GEOFENCE_HEALTH_GO_2026-02-20.md`.
+4. Fase cerrada: `F3 - Sincronizacion Personal -> Colaboradores` (`GO`).
+5. Evidencia F3: `deployment_evidence/F3_SYNC_TRIGGER_GO_2026-02-20.md`.
+6. Fase cerrada: `F4 - Certificaciones y bloqueo por skill vencido` (`GO`).
+7. Runbook F3 manual: `docs/F3_EJECUCION_MANUAL_STAGING.md` (cerrado).
+8. Evidencia F4: `deployment_evidence/F4_SKILL_EXPIRED_GO_2026-02-21.md`.
+9. Runbook F4 manual: `docs/F4_EJECUCION_MANUAL_STAGING.md` (cerrado).
+10. Fase activa: `F5 - Dashboard y Auditoria visual`.
+11. Regla operativa: entrega siempre con evidencia runtime y SQL aplicado.
